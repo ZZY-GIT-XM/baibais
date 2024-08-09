@@ -138,4 +138,11 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+._xiuxian_impart.db
+xiuxian.db
+xiuxian_impart.db
+.env
+.env.dev
+.env.prod
+
 # End of https://www.toptal.com/developers/gitignore/api/python
