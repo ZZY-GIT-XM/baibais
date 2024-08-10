@@ -24,14 +24,14 @@ cache_help = {}
 sql_message = XiuxianDateManage()  # sql类
 
 __dufang_help__ = f"""
-天才培养，专门针对修仙界的天才修士进行早期培养，帮助他们克服修炼初期的困难，期待未来能获得丰厚的回报。
+培养计划，专门针对修仙界的天才修士进行早期培养，帮助他们克服修炼初期的困难，期待未来能获得丰厚的回报。
 指令(最低境界要求【{XiuConfig().peiyang_min}】):
     培养66666
 """.strip()
 
 
 # 培养
-dufang_help = on_command("天才培养帮助", permission=GROUP, priority=7, block=True)
+dufang_help = on_command("培养帮助", permission=GROUP, priority=7, block=True)
 dufang = on_regex(
     r"(培养)\s?(\d+)",
     flags=I,
