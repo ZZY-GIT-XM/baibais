@@ -116,7 +116,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.db
+*.db
 
 # Spyder project settings
 .spyderproject
