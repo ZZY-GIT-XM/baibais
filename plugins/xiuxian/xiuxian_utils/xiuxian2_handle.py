@@ -81,7 +81,7 @@ class XiuxianDateManage:
       "user_name" TEXT DEFAULT NULL,
       "level_up_cd" integer DEFAULT NULL,
       "level_up_rate" integer DEFAULT 0,
-      "consecutive_wins" integer DEFAULT 0
+      "consecutive_wins" integer DEFAULT 0,
       "consecutive_losses" integer DEFAULT 0
     );""")
             elif i == "user_cd":
