@@ -25,7 +25,7 @@ work = {}  # 悬赏令信息记录
 refreshnum: Dict[str, int] = {}  # 用户悬赏令刷新次数记录
 sql_message = XiuxianDateManage()  # sql类
 items = Items()
-lscost = 1000000000 # 刷新灵石消耗
+lscost = 10000000000 # 刷新灵石消耗
 count = 3  # 免费次数
 
 
