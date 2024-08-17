@@ -1,4 +1,8 @@
 import re
+import json
+import base64
+import botpy
+from botpy.types.message import Ark, ArkKv
 import random
 import asyncio
 from datetime import datetime
@@ -71,7 +75,7 @@ lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block
 level_help = on_command('境界列表', aliases={"灵根列表", "品阶列表"}, priority=15, permission=GROUP, block=True)
 
 __xiuxian_notes__ = f"""
-详情(命令:说明帮助)：
+详情：
 1、我要修仙:步入修仙世界
 2、我的修仙信息:获取修仙数据
 3、修仙签到:获取灵石
@@ -311,17 +315,26 @@ async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = Command
         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help[session_id]))
         await help_in.finish()
     else:
-        font_size = 32
-        title = "修仙帮助"
+        md = {"keyboard": {"id": "102125567_1723650390"}}
+        json1 = json.dumps(md)
+        bytes = json1.encode('utf-8')
+        data = base64.b64encode(bytes).decode('utf-8')
         msg = __xiuxian_notes__
-        img = Txt2Img(font_size)
-        if XiuConfig().img:
-            pic = await img.save(title, msg)
-            cache_help[session_id] = pic
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        markdown_message = f"{msg}[CQ:markdown,data=base64://{data}]"
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message)
         await help_in.finish()
+
+        # font_size = 32
+        # title = "修仙帮助"
+        # msg = __xiuxian_notes__
+        # img = Txt2Img(font_size)
+        # if XiuConfig().img:
+        #     pic = await img.save(title, msg)
+        #     cache_help[session_id] = pic
+        #     await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
+        # else:
+        #     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        # await help_in.finish()
 
 
 @level_help.handle(parameterless=[Cooldown(at_sender=False)])
