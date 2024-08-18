@@ -49,7 +49,7 @@ run_xiuxian = on_fullmatch("我要修仙", priority=8, permission=GROUP, block=T
 restart = on_fullmatch("重入仙途", permission=GROUP, priority=7, block=True)
 sign_in = on_fullmatch("修仙签到", priority=13, permission=GROUP, block=True)
 help_in = on_fullmatch("修仙帮助", priority=12, permission=GROUP, block=True)
-rank = on_command("排行榜", aliases={"修仙排行榜", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜"},
+rank = on_command("排行榜", aliases={"排行榜列表", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜"},
                   priority=7, permission=GROUP, block=True)
 remaname = on_command("改名", priority=5, permission=GROUP, block=True)
 level_up = on_fullmatch("突破", priority=6, permission=GROUP, block=True)
