@@ -72,7 +72,9 @@ user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permis
 # xiuxian_updata_level = on_fullmatch('修仙适配', priority=15, permission=GROUP, block=True)  zzy改
 # xiuxian_uodata_data = on_fullmatch('更新记录', priority=15, permission=GROUP, block=True)  zzy改
 lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block=True)
-level_help = on_command('境界列表', aliases={"灵根列表", "品阶列表"}, priority=15, permission=GROUP, block=True)
+level_help_jingjie = on_command('境界列表', priority=15, permission=GROUP, block=True)
+level_help_linggen = on_command('灵根列表', priority=15, permission=GROUP, block=True)
+level_help_pinjie = on_command('品阶列表', priority=15, permission=GROUP, block=True)
 
 __xiuxian_notes__ = f"""
 修仙帮助详情：
@@ -135,19 +137,22 @@ __xiuxian_notes__ = f"""
 # 9.逐步实现体力系统
 # """.strip()
 
-__level_help__ = """
-详情：
-                       --灵根列表--
-               轮回——异界——机械——混沌
-           融——超——龙——天——异——真——伪
-
+__level_help_jingjie__ = """
                        --境界列表--
            祭道境——仙帝境——虚神境——轮回境
            金仙境——创世境——混沌境——斩我境
            虚道境——天神境——圣祭境——真一境
            神火境——尊者境——列阵境——铭纹境
            化灵境——洞天境——搬血境——江湖人
+""".strip()
 
+__level_help_linggen__ = """
+                       --灵根列表--
+               轮回——异界——机械——混沌
+           融——超——龙——天——异——真——伪
+""".strip()
+
+__level_help_pinjie__ = """
                        --功法品阶--
                            无上
                          仙阶极品
@@ -338,18 +343,18 @@ async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = Command
         # await help_in.finish()
 
 
-@level_help.handle(parameterless=[Cooldown(at_sender=False)])
+@level_help_jingjie.handle(parameterless=[Cooldown(at_sender=False)])
 async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
     """境界列表"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     if session_id in cache_level_help:
         await bot.send_group_msg(group_id=int(send_group_id),
                                  message=MessageSegment.image(cache_level_help[session_id]))
-        await level_help.finish()
+        await level_help_jingjie.finish()
     else:
         font_size = 32
         title = "境界列表"
-        msg = __level_help__
+        msg = __level_help_jingjie__
         img = Txt2Img(font_size)
         if XiuConfig().img:
             pic = await img.save(title, msg)
@@ -357,7 +362,51 @@ async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = Comm
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await level_help.finish()
+        await level_help_jingjie.finish()
+
+
+@level_help_linggen.handle(parameterless=[Cooldown(at_sender=False)])
+async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
+    """灵根列表"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    if session_id in cache_level_help:
+        await bot.send_group_msg(group_id=int(send_group_id),
+                                 message=MessageSegment.image(cache_level_help[session_id]))
+        await level_help_linggen.finish()
+    else:
+        font_size = 32
+        title = "灵根列表"
+        msg = __level_help_linggen__
+        img = Txt2Img(font_size)
+        if XiuConfig().img:
+            pic = await img.save(title, msg)
+            cache_level_help[session_id] = pic
+            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
+        else:
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await level_help_linggen.finish()
+
+
+@level_help_pinjie.handle(parameterless=[Cooldown(at_sender=False)])
+async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
+    """品阶列表"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    if session_id in cache_level_help:
+        await bot.send_group_msg(group_id=int(send_group_id),
+                                 message=MessageSegment.image(cache_level_help[session_id]))
+        await level_help_pinjie.finish()
+    else:
+        font_size = 32
+        title = "品阶列表"
+        msg = __level_help_pinjie__
+        img = Txt2Img(font_size)
+        if XiuConfig().img:
+            pic = await img.save(title, msg)
+            cache_level_help[session_id] = pic
+            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
+        else:
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await level_help_pinjie.finish()
 
 
 @restart.handle(parameterless=[Cooldown(at_sender=False)])
