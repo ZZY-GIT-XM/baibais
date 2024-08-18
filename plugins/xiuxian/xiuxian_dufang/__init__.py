@@ -55,7 +55,6 @@ async def dufang_help_(bot: Bot, event: GroupMessageEvent, session_id: int = Com
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await dufang_help.finish()
 
-
 @dufang.handle(parameterless=[Cooldown(cd_time=XiuConfig().dufang_cd, at_sender=False)])
 async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
@@ -74,7 +73,7 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
     investment_amount = args[1]
     # full_investment_str = f"培养 {investment_amount}"
 
-    if (user_info['level'] < XiuConfig().peiyang_min):
+    if (user_info['level'] > XiuConfig().peiyang_min):
         msg = f"培养天才需要道友境界最低要求为{XiuConfig().peiyang_min}"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
@@ -102,7 +101,6 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await dufang.finish()
-
 
     # 获取用户的连胜和连败次数
     consecutive_wins, consecutive_losses = sql_message.get_consecutive_wins_and_losses(user_id)
