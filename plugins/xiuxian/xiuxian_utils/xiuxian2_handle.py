@@ -82,7 +82,8 @@ class XiuxianDateManage:
       "level_up_cd" integer DEFAULT NULL,
       "level_up_rate" integer DEFAULT 0,
       "consecutive_wins" integer DEFAULT 0,
-      "consecutive_losses" integer DEFAULT 0
+      "consecutive_losses" integer DEFAULT 0,
+      "poxian_num" integer DEFAULT 0
     );""")
             elif i == "user_cd":
                 try:
@@ -217,6 +218,19 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         else:
             return None
         
+    def get_user_real_info(self, user_id):
+        """根据USER_ID获取用户信息,获取功法加成"""
+        cur = self.conn.cursor()
+        sql = f"select * from user_xiuxian WHERE user_id=?"
+        cur.execute(sql, (user_id,))
+        result = cur.fetchone()
+        if result:
+            columns = cur.description
+            user_data_dict = final_user_data(result, columns)
+            return user_data_dict
+        else:
+            return None
+        
     def get_user_info_with_name(self, user_id):
         """根据user_name获取用户信息"""
         cur = self.conn.cursor()
@@ -253,19 +267,6 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             sql = f"UPDATE user_xiuxian SET user_stamina=user_stamina-? WHERE user_id=?"
             cur.execute(sql, (stamina_change, user_id))
             self.conn.commit()
- 
-    def get_user_real_info(self, user_id):
-        """根据USER_ID获取用户信息,获取功法加成"""
-        cur = self.conn.cursor()
-        sql = f"select * from user_xiuxian WHERE user_id=?"
-        cur.execute(sql, (user_id,))
-        result = cur.fetchone()
-        if result:
-            columns = cur.description
-            user_data_dict = final_user_data(result, columns)
-            return user_data_dict
-        else:
-            return None
 
     def get_sect_info(self, sect_id):
         """
@@ -419,7 +420,14 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         sql = f"UPDATE user_xiuxian SET consecutive_wins=?, consecutive_losses=? WHERE user_id=?"
         cur.execute(sql, (wins, losses, user_id))
         self.conn.commit()
-
+    
+    def update_poxian_num(self, user_id):
+        """更新用户打破极限的次数"""
+        cur = self.conn.cursor()
+        sql = f"UPDATE user_xiuxian SET poxian_num = poxian_num + 1 WHERE user_id=?"
+        cur.execute(sql, (user_id,))
+        self.conn.commit()   
+    
     def update_root(self, user_id, key):
         """更新灵根  1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世"""
         cur = self.conn.cursor()

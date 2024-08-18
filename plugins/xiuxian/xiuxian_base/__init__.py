@@ -56,8 +56,6 @@ level_up = on_fullmatch("突破", priority=6, permission=GROUP, block=True)
 level_up_dr = on_fullmatch("渡厄突破", priority=7, permission=GROUP, block=True)
 level_up_drjd = on_command("渡厄金丹突破", aliases={"金丹突破"}, priority=7, permission=GROUP, block=True)
 level_up_zj = on_command("level_up_zj", aliases={"直接突破", "破"}, priority=7, permission=GROUP, block=True)
-# level_up_zj = on_fullmatch("直接突破", priority=7, permission=GROUP, block=True)  zzy改
-# level_up_zj = on_fullmatch("破", priority=7, permission=GROUP, block=True)  zzy改
 give_stone = on_command("送灵石", priority=5, permission=GROUP, block=True)
 steal_stone = on_command("偷灵石", aliases={"飞龙探云手"}, priority=4, permission=GROUP, block=True)
 gm_command = on_command("神秘力量", permission=SUPERUSER, priority=10, block=True)
@@ -69,8 +67,6 @@ set_xiuxian = on_command("启用修仙功能", aliases={'禁用修仙功能'},
                          permission=GROUP and (SUPERUSER or GROUP_ADMIN or GROUP_OWNER), priority=5, block=True)
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
-# xiuxian_updata_level = on_fullmatch('修仙适配', priority=15, permission=GROUP, block=True)  zzy改
-# xiuxian_uodata_data = on_fullmatch('更新记录', priority=15, permission=GROUP, block=True)  zzy改
 lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block=True)
 level_help_jingjie = on_command('境界列表', priority=15, permission=GROUP, block=True)
 level_help_linggen = on_command('灵根列表', priority=15, permission=GROUP, block=True)
@@ -103,39 +99,6 @@ __xiuxian_notes__ = f"""
 23、境界列表、灵根列表、品阶列表:获取对应列表信息
 24、仙器合成:发送 合成xx 获取，目前开放合成的仙器为天罪
 """.strip()
-
-# __xiuxian_updata_data__ = """
-# 详情：
-# #更新2023.6.14
-# 1.修复已知bug
-# 2.增强了Boss，现在的BOSS会掉落物品了
-# 3.增加了全新物品
-# 4.悬赏令刷新需要的灵石会随着等级增加
-# 5.减少了讨伐Boss的cd（减半）
-# 6.世界商店上新
-# 7.增加了闭关获取的经验（翻倍）
-# #更新2023.6.16
-# 1.增加了仙器合成
-# 2.再次增加了闭关获取的经验（翻倍）
-# 3.上调了Boss的掉落率
-# 4.修复了悬赏令无法刷新的bug
-# 5.修复了突破CD为60分钟的问题
-# 6.略微上调Boss使用神通的概率
-# 7.尝试修复丹药无法使用的bug
-# #更新2024.3.18
-# 1.修复了三个模块循环导入的问题
-# 2.合并read_bfff,xn_xiuxian_impart到dandle中
-# #更新2024.4.05（后面的改动一次性加进来）
-# 1.增加了培养功能(调试中)
-# 2.坊市上架，购买可以自定义数量
-# 3.生成指定境界boss可以指定boss名字了
-# 4.替换base64为io（可选），支持转发消息类型设置，支持图片压缩率设置
-# 5.适配Pydantic,Pillow,更换失效的图片api
-# 6.替换数据库元组为字典返回，替换USERRANK为convert_rank函数
-# 7.群拍卖会可以依次拍卖多个物品了
-# 8.支持用户提交拍卖品了，拍卖时优先拍卖用户的拍卖品
-# 9.逐步实现体力系统
-# """.strip()
 
 __level_help_jingjie__ = """
                        --境界列表--
@@ -173,27 +136,11 @@ __level_help_pinjie__ = """
                    上品符器——下品符器
 """.strip()
 
-
 # 重置每日签到
 @scheduler.scheduled_job("cron", hour=0, minute=0)
 async def xiuxian_sing_():
     sql_message.sign_remake()
     logger.opt(colors=True).info(f"<green>每日修仙签到重置成功！</green>")
-
-# 更新记录关闭  zzy改
-# @xiuxian_uodata_data.handle(parameterless=[Cooldown(at_sender=False)])
-# async def mix_elixir_help_(bot: Bot, event: GroupMessageEvent):
-#     """更新记录"""
-#     bot, send_group_id = await assign_bot(bot=bot, event=event)
-#     msg = __xiuxian_updata_data__
-#     if XiuConfig().img:
-#         pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-#         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-#     else:
-#         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-#     await xiuxian_uodata_data.finish()
-
-
 
 hanzi_list = [
     # 数字
@@ -235,7 +182,6 @@ hanzi_list = [
     # 衣服
     "衣", "帽", "鞋", "袜", "裙", "裤", "衫", "袍", "褂", "靴",
 ]
-
 
 # 生成随机名字的函数
 def generate_random_name(length_range=(3, 5)):
@@ -320,6 +266,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = Command
         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help[session_id]))
         await help_in.finish()
     else:
+        # markdown 模版代入
         md = {"keyboard": {"id": "102125567_1723650390"}}
         json1 = json.dumps(md)
         bytes = json1.encode('utf-8')
@@ -328,19 +275,6 @@ async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = Command
         markdown_message = f"{msg}[CQ:markdown,data=base64://{data}]"
         await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message)
         await help_in.finish()
-
-
-        # font_size = 32
-        # title = "修仙帮助"
-        # msg = __xiuxian_notes__
-        # img = Txt2Img(font_size)
-        # if XiuConfig().img:
-        #     pic = await img.save(title, msg)
-        #     cache_help[session_id] = pic
-        #     await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        # else:
-        #     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        # await help_in.finish()
 
 
 @level_help_jingjie.handle(parameterless=[Cooldown(at_sender=False)])
@@ -1308,7 +1242,7 @@ async def gm_command_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
                 continue
     await gm_command.finish()
 
-
+# 创造，不@默认送给所有人
 @cz.handle(parameterless=[Cooldown(at_sender=False)])
 async def cz_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """创造力量"""
@@ -1520,40 +1454,67 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await rob_stone.finish()
                 impart_data_1 = xiuxian_impart.get_user_info_with_id(user_id)
+                # 添加破限增幅计算
+                poxian_num1 = user_info['poxian_num']
+                poxian_num2 = user_2['poxian_num']
+                # 计算破限带来的总增幅百分比
+                total_poxian_percent1 = 0
+                if poxian_num1 <= 10:
+                    total_poxian_percent1 += poxian_num1 * 10
+                else:
+                    total_poxian_percent1 += 10 * 10  # 前10次破限的总增幅
+                    total_poxian_percent1 += (poxian_num1 - 10) * 20  # 超过10次之后的增幅
+
+                total_poxian_percent2 = 0
+                if poxian_num2 <= 10:
+                    total_poxian_percent2 += poxian_num2 * 10
+                else:
+                    total_poxian_percent2 += 10 * 10  # 前10次破限的总增幅
+                    total_poxian_percent2 += (poxian_num2 - 10) * 20  # 超过10次之后的增幅
+
+                # 应用破限增幅到攻击力
+                atk_with_poxian1 = user_info['atk'] * (1 + total_poxian_percent1 / 100)
+                atk_with_poxian2 = user_2['atk'] * (1 + total_poxian_percent2 / 100)
+                # 应用破限增幅到气血
+                hp_with_poxian1 = user_info['hp'] * (1 + total_poxian_percent1 / 100)
+                hp_with_poxian2 = user_2['hp'] * (1 + total_poxian_percent2 / 100)
+                # 应用破限增幅到真元
+                mp_with_poxian1 = user_info['mp'] * (1 + total_poxian_percent1 / 100)
+                mp_with_poxian2 = user_2['mp'] * (1 + total_poxian_percent2 / 100)
                 player1['user_id'] = user_info['user_id']
                 player1['道号'] = user_info['user_name']
-                player1['气血'] = user_info['hp']
-                player1['攻击'] = user_info['atk']
-                player1['真元'] = user_info['mp']
+                player1['气血'] = hp_with_poxian1
+                player1['攻击'] = atk_with_poxian1
+                player1['真元'] = mp_with_poxian1
                 player1['会心'] = int(
-                    (0.01 + impart_data_1['impart_know_per'] if impart_data_1 is not None else 0) * 100)
+                    (0.01 + impart_data_1['impart_know_per'] if impart_data_1 is not None else 0) * 100 * (1 + total_poxian_percent1 / 100))
                 player1['爆伤'] = int(
-                    1.5 + impart_data_1['impart_burst_per'] if impart_data_1 is not None else 0)
+                    (1.5 + impart_data_1['impart_burst_per'] if impart_data_1 is not None else 0) * (1 + total_poxian_percent1 / 100))
                 user_buff_data = UserBuffDate(user_id)
                 user_armor_data = user_buff_data.get_user_armor_buff_data()
                 if user_armor_data is not None:
                     def_buff = int(user_armor_data['def_buff'])
                 else:
                     def_buff = 0
-                player1['防御'] = def_buff
+                player1['防御'] = def_buff * (1 + total_poxian_percent1 / 100)
 
                 impart_data_2 = xiuxian_impart.get_user_info_with_id(user_2['user_id'])
                 player2['user_id'] = user_2['user_id']
                 player2['道号'] = user_2['user_name']
-                player2['气血'] = user_2['hp']
-                player2['攻击'] = user_2['atk']
-                player2['真元'] = user_2['mp']
+                player2['气血'] = hp_with_poxian2
+                player2['攻击'] = atk_with_poxian2
+                player2['真元'] = mp_with_poxian2
                 player2['会心'] = int(
-                    (0.01 + impart_data_2['impart_know_per'] if impart_data_2 is not None else 0) * 100)
+                    (0.01 + impart_data_2['impart_know_per'] if impart_data_2 is not None else 0) * 100 * (1 + total_poxian_percent2 / 100))
                 player2['爆伤'] = int(
-                    1.5 + impart_data_2['impart_burst_per'] if impart_data_2 is not None else 0)
+                    (1.5 + impart_data_2['impart_burst_per'] if impart_data_2 is not None else 0) * (1 + total_poxian_percent2 / 100))
                 user_buff_data = UserBuffDate(user_2['user_id'])
                 user_armor_data = user_buff_data.get_user_armor_buff_data()
                 if user_armor_data is not None:
                     def_buff = int(user_armor_data['def_buff'])
                 else:
                     def_buff = 0
-                player2['防御'] = def_buff
+                player2['防御'] = def_buff * (1 + total_poxian_percent2 / 100)
 
                 result, victor = OtherSet().player_fight(player1, player2)
                 await send_msg_handler(bot, event, '决斗场', bot.self_id, result)
@@ -1719,49 +1680,3 @@ async def open_xiuxian_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await set_xiuxian.finish()
-
-# 修仙适配关闭  zzy改
-# @xiuxian_updata_level.handle(parameterless=[Cooldown(at_sender=False)])
-# async def xiuxian_updata_level_(bot: Bot, event: GroupMessageEvent):
-#     """将修仙1的境界适配到修仙2"""
-#     bot, send_group_id = await assign_bot(bot=bot, event=event)
-#     isUser, user_info, msg = check_user(event)
-#     if not isUser:
-#         if XiuConfig().img:
-#             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-#             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-#         else:
-#             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-#         await xiuxian_updata_level.finish()
-#     level_dict = {
-#         "练气境": "搬血境",
-#         "筑基境": "洞天境",
-#         "结丹境": "化灵境",
-#         "元婴境": "铭纹境",
-#         "化神境": "列阵境",
-#         "炼虚境": "尊者境",
-#         "合体境": "神火境",
-#         "大乘境": "真一境",
-#         "渡劫境": "圣祭境",
-#         "半步金仙": "天神境中期",
-#         "金仙境": "虚道境",
-#         "金仙境": "斩我境",
-#         "太乙境": "混沌境"
-#     }
-#     level = user_info['level']
-#     user_id = user_info['user_id']
-#     if level == "半步金仙":
-#         level = "天神境中期"
-#     else:
-#         try:
-#             level = level_dict.get(level[:3]) + level[-2:]
-#         except:
-#             level = level
-#     sql_message.updata_level(user_id=user_id, level_name=level)
-#     msg = '境界适配成功成功！'
-#     if XiuConfig().img:
-#         pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-#         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-#     else:
-#         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-#     await xiuxian_updata_level.finish()

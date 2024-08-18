@@ -77,6 +77,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     DETAIL_baseinfo = {
         "灵根": DETAIL_MAP["灵根"],
         "突破状态": DETAIL_MAP["突破状态"],
+        "破限增幅": DETAIL_MAP["破限增幅"],
         '主修功法': DETAIL_MAP['主修功法'],
         '辅修功法': DETAIL_MAP['辅修功法'],
         '副修神通': DETAIL_MAP['副修神通'],
@@ -115,7 +116,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     w, h = await linewh(sectinfo, sectword)
     sectinfo_draw = ImageDraw.Draw(sectinfo)
     sectinfo_draw.text((w, h), sectword, first_color, font_40, 'lm')
-    img.paste(sectinfo, (100, 1542), sectinfo) #100为距离图像左边界100像素，1542为距离图像上边界1542像素
+    img.paste(sectinfo, (100, 1641), sectinfo) #100为距离图像左边界100像素，1542为距离图像上边界1542像素
 
     DETAIL_sectinfo = {
         '所在宗门': DETAIL_MAP['所在宗门'],
@@ -134,7 +135,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     w, h = await linewh(paihang, paihangword)
     paihang_draw = ImageDraw.Draw(paihang)
     paihang_draw.text((w, h), paihangword, first_color, font_40, 'lm')
-    img.paste(paihang, (100, 1873), paihang)
+    img.paste(paihang, (100, 1959), paihang)
 
     DETAIL_paihang = {}
     DETAIL_paihang['注册位数'] = DETAIL_MAP['注册位数']
@@ -175,7 +176,7 @@ async def _draw_sect_info_line(img: Image.Image, key, value, DETAIL_MAP):
     w, h = await linewh(line, word)
 
     line_draw.text((100, h), word, first_color, font_36, 'lm')
-    img.paste(line, (100, 1647 + list(DETAIL_MAP.keys()).index(key) * 103), line)
+    img.paste(line, (100, 1745 + list(DETAIL_MAP.keys()).index(key) * 103), line)
 
 
 async def _draw_ph_info_line(img: Image.Image, key, value, DETAIL_MAP):
@@ -186,7 +187,7 @@ async def _draw_ph_info_line(img: Image.Image, key, value, DETAIL_MAP):
     w, h = await linewh(line, word)
 
     line_draw.text((100, h), word, first_color, font_36, 'lm')
-    img.paste(line, (100, 1978 + list(DETAIL_MAP.keys()).index(key) * 103), line)
+    img.paste(line, (100, 2063 + list(DETAIL_MAP.keys()).index(key) * 103), line)
 
 
 async def img_author(img, bg):

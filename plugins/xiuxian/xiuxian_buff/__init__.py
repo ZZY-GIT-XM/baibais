@@ -279,7 +279,7 @@ async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent, args: Message
     await blessed_spot_rename.finish()
 
 
-@qc.handle(parameterless=[Cooldown(stamina_cost = 5, at_sender=False)])
+@qc.handle(parameterless=[Cooldown(stamina_cost=5, at_sender=False)])
 async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """切磋，不会掉血"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
@@ -294,11 +294,6 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     user_id = user_info['user_id']
 
     user1 = sql_message.get_user_real_info(user_id)
-    # 关闭 @的方法  zzy改
-    # give_qq = None  # 艾特的时候存到这里
-    # for arg in args:
-    #     if arg.type == "at":
-    #         give_qq = arg.data.get("qq", "")
 
     give_qq = None  # 切磋后边的文字存到这里
     for arg in args:
@@ -344,24 +339,51 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
                    "攻击": None, "真元": None, '会心': None, '防御': 0, 'exp': 0}
         player2 = {"user_id": None, "道号": None, "气血": None,
                    "攻击": None, "真元": None, '会心': None, '防御': 0, 'exp': 0}
-        
+
+        # 添加破限增幅计算
+        poxian_num1 = user1['poxian_num']
+        poxian_num2 = user2['poxian_num']
+        # 计算破限带来的总增幅百分比
+        total_poxian_percent1 = 0
+        if poxian_num1 <= 10:
+            total_poxian_percent1 += poxian_num1 * 10
+        else:
+            total_poxian_percent1 += 10 * 10  # 前10次破限的总增幅
+            total_poxian_percent1 += (poxian_num1 - 10) * 20  # 超过10次之后的增幅
+
+        total_poxian_percent2 = 0
+        if poxian_num2 <= 10:
+            total_poxian_percent2 += poxian_num2 * 10
+        else:
+            total_poxian_percent2 += 10 * 10  # 前10次破限的总增幅
+            total_poxian_percent2 += (poxian_num2 - 10) * 20  # 超过10次之后的增幅
+
+        # 应用破限增幅到攻击力
+        atk_with_poxian1 = user1['atk'] * (1 + total_poxian_percent1 / 100)
+        atk_with_poxian2 = user2['atk'] * (1 + total_poxian_percent2 / 100)
+        # 应用破限增幅到气血
+        hp_with_poxian1 = user1['hp'] * (1 + total_poxian_percent1 / 100)
+        hp_with_poxian2 = user2['hp'] * (1 + total_poxian_percent2 / 100)
+        # 应用破限增幅到真元
+        mp_with_poxian1 = user1['mp'] * (1 + total_poxian_percent1 / 100)
+        mp_with_poxian2 = user2['mp'] * (1 + total_poxian_percent2 / 100)
 
         user1_weapon_data = UserBuffDate(user_id).get_user_weapon_data()
         user1_armor_crit_buff = UserBuffDate(user_id).get_user_armor_buff_data()
         user1_main_data = UserBuffDate(user_id).get_user_main_buff_data() #玩家1功法会心
         
-        if  user1_main_data != None: #玩家1功法会心
-            main_crit_buff = user1_main_data['crit_buff']
+        if  user1_main_data is not None: #玩家1功法会心
+            main_crit_buff = user1_main_data['crit_buff']* (1 + total_poxian_percent1 / 100)
         else:
             main_crit_buff = 0
         
         if user1_armor_crit_buff is not None: #玩家1防具会心
-            armor_crit_buff = user1_armor_crit_buff['crit_buff']
+            armor_crit_buff = user1_armor_crit_buff['crit_buff']* (1 + total_poxian_percent1 / 100)
         else:
             armor_crit_buff = 0
             
         if user1_weapon_data is not None:
-            player1['会心'] = int(((user1_weapon_data['crit_buff']) + (armor_crit_buff) + (main_crit_buff))* 100)
+            player1['会心'] = int(((user1_weapon_data['crit_buff'] * (1 + total_poxian_percent1 / 100)) + (armor_crit_buff) + (main_crit_buff)) * 100)
         else:
             player1['会心'] = (armor_crit_buff + main_crit_buff) * 100
 
@@ -370,32 +392,33 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         user2_armor_crit_buff = UserBuffDate(user_id).get_user_armor_buff_data()
         user2_main_data = UserBuffDate(user_id).get_user_main_buff_data() #玩家2功法会心
         
-        if  user2_main_data != None: #玩家2功法会心
-            main_crit_buff2 = user2_main_data['crit_buff']
+        if  user2_main_data is not None: #玩家2功法会心
+            main_crit_buff2 = user2_main_data['crit_buff']* (1 + total_poxian_percent2 / 100)
         else:
             main_crit_buff2 = 0
         
         if user2_armor_crit_buff is not None: #玩家2防具会心
-            armor_crit_buff2 = user2_armor_crit_buff['crit_buff']
+            armor_crit_buff2 = user2_armor_crit_buff['crit_buff']* (1 + total_poxian_percent2 / 100)
         else:
             armor_crit_buff2 = 0
             
         if user2_weapon_data is not None:
-            player2['会心'] = int(((user2_weapon_data['crit_buff']) + (armor_crit_buff2) + (main_crit_buff2) * 100))
+            player2['会心'] = int(((user2_weapon_data['crit_buff']* (1 + total_poxian_percent2 / 100)) + (armor_crit_buff2) + (main_crit_buff2)) * 100)
         else:
             player2['会心'] = (armor_crit_buff2 + main_crit_buff2) * 100
+
         player1['user_id'] = user1['user_id']
         player1['道号'] = user1['user_name']
-        player1['气血'] = user1['hp']
-        player1['攻击'] = user1['atk']
-        player1['真元'] = user1['mp']
+        player1['气血'] = hp_with_poxian1  # 使用破限增幅后的气血
+        player1['攻击'] = atk_with_poxian1  # 使用破限增幅后的攻击力
+        player1['真元'] = mp_with_poxian1  # 使用破限增幅后的真元
         player1['exp'] = user1['exp']
 
         player2['user_id'] = user2['user_id']
         player2['道号'] = user2['user_name']
-        player2['气血'] = user2['hp']
-        player2['攻击'] = user2['atk']
-        player2['真元'] = user2['mp']
+        player2['气血'] = hp_with_poxian2  # 使用破限增幅后的气血
+        player2['攻击'] = atk_with_poxian2  # 使用破限增幅后的攻击力
+        player2['真元'] = mp_with_poxian2  # 使用破限增幅后的真元
         player2['exp'] = user2['exp']
 
         result, victor = Player_fight(player1, player2, 1, bot.self_id)
@@ -638,6 +661,16 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     level = user_mes['level']
     use_exp = user_mes['exp']
     use_stone = user_mes['stone']
+    use_poxian = user_mes['poxian_num'] # 获取用户破限信息
+
+    # 计算破限带来的总增幅百分比
+    total_poxian_percent = 0
+    if use_poxian <= 10:
+        total_poxian_percent += use_poxian * 10
+    else:
+        total_poxian_percent += 10 * 10  # 前10次破限的总增幅
+        total_poxian_percent += (use_poxian - 10) * 20  # 超过10次之后的增幅
+
     max_exp = (
             int(OtherSet().set_closing_type(level)) * XiuConfig().closing_exp_upper_limit
     )  # 获取下个境界需要的修为 * 1.5为闭关上限
@@ -670,7 +703,7 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
 
-    exp = int(stone_num / 10)
+    exp = int(stone_num / 10) * (1 + total_poxian_percent / 100) # 加入破限增幅部分
     if exp >= user_get_exp_max:
         # 用户获取的修为到达上限
         sql_message.update_exp(user_id, user_get_exp_max)
@@ -746,6 +779,16 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
     user_mes = sql_message.get_user_info_with_id(user_id)  # 获取用户信息
     level = user_mes['level']
     use_exp = user_mes['exp']
+    use_poxian = user_mes['poxian_num'] # 获取用户破限信息
+
+    # 计算破限带来的总增幅百分比
+    total_poxian_percent = 0
+    if use_poxian <= 10:
+        total_poxian_percent += use_poxian * 10
+    else:
+        total_poxian_percent += 10 * 10  # 前10次破限的总增幅
+        total_poxian_percent += (use_poxian - 10) * 20  # 超过10次之后的增幅
+
     hp_speed = 25
     mp_speed = 50
 
@@ -791,7 +834,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
         # 计算传承增益
         impart_data = xiuxian_impart.get_user_info_with_id(user_id)
         impart_exp_up = impart_data['impart_exp_up'] if impart_data is not None else 0
-        exp = int(exp * (1 + impart_exp_up))
+        exp = int(exp * (1 + impart_exp_up)) 
         if exp >= user_get_exp_max:
             # 用户获取的修为到达上限
             sql_message.in_closing(user_id, user_type)
@@ -815,15 +858,16 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                     user_stone = 0
                 if exp <= user_stone:
                     exp = exp * 2
+                    exp_poxian = exp * (1 + total_poxian_percent / 100) # 加入破限增幅部分
                     sql_message.in_closing(user_id, user_type)
-                    sql_message.update_exp(user_id, exp)
+                    sql_message.update_exp(user_id, exp_poxian)
                     sql_message.update_ls(user_id, int(exp / 2), 2)
                     sql_message.update_power2(user_id)  # 更新战力
 
                     result_msg, result_hp_mp = OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)), int(exp * mp_speed))
                     sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1],
                                                       int(result_hp_mp[2] / 10))
-                    msg = f"闭关结束，共闭关{exp_time}分钟，本次闭关增加修为：{exp}，消耗灵石{int(exp / 2)}枚{result_msg[0]}{result_msg[1]}"
+                    msg = f"闭关结束，共闭关{exp_time}分钟，本次闭关增加修为：{exp_poxian}，消耗灵石{int(exp / 2)}枚{result_msg[0]}{result_msg[1]}"
                     if XiuConfig().img:
                         pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
                         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
@@ -831,7 +875,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await out_closing.finish()
                 else:
-                    exp = exp + user_stone
+                    exp = exp + (user_stone * (1 + total_poxian_percent / 100)) # 加入破限增幅部分
                     sql_message.in_closing(user_id, user_type)
                     sql_message.update_exp(user_id, exp)
                     sql_message.update_ls(user_id, user_stone, 2)
@@ -847,6 +891,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await out_closing.finish()
             else:
+                exp = exp * (1 + total_poxian_percent / 100) # 加入破限增幅部分
                 sql_message.in_closing(user_id, user_type)
                 sql_message.update_exp(user_id, exp)
                 sql_message.update_power2(user_id)  # 更新战力
@@ -874,7 +919,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await mind_state.finish()
     user_id = user_msg['user_id']
-    sql_message.update_last_check_info_time(user_id) # 更新查看修仙信息时间
+    sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     if user_msg['hp'] is None or user_msg['hp'] == 0:
         sql_message.update_user_hp(user_id)
     user_msg = sql_message.get_user_real_info(user_id)
@@ -883,11 +928,20 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     realm_rate = jsondata.level_data()[user_msg['level']]["spend"]  # 境界倍率
     user_buff_data = UserBuffDate(user_id)
     main_buff_data = user_buff_data.get_user_main_buff_data()
-    user_armor_crit_data = user_buff_data.get_user_armor_buff_data() #我的状态防具会心
-    user_weapon_data = UserBuffDate(user_id).get_user_weapon_data() #我的状态武器减伤
-    user_main_crit_data = UserBuffDate(user_id).get_user_main_buff_data() #我的状态功法会心
-    user_main_data = UserBuffDate(user_id).get_user_main_buff_data() #我的状态功法减伤
-    
+    user_armor_crit_data = user_buff_data.get_user_armor_buff_data()  # 我的状态防具会心
+    user_weapon_data = UserBuffDate(user_id).get_user_weapon_data()  # 我的状态武器减伤
+    user_main_crit_data = UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心
+    user_main_data = UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法减伤
+    user_poxian = user_msg['poxian_num']  # 新增破限次数
+
+    # 计算破限带来的总增幅百分比
+    total_poxian_percent = 0
+    if user_poxian <= 10:
+        total_poxian_percent += user_poxian * 10
+    else:
+        total_poxian_percent += 10 * 10  # 前10次破限的总增幅
+        total_poxian_percent += (user_poxian - 10) * 20  # 超过10次之后的增幅
+
     if user_main_data is not None:
         main_def = user_main_data['def_buff'] * 100 #我的状态功法减伤
     else:
@@ -952,16 +1006,16 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     
     msg = f"""      
 道号：{user_msg['user_name']}               
-气血:{number_to(user_msg['hp'])}/{number_to(int((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))}({((user_msg['hp'] / ((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))) * 100:.2f}%)
-真元:{number_to(user_msg['mp'])}/{number_to(user_msg['exp'])}({((user_msg['mp'] / user_msg['exp']) * 100):.2f}%)
-攻击:{number_to(user_msg['atk'])}
-突破状态: {exp_meg}(概率：{jsondata.level_rate_data()[user_msg['level']] + leveluprate + number}%)
+气血:{number_to(user_msg['hp'] * (1 + total_poxian_percent / 100))}/{number_to(int((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * (1 + total_poxian_percent / 100)))}({((user_msg['hp'] / ((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))) * 100:.2f}%)
+真元:{number_to(user_msg['mp'] * (1 + total_poxian_percent / 100))}/{number_to(user_msg['exp'] * (1 + total_poxian_percent / 100))}({((user_msg['mp'] / user_msg['exp']) * 100):.2f}%)
+攻击:{number_to(user_msg['atk'] * (1 + total_poxian_percent / 100))}
+破限增幅: {total_poxian_percent}%
 攻击修炼:{user_msg['atkpractice']}级(提升攻击力{user_msg['atkpractice'] * 4}%)
-修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100)}%
-会心:{crit_buff + int(impart_know_per * 100) + armor_crit_buff + main_crit_buff}%
+修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100 * (1 + total_poxian_percent / 100))}%
+会心:{round((crit_buff + impart_know_per * 100 + armor_crit_buff + main_crit_buff) * (1 + total_poxian_percent / 100), 1)}%
 减伤率:{def_buff + weapon_def + main_def}%
-boss战增益:{int(boss_atk * 100)}%
-会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100)}%
+boss战增益:{int(boss_atk * 100 * (1 + total_poxian_percent / 100))}%
+会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100 * (1 + total_poxian_percent / 100))}%
 """
     sql_message.update_last_check_info_time(user_id)
     if XiuConfig().img:

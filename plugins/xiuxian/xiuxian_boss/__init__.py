@@ -426,6 +426,15 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     player = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '防御': 0}
     userinfo = sql_message.get_user_real_info(user_id)
     user_weapon_data = UserBuffDate(userinfo['user_id']).get_user_weapon_data()
+    user_poxian = userinfo['poxian_num']  # 新增破限次数
+
+    # 计算破限带来的总增幅百分比
+    total_poxian_percent = 0
+    if user_poxian <= 10:
+        total_poxian_percent += user_poxian * 10
+    else:
+        total_poxian_percent += 10 * 10  # 前10次破限的总增幅
+        total_poxian_percent += (user_poxian - 10) * 20  # 超过10次之后的增幅
 
     impart_data = xiuxian_impart.get_user_info_with_id(user_id)
     boss_atk = impart_data['boss_atk'] if impart_data['boss_atk'] is not None else 0
@@ -446,15 +455,15 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         armor_crit_buff = 0
     
     if user_weapon_data != None:
-        player['会心'] = int(((user_weapon_data['crit_buff']) + (armor_crit_buff) + (main_crit_buff)) * 100)
+        player['会心'] = int(((user_weapon_data['crit_buff']) + (armor_crit_buff) + (main_crit_buff)) * 100 * (1 + total_poxian_percent / 100))
     else:
-        player['会心'] = (armor_crit_buff + main_crit_buff) * 100
-    player['user_id'] = userinfo['user_id']
+        player['会心'] = (armor_crit_buff + main_crit_buff) * 100 * (1 + total_poxian_percent / 100)
+    player['user_id'] = userinfo['user_id'] 
     player['道号'] = userinfo['user_name']
-    player['气血'] = userinfo['hp']
+    player['气血'] = userinfo['hp'] * (1 + total_poxian_percent / 100)
     player['攻击'] = int(userinfo['atk'] * (1 + boss_atk))
-    player['真元'] = userinfo['mp']
-    player['exp'] = userinfo['exp']
+    player['真元'] = userinfo['mp'] * (1 + total_poxian_percent / 100)
+    player['exp'] = userinfo['exp'] * (1 + total_poxian_percent / 100)
 
     bossinfo = group_boss[group_id][boss_num - 1]
     if bossinfo['jj'] == '零':

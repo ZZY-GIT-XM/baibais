@@ -76,6 +76,21 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     user_sec_buff_date = user_buff_data.get_user_sec_buff_data()
     user_weapon_data = user_buff_data.get_user_weapon_data()
     user_armor_data = user_buff_data.get_user_armor_buff_data()
+
+    user_poxian = user_info['poxian_num']  # 获取用户破限次数
+
+    # 计算破限带来的总增幅百分比
+    total_poxian_percent = 0
+    if user_poxian <= 10:
+        total_poxian_percent += user_poxian * 10
+    else:
+        total_poxian_percent += 10 * 10  # 前10次破限的总增幅
+        total_poxian_percent += (user_poxian - 10) * 20  # 超过10次之后的增幅
+
+    # 应用破限增幅到战力和攻击力
+    level_rate_with_poxian = level_rate * (1 + total_poxian_percent / 100)
+    atk_with_poxian = user_info['atk'] * (1 + total_poxian_percent / 100)
+
     main_buff_name = f"无"
     sub_buff_name = f"无"
     sec_buff_name = f"无"
@@ -100,10 +115,11 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         "境界": f"{user_info['level']}",
         "修为": f"{number_to(user_info['exp'])}",
         "灵石": f"{number_to(user_info['stone'])}",
-        "战力": f"{number_to(int(user_info['exp'] * level_rate * realm_rate))}",
-        "灵根": f"{user_info['root']}({user_info['root_type']}+{int(level_rate * 100)}%)",
+        "战力": f"{number_to(int(user_info['exp'] * level_rate_with_poxian * realm_rate))}",
+        "灵根": f"{user_info['root']}({user_info['root_type']}+{int(level_rate_with_poxian * 100)}%)",
+        "破限增幅": f"{total_poxian_percent}%",
         "突破状态": f"{exp_meg}概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%",
-        "攻击力": f"{number_to(user_info['atk'])}，攻修等级{user_info['atkpractice']}级",
+        "攻击力": f"{number_to(int(atk_with_poxian))}，攻修等级{user_info['atkpractice']}级",
         "所在宗门": sectmsg,
         "宗门职位": sectzw,
         "主修功法": main_buff_name,
@@ -122,10 +138,10 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         await xiuxian_message.finish()
     else:
         msg = f"""{user_name}道友的信息
-灵根为：{user_info['root']}({user_info['root_type']}+{int(level_rate * 100)}%)
+灵根为：{user_info['root']}({user_info['root_type']}+{int(level_rate_with_poxian * 100)}%)
 当前境界：{user_info['level']}(境界+{int(realm_rate * 100)}%)
 当前灵石：{user_info['stone']}
-当前修为：{user_info['exp']}(修炼效率+{int((level_rate * realm_rate) * 100)}%)
+当前修为：{user_info['exp']}(修炼效率+{int((level_rate_with_poxian * realm_rate) * 100)}%)
 突破状态：{exp_meg}
-你的战力为：{int(user_info['exp'] * level_rate * realm_rate)}"""
+你的战力为：{int(user_info['exp'] * level_rate_with_poxian * realm_rate)}"""
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
