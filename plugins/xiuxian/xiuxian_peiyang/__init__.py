@@ -23,7 +23,7 @@ from ..xiuxian_utils.utils import (
 cache_help = {}
 sql_message = XiuxianDateManage()  # sql类
 
-__dufang_help__ = f"""
+__peiyang_help__ = f"""
 培养计划，专门针对修仙界的天才修士进行早期培养，帮助他们克服修炼初期的困难，期待未来能获得丰厚的回报。
 指令(最低境界要求【{XiuConfig().peiyang_min}】):
     培养66666
@@ -31,32 +31,32 @@ __dufang_help__ = f"""
 
 
 # 培养
-dufang_help = on_command("培养帮助", permission=GROUP, priority=7, block=True)
-dufang = on_regex(
+peiyang_help = on_command("培养帮助", permission=GROUP, priority=7, block=True)
+peiyang = on_regex(
     r"(培养)\s?(\d+)",
     flags=I,
     permission=GROUP,
     block=True
 )
 
-@dufang_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def dufang_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
+@peiyang_help.handle(parameterless=[Cooldown(at_sender=False)])
+async def peiyang_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     if session_id in cache_help:
         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help[session_id]))
-        await dufang_help.finish()
+        await peiyang_help.finish()
     else:
-        msg = __dufang_help__
+        msg = __peiyang_help__
         if XiuConfig().img:
             pic = await get_msg_pic(msg)
             cache_help[session_id] = pic
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await dufang_help.finish()
+        await peiyang_help.finish()
 
-@dufang.handle(parameterless=[Cooldown(cd_time=XiuConfig().dufang_cd, at_sender=False)])
-async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
+@peiyang.handle(parameterless=[Cooldown(cd_time=XiuConfig().peiyang_cd, at_sender=False)])
+async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
 
     isUser, user_info, msg = check_user(event)
@@ -67,7 +67,7 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await dufang.finish()
+        await peiyang.finish()
 
     user_message = sql_message.get_user_info_with_id(user_id)
     investment_amount = args[1]
@@ -80,7 +80,7 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await dufang.finish()
+        await peiyang.finish()
     
     # 检查培养金额是否有效
     if int(investment_amount) <= 0:
@@ -90,7 +90,7 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await dufang.finish()
+        await peiyang.finish()
 
     # 判断灵石是否足够
     if int(user_message['stone']) < int(investment_amount):
@@ -100,7 +100,7 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await dufang.finish()
+        await peiyang.finish()
 
     # 获取用户的连胜和连败次数
     consecutive_wins, consecutive_losses = sql_message.get_consecutive_wins_and_losses(user_id)
@@ -155,4 +155,4 @@ async def dufang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Re
     else:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
 
-    await dufang.finish()
+    await peiyang.finish()

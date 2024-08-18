@@ -91,7 +91,7 @@ class XiuConfig:
         self.beg_lingshi_lower_limit = 200000  # 仙途奇缘灵石下限
         self.beg_lingshi_upper_limit = 500000  # 仙途奇缘灵石上限
         self.tou = 100000  # 偷灵石惩罚
-        self.dufang_cd = 10  # 金银阁cd/秒
+        self.peiyang_cd = 10  # 培养cd/秒
         self.peiyang_min = "神火境初期"  #培养天才最低境界需求神火境初期
         self.tou_lower_limit = 0.01  # 偷灵石下限(百分比)
         self.tou_upper_limit = 0.50  # 偷灵石上限(百分比)

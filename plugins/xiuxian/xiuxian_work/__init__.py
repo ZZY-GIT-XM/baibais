@@ -188,7 +188,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         await do_work.finish()
     mode = args[0]  # 刷新、终止、结算、接取
     if user_rank <= convert_rank('轮回境初期')[0] or user_info['exp'] >= sql_message.get_level_power(user_level):
-        msg = "道友的境界已过创业初期，悬赏令已经不能满足道友了！"
+        msg = "道友的境界已过创业的初期，悬赏令已经不能满足道友了！"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
