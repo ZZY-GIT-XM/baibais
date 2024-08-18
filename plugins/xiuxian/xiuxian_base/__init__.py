@@ -75,7 +75,7 @@ lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block
 level_help = on_command('境界列表', aliases={"灵根列表", "品阶列表"}, priority=15, permission=GROUP, block=True)
 
 __xiuxian_notes__ = f"""
-详情：
+修仙帮助详情：
 1、我要修仙:步入修仙世界
 2、我的修仙信息:获取修仙数据
 3、修仙签到:获取灵石
@@ -142,8 +142,8 @@ __level_help__ = """
            融——超——龙——天——异——真——伪
 
                        --境界列表--
-           祭道境——仙帝境——准帝境——仙王境
-           真仙境——至尊境——遁一境——斩我境
+           祭道境——仙帝境——虚神境——轮回境
+           金仙境——创世境——混沌境——斩我境
            虚道境——天神境——圣祭境——真一境
            神火境——尊者境——列阵境——铭纹境
            化灵境——洞天境——搬血境——江湖人
@@ -323,6 +323,7 @@ async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = Command
         markdown_message = f"{msg}[CQ:markdown,data=base64://{data}]"
         await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message)
         await help_in.finish()
+
 
         # font_size = 32
         # title = "修仙帮助"
@@ -1693,14 +1694,14 @@ async def open_xiuxian_(bot: Bot, event: GroupMessageEvent):
 #         "合体境": "神火境",
 #         "大乘境": "真一境",
 #         "渡劫境": "圣祭境",
-#         "半步真仙": "天神境中期",
-#         "真仙境": "虚道境",
+#         "半步金仙": "天神境中期",
+#         "金仙境": "虚道境",
 #         "金仙境": "斩我境",
-#         "太乙境": "遁一境"
+#         "太乙境": "混沌境"
 #     }
 #     level = user_info['level']
 #     user_id = user_info['user_id']
-#     if level == "半步真仙":
+#     if level == "半步金仙":
 #         level = "天神境中期"
 #     else:
 #         try:

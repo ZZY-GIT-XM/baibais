@@ -48,7 +48,7 @@ __work_help__ = f"""
 指令：
 1、悬赏令:获取对应实力的悬赏令
 2、悬赏令刷新:刷新当前悬赏令,每日免费{count}次
-实力支持：江湖好手|搬血境|洞天境|化灵境|铭纹境|列阵境|尊者境|神火境|真一境|圣祭境|天神境|虚道境|斩我境|遁一境|至尊境|真仙境
+实力支持：江湖好手|搬血境|洞天境|化灵境|铭纹境|列阵境|尊者境|神火境|真一境|圣祭境|天神境|虚道境|斩我境|混沌境|创世境|金仙境
 3、悬赏令终止:终止当前悬赏令任务
 4、悬赏令结算:结算悬赏奖励
 5、悬赏令接取+编号：接取对应的悬赏令
@@ -72,7 +72,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
     user_rank = convert_rank(user_level)[0]
     is_type, msg = check_user_type(user_id, 2)  # 需要在悬赏令中的用户
     if (is_type and user_rank <= 11) or (
-        is_type and user_info['exp'] >= sql_message.get_level_power("真仙境圆满")) or (
+        is_type and user_info['exp'] >= sql_message.get_level_power("金仙境圆满")) or (
         is_type and int(user_info['exp']) >= int(OtherSet().set_closing_type(user_level)) * XiuConfig().closing_exp_upper_limit    
         ):
         user_cd_message = sql_message.get_user_cd(user_id)
@@ -163,7 +163,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
 @do_work.handle(parameterless=[Cooldown(stamina_cost = 1, at_sender=False)])
 async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
-    user_level = "仙王境初期"
+    user_level = "轮回境初期"
     isUser, user_info, msg = check_user(event)
     if not isUser:
         if XiuConfig().img:
@@ -187,7 +187,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await do_work.finish()
     mode = args[0]  # 刷新、终止、结算、接取
-    if user_rank <= convert_rank('仙王境初期')[0] or user_info['exp'] >= sql_message.get_level_power(user_level):
+    if user_rank <= convert_rank('轮回境初期')[0] or user_info['exp'] >= sql_message.get_level_power(user_level):
         msg = "道友的境界已过创业初期，悬赏令已经不能满足道友了！"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
