@@ -110,6 +110,8 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
+.env.prod
 .venv
 env/
 venv/
@@ -138,9 +140,5 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
-
-.env
-.env.dev
-.env.prod
 
 # End of https://www.toptal.com/developers/gitignore/api/python
