@@ -31,8 +31,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     user_id = user_info['user_id']
     user_info = sql_message.get_user_real_info(user_id)
     user_name = user_info['user_name']
-    
-    
+
     user_num = user_info['id']
     rank = sql_message.get_exp_rank(user_id)
     user_rank = int(rank[0])
@@ -55,7 +54,6 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         sectmsg = f"无宗门"
         sectzw = f"无"
 
-    
     # 判断突破的修为
     list_all = len(OtherSet().level) - 1
     now_index = OtherSet().level.index(user_info['level'])
@@ -99,17 +97,17 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     if user_main_buff_date is not None:
         main_buff_name = f"{user_main_buff_date['name']}({user_main_buff_date['level']})"
     if user_sub_buff_date != None:
-        sub_buff_name = f"{user_sub_buff_date['name']}({user_sub_buff_date['level']})"   
+        sub_buff_name = f"{user_sub_buff_date['name']}({user_sub_buff_date['level']})"
     if user_sec_buff_date is not None:
         sec_buff_name = f"{user_sec_buff_date['name']}({user_sec_buff_date['level']})"
     if user_weapon_data is not None:
         weapon_name = f"{user_weapon_data['name']}({user_weapon_data['level']})"
     if user_armor_data is not None:
         armor_name = f"{user_armor_data['name']}({user_armor_data['level']})"
-    main_rate_buff = UserBuffDate(user_id).get_user_main_buff_data() # 功法突破概率提升
-    sql_message.update_last_check_info_time(user_id) # 更新查看修仙信息时间
+    main_rate_buff = UserBuffDate(user_id).get_user_main_buff_data()  # 功法突破概率提升
+    sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
-    number =  main_rate_buff["number"] if main_rate_buff is not None else 0
+    number = main_rate_buff["number"] if main_rate_buff is not None else 0
     DETAIL_MAP = {
         "道号": f"{user_name}",
         "境界": f"{user_info['level']}",
@@ -131,7 +129,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         "修为排行": f"道友的修为排在第{int(user_rank)}位",
         "灵石排行": f"道友的灵石排在第{int(user_stone)}位",
     }
-    
+
     if XiuConfig().user_info_image:
         img_res = await draw_user_info_img(user_id, DETAIL_MAP)
         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(img_res))
