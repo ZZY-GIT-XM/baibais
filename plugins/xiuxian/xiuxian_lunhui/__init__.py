@@ -92,6 +92,7 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
         now_exp = exp - 100
         sql_message.updata_level(user_id, '江湖好手') #重置用户境界
         sql_message.update_levelrate(user_id, 0) #重置突破成功率
+        sql_message.update_stone(user_id, 0) #重置用户灵石
         sql_message.update_j_exp(user_id, now_exp) #重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         sql_message.updata_user_main_buff(user_id, 0) #重置用户主功法
@@ -135,18 +136,8 @@ async def twolun_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
     user_poxian = user_msg['poxian_num']
     list_level_all = list(jsondata.level_data().keys())
     level = user_info['level']
-    
-    # 移除轮回上限
-    # if user_root == '真·轮回道果':
-    #     msg = "道友已是万世轮回之身！"
-    #     if XiuConfig().img:
-    #         pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-    #         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-    #     else:
-    #         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    #     await twolun.finish() 
         
-    if user_root != '轮回道果' or user_poxian < 10:
+    if user_root != '轮回道果' and user_poxian < 10:
         msg = "道友还未渡过千世轮回，请先进入千世轮回！"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
@@ -160,6 +151,7 @@ async def twolun_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
         now_exp = exp - 100
         sql_message.updata_level(user_id, '江湖好手') #重置用户境界
         sql_message.update_levelrate(user_id, 0) #重置突破成功率
+        sql_message.update_stone(user_id, 0) #重置用户灵石
         sql_message.update_j_exp(user_id, now_exp) #重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         sql_message.update_root(user_id, 7) #更换轮回灵根

@@ -393,6 +393,13 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             sql = f"UPDATE user_xiuxian SET stone=stone-? WHERE user_id=?"
             cur.execute(sql, (price, user_id))
             self.conn.commit()
+
+    def update_stone(self, user_id, rate):
+        """更新突破成功率"""
+        sql = f"UPDATE user_xiuxian SET stone=? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (rate, user_id))
+        self.conn.commit()
     
     def get_consecutive_wins_and_losses(self, user_id):
         """获取用户的连胜和连败次数"""

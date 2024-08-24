@@ -106,7 +106,7 @@
     "轮回道果": {
         "type_rate": 0,
         "type_list": [
-            "轮回千次不灭，只为臻至巅峰"
+            "历千劫而不死"
         ],
         "type_speeds": 4,
         "type_flag": []
@@ -114,7 +114,7 @@
     "真·轮回道果": {
         "type_rate": 0,
         "type_list": [
-            "轮回万次不灭，只为超越巅峰"
+            "万劫不灭"
         ],
         "type_speeds": 5,
         "type_flag": []

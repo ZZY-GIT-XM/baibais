@@ -65,7 +65,7 @@ set_xiuxian = on_command("启用修仙功能", aliases={'禁用修仙功能'},
                          permission=GROUP and (SUPERUSER or GROUP_ADMIN or GROUP_OWNER), priority=5, block=True)
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
-lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block=True)
+# lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block=True)
 level_help_jingjie = on_command('境界列表', priority=15, permission=GROUP, block=True)
 level_help_linggen = on_command('灵根列表', priority=15, permission=GROUP, block=True)
 level_help_pinjie = on_command('品阶列表', priority=15, permission=GROUP, block=True)
