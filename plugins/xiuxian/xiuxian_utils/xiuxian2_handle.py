@@ -470,13 +470,13 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             
         elif int(key) == 6:
             sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-            cur.execute(sql, ("轮回千次不灭，只为臻至巅峰", "轮回道果", user_id))
+            cur.execute(sql, ("千劫不死", "轮回道果", user_id))
             root_name = "轮回道果"
             self.conn.commit()
             
         elif int(key) == 7:
             sql = f"UPDATE user_xiuxian SET root=?,root_type=? WHERE user_id=?"
-            cur.execute(sql, ("轮回万次不灭，只为超越巅峰", "真·轮回道果", user_id))
+            cur.execute(sql, ("万劫不灭", "真·轮回道果", user_id))
             root_name = "真·轮回道果"
             self.conn.commit()
 
