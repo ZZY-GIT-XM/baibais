@@ -37,10 +37,14 @@ def convert_rank(rank_name):
         '祭道境初期', '祭道境中期', '祭道境圆满'  # 0
     ]
 
+    # 如果rank_name存在于ranks列表中
     if rank_name in ranks:
+        # 计算rank_name的排名编号：从0开始的索引值取反，即总长度减去索引再减一
         rank_number = len(ranks) - ranks.index(rank_name) - 1
+        # 返回排名编号及ranks列表
         return rank_number, ranks
     else:
+        # 如果未找到rank_name，返回None及ranks列表
         return None, ranks
 
 
