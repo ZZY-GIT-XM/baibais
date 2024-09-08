@@ -3,7 +3,7 @@ import io
 import asyncio
 import json
 import math
-import datetime
+from datetime import datetime
 import unicodedata
 from .xiuxian2_handle import XiuxianDateManage
 from nonebot.adapters.onebot.v11 import (
@@ -70,6 +70,19 @@ def check_user_type(user_id, need_type):
         elif user_type == 0:
             msg = "道友现在什么都没干呢~"
 
+        elif user_type == 4:
+            now_time = datetime.now()
+            in_closing_time = datetime.strptime(
+                user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
+            )  # 预计修炼结束的时间
+            seconds_diff = (in_closing_time - now_time).total_seconds()
+            remaining_seconds = int(seconds_diff)
+            if remaining_seconds > 0:
+                msg = f"道友正在修炼中，还剩 {remaining_seconds} 秒结束修炼！"
+            else:
+                # 如果修炼已经结束，更新状态
+                sql_message.in_closing(user_id, 0)
+                msg = "修炼已结束，请重新开始修炼！"
     return isType, msg
 
 

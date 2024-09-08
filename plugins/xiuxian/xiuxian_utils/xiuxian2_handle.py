@@ -5,7 +5,7 @@ except ImportError:
 import os
 import random
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from nonebot.log import logger
 from .data_source import jsondata
@@ -767,6 +767,8 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             now_time = 0
         elif the_type == 2:
             now_time = datetime.now()
+        elif the_type == 4:
+            now_time = datetime.now() + timedelta(seconds=60)
         sql = "UPDATE user_cd SET type=?,create_time=? WHERE user_id=?"
         cur = self.conn.cursor()
         cur.execute(sql, (the_type, now_time, user_id))
