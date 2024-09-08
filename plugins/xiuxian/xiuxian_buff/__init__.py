@@ -982,7 +982,7 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
         if exp > user_get_exp_max:
             exp = user_get_exp_max
 
-        await bot.send_group_msg(group_id=int(send_group_id), message="进入修炼") # 回复消息 "进入修炼"
+        await bot.send_group_msg(group_id=int(send_group_id), message="进入修炼,1分钟后结束!") # 回复消息 "进入修炼"
         sql_message.in_closing(user_id, 4) # 设置用户状态为 "正在修炼"
         await asyncio.sleep(60)# 开始倒计时 60 秒
         sql_message.update_power2(user_id) # 更新用户战力
@@ -992,7 +992,7 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
         result_msg, result_hp_mp = OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
                                                          int(exp * mp_speed))
         sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
-        msg = f"修炼结束，本次修炼增加修为：{exp}{result_msg[0]}{result_msg[1]}"
+        msg = f"修炼结束，本次修炼增加修为：{exp} {result_msg[0]}{result_msg[1]}"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
             await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
