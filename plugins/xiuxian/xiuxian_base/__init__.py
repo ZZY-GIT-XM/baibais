@@ -366,15 +366,10 @@ async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
 
     state["user_id"] = user_info['user_id']  # 将用户信息存储在状态中
 
-    linggen_options = []
-    for _ in range(10):
-        name, root_type = XiuxianJsonDate().linggen_get()
-        linggen_options.append((name, root_type))
+    # 随机获得一个灵根
+    name, root_type = XiuxianJsonDate().linggen_get()  # 获取灵根，灵根类型
 
-    linggen_list_msg = "\n".join(
-        [f"{i + 1}. {name} ({root_type})" for i, (name, root_type) in enumerate(linggen_options)])
-    msg = f"请从以下灵根中选择一个:\n{linggen_list_msg}\n请输入对应的数字选择 (1-10):"
-    state["linggen_options"] = linggen_options
+    msg = f"逆天之行，重获新生，新的灵根为: {name}，类型为：{root_type}"
 
     if XiuConfig().img:
         pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
