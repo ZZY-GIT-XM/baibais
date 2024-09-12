@@ -493,7 +493,7 @@ async def shop_(bot: Bot, event: GroupMessageEvent):
         msg += f"\n价格：{v['price']}枚灵石\n"
         if v['user_id'] != 0:
             msg += f"拥有人：{v['user_name']}道友\n"
-            msg += f"数量：{v['stock']}\n"
+            msg += f"数量：{v['stock']}\n\n"
         else:
             msg += f"系统出售\n"
             msg += f"数量：无限\n\n"
