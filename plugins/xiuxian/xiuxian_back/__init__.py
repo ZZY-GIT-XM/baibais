@@ -360,7 +360,7 @@ async def buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
                 await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await buy.finish()
         user_id = user_info['user_id']
-        group_id = str(event.group_id)
+        group_id = str(666)
         shop_data = get_shop_data(group_id)
         
         if shop_data[group_id] == {}:
@@ -475,7 +475,7 @@ async def shop_(bot: Bot, event: GroupMessageEvent):
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await shop.finish()
 
-    group_id = str(event.group_id)
+    group_id = str(666)
     shop_data = get_shop_data(group_id)
     data_list = []
     if shop_data[group_id] == {}:
@@ -496,7 +496,7 @@ async def shop_(bot: Bot, event: GroupMessageEvent):
             msg += f"数量：{v['stock']}\n"
         else:
             msg += f"系统出售\n"
-            msg += f"数量：无限\n"
+            msg += f"数量：无限\n\n"
         data_list.append(msg)
     await send_msg_handler(bot, event, '坊市', bot.self_id, data_list)
     await shop.finish()
@@ -573,7 +573,7 @@ async def shop_added_by_admin_(bot: Bot, event: GroupMessageEvent, args: Message
     except LookupError:
         pass
 
-    group_id = str(event.group_id)
+    group_id = str(666)
     shop_data = get_shop_data(group_id)
     if shop_data == {}:
         shop_data[group_id] = {}
@@ -726,7 +726,7 @@ async def shop_added_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
                 await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await shop_added.finish() 
 
-    group_id = str(event.group_id)
+    group_id = str(666)
     shop_data = get_shop_data(group_id)
 
     num = 0
@@ -878,7 +878,7 @@ async def shop_off_(bot: Bot, event: GroupMessageEvent, args: Message = CommandA
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await shop_off.finish()
     user_id = user_info['user_id']
-    group_id = str(event.group_id)
+    group_id = str(666)
     shop_data = get_shop_data(group_id)
     if shop_data[group_id] == {}:
         msg = "坊市目前空空如也！"
@@ -2066,7 +2066,7 @@ async def shop_off_all_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await shop_off_all.finish()
-    group_id = str(event.group_id)
+    group_id = str(666)
     shop_data = get_shop_data(group_id)
     if shop_data[group_id] == {}:
         msg = "坊市目前空空如也！"
