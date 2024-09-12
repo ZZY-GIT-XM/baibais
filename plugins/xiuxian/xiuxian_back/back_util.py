@@ -11,6 +11,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
 )
 from datetime import datetime
 import os
+import uuid
 from pathlib import Path
 from ..xiuxian_config import convert_rank
 
@@ -620,6 +621,14 @@ def get_shop_data(group_id):
         data[group_id] = {}
     save_shop(data)
     return data
+
+
+
+def generate_unique_id():
+    """
+    生成唯一ID
+    """
+    return str(uuid.uuid4())
 
 
 PATH = Path(__file__).parent

@@ -85,9 +85,9 @@ class XiuConfig:
         self.sect_rename_cost = 50000000  # 宗门改名消耗
         self.sect_rename_cd = 1  # 宗门改名cd/天
         self.auto_change_sect_owner_cd = 7  # 自动换长时间不玩宗主cd/天
-        self.closing_exp_upper_limit = 1.5  # 闭关获取修为上限（例如：1.5 下个境界的修为数*1.5）
-        self.level_punishment_floor = 5  # 突破失败扣除修为，惩罚下限（百分比）
-        self.level_punishment_limit = 15  # 突破失败扣除修为，惩罚上限(百分比)
+        self.closing_exp_upper_limit = 10  # 闭关获取修为上限（例如：1.5 下个境界的修为数*1.5）
+        self.level_punishment_floor = 1  # 突破失败扣除修为，惩罚下限（百分比）
+        self.level_punishment_limit = 5  # 突破失败扣除修为，惩罚上限(百分比)
         self.level_up_probability = 0.2  # 突破失败增加当前境界突破概率的比例
         self.sign_in_lingshi_lower_limit = 100000  # 每日签到灵石下限
         self.sign_in_lingshi_upper_limit = 300000  # 每日签到灵石上限
