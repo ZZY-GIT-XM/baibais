@@ -52,14 +52,13 @@ set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
 reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
 
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
+use = on_command("使用", priority=15, permission=GROUP, block=True)
 shop = on_command("坊市查看", aliases={"查看坊市"}, priority=8, permission=GROUP, block=True)
 auction_view = on_command("拍卖品查看", aliases={"查看拍卖品"}, priority=8, permission=GROUP, block=True)
 shop_added = on_command("坊市上架", priority=10, permission=GROUP, block=True)
 shop_added_by_admin = on_command("系统坊市上架", priority=5, permission=SUPERUSER, block=True)
 shop_off = on_command("坊市下架", priority=5, permission=GROUP, block=True)
-shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, block=True)
 main_back = on_command('我的背包', aliases={'我的物品'}, priority=10, permission=GROUP, block=True)
-use = on_command("使用", priority=15, permission=GROUP, block=True)
 no_use_zb = on_command("换装", priority=5, permission=GROUP, block=True)
 buy = on_command("坊市购买", priority=5, block=True)
 auction_added = on_command("提交拍卖品", aliases={"拍卖品提交"}, priority=10, permission=GROUP, block=True)
@@ -69,9 +68,10 @@ creat_auction = on_fullmatch("举行拍卖会", priority=5, permission=GROUP and
 offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
 back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
 xiuxian_sone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
+shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, block=True)
 chakan_wupin = on_command("查看修仙界物品", priority=25, permission=GROUP, block=True)
 
-__back_help__ = """
+__back_help__ = f"""
 指令：
 1、我的背包、我的物品:查看自身背包前196个物品的信息
 2、使用+物品名字：使用物品,可批量使用
@@ -87,8 +87,6 @@ __back_help__ = """
 12、拍卖+金额：对本次拍卖会的物品进行拍卖
 13、炼金+物品名字：将物品炼化为灵石,支持批量炼金和绑定丹药炼金
 14、背包帮助:获取背包帮助指令
-15、查看修仙界物品:支持类型【功法|神通|丹药|合成丹药|法器|防具】
-16、清空坊市:清空本群坊市,管理员权限
 非指令：
 1、定时生成拍卖会,每天{auction_time_config['hours']}点每整点生成一场拍卖会
 """.strip()
@@ -1596,7 +1594,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
         
         user_info = sql_message.get_user_info_with_id(auction['user_id'])
         msg = "(拍卖锤落下)！！！\n"
-        msg += "恭喜来自群{auction['group_id']}的{user_info['user_name']}道友成功拍下：{auction['type']}-{auction['name']}x{auction['quantity']}，将在拍卖会结算后送到您手中。\n"
+        msg += f"恭喜来自群{auction['group_id']}的{user_info['user_name']}道友成功拍下：{auction['type']}-{auction['name']}x{auction['quantity']}，将在拍卖会结算后送到您手中。\n"
         if i + 1 == len(auction_items):
             msg += "本场拍卖会到此结束，开始整理拍卖会结果，感谢各位道友参与！"
 
@@ -1625,7 +1623,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
         if user_id:
             sql_message.update_ls(user_id, int(final_price) * quantity, 2)
             sql_message.send_back(user_id, auction_id, item_name, item_type, quantity)
-            end_msg += "{idx + 1}号拍卖品：{item_name}x{quantity}由群{group_id}的{final_user_info['user_name']}道友成功拍下\n"
+            end_msg += f"{idx + 1}号拍卖品：{item_name}x{quantity}由群{group_id}的{final_user_info['user_name']}道友成功拍下\n"
 
             user_auction_info = get_user_auction_price_by_id(auction_id)
             if user_auction_info:
@@ -1638,7 +1636,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             auction = {}
             auction_offer_time_count = 0
         else:
-            end_msg += "{idx + 1}号拍卖品：{item_name}x{quantity} - 流拍了\n"
+            end_msg += f"{idx + 1}号拍卖品：{item_name}x{quantity} - 流拍了\n"
 
     for gid in groups:
         bot = await assign_bot_group(group_id=gid)
@@ -1702,7 +1700,7 @@ async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     now_price = auction['now_price']
     min_price = int(now_price * 0.05)  # 最低加价5%
     if price <= 0 or price <= auction['now_price'] or price > user_info['stone']:
-        msg = "走开走开，别捣乱！小心清空你灵石捏"
+        msg = "走开走开,灵石不够，别捣乱！小心清空你灵石捏"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
             await bot.send_group_msg(group_id=int(group_id), message=MessageSegment.image(pic))
