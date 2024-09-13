@@ -79,6 +79,37 @@
             "price": 500000,
             "user_name": "白白",
             "stock": 1
+        },
+        "9": {
+            "user_id": 370678596,
+            "goods_name": "渡厄丹",
+            "goods_id": 1999,
+            "goods_type": "丹药",
+            "desc": "名字：渡厄丹\n效果：使下一次突破丢失的修为减少为0！",
+            "price": 500000,
+            "user_name": "雨青画",
+            "stock": 1
+        },
+        "10": {
+            "user_id": 370678596,
+            "goods_name": "渡厄丹",
+            "goods_id": 1999,
+            "goods_type": "丹药",
+            "desc": "名字：渡厄丹\n效果：使下一次突破丢失的修为减少为0！",
+            "price": 500000,
+            "user_name": "雨青画",
+            "stock": 1
+        },
+        "11": {
+            "user_id": 370678596,
+            "goods_name": "渡厄丹",
+            "goods_id": 1999,
+            "goods_type": "丹药",
+            "desc": "名字：渡厄丹\n效果：使下一次突破丢失的修为减少为0！",
+            "price": 500000,
+            "user_name": "雨青画",
+            "stock": 1
         }
-    }
+    },
+    "530474644": {}
 }

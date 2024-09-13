@@ -40,6 +40,7 @@ config = get_auction_config()
 groups = config['open']  # list，群交流会使用
 auction = {}
 AUCTIONSLEEPTIME = 120  # 拍卖初始等待时间（秒）
+PAGE_SIZE = 5  # 每页显示的物品数量
 cache_help = {}
 auction_offer_flag = False  # 拍卖标志
 AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
@@ -461,43 +462,68 @@ async def buy_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
 
 
 @shop.handle(parameterless=[Cooldown(at_sender=False)])
-async def shop_(bot: Bot, event: GroupMessageEvent):
-    """坊市查看"""
+async def shop_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """坊市查看，添加翻页功能"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
+
+    # 如果用户未注册，直接发送文字消息
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
         await shop.finish()
 
     group_id = str(666)
     shop_data = get_shop_data(group_id)
-    data_list = []
+
+    # 如果坊市数据为空，发送纯文字提示
     if shop_data[group_id] == {}:
         msg = "坊市目前空空如也！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
         await shop.finish()
 
+    # 尝试获取页码
+    try:
+        page = int(args.extract_plain_text().strip())
+    except ValueError:
+        page = 1  # 如果没有提供页码或格式不正确，默认为第一页
+
+    # 将坊市数据转化为列表，便于分页
+    data_list = []
     for k, v in shop_data[group_id].items():
         msg = f"编号：{k}\n"
         msg += f"{v['desc']}"
         msg += f"\n价格：{v['price']}枚灵石\n"
         if v['user_id'] != 0:
             msg += f"拥有人：{v['user_name']}道友\n"
-            msg += f"数量：{v['stock']}\n\n"
+            msg += f"数量：{v['stock']}\n"
         else:
             msg += f"系统出售\n"
-            msg += f"数量：无限\n\n"
+            msg += f"数量：无限\n"
         data_list.append(msg)
-    await send_msg_handler(bot, event, '坊市', bot.self_id, data_list)
+
+    # 计算总页数
+    total_items = len(data_list)
+    total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE  # 向上取整
+
+    # 检查当前页码是否有效
+    if page < 1 or page > total_pages:
+        await bot.send_group_msg(group_id=int(send_group_id),
+                                 message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
+        await shop.finish()
+
+    # 获取当前页的数据
+    start_idx = (page - 1) * PAGE_SIZE
+    end_idx = min(start_idx + PAGE_SIZE, total_items)
+    page_data = data_list[start_idx:end_idx]
+
+    # 组装并发送当前页的数据
+    final_msg = f"坊市列表 \n" + "\n\n".join(page_data)
+    final_msg += f"\n\n第 {page}/{total_pages} 页\n使用命令 '坊市查看 {page + 1}' 查看下一页" if page < total_pages else "\n\n这是最后一页。"
+
+    await bot.send_group_msg(group_id=int(send_group_id), message=final_msg)
+
     await shop.finish()
+
 
 
 @shop_added_by_admin.handle(parameterless=[Cooldown(1.4, at_sender=False, isolate_level=CooldownIsolateLevel.GROUP, parallel=1)])
@@ -1035,13 +1061,14 @@ async def auction_withdraw_(bot: Bot, event: GroupMessageEvent, args: Message = 
 
 
 @main_back.handle(parameterless=[Cooldown(cd_time=10, at_sender=False)])
-async def main_back_(bot: Bot, event: GroupMessageEvent):
+async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """我的背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
+
     if not isUser:
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
@@ -1051,11 +1078,44 @@ async def main_back_(bot: Bot, event: GroupMessageEvent):
         await main_back.finish()
 
     user_id = user_info['user_id']
+
+    # 尝试获取页码
+    try:
+        page = int(args.extract_plain_text().strip())
+    except ValueError:
+        page = 1  # 如果没有提供页码或格式不正确，默认为第一页
+
+    # 定义分页大小
+    PAGE_SIZE = 5
+
     msg = get_user_main_back_msg(user_id)
+
+    # 将药材背包数据转化为列表，便于分页
+    data_list = []
+    for item in msg:
+        data_list.append(item)
+
+    # 计算总页数
+    total_items = len(data_list)
+    total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE  # 向上取整
+
+    # 检查当前页码是否有效
+    if page < 1 or page > total_pages:
+        await bot.send_group_msg(group_id=int(send_group_id),
+                                 message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
+        await main_back.finish()
+
+    # 获取当前页的数据
+    start_idx = (page - 1) * PAGE_SIZE
+    end_idx = min(start_idx + PAGE_SIZE, total_items)
+    page_data = data_list[start_idx:end_idx]
 
     # 合并所有消息为一个字符串
     header = f"{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚\n"
-    full_msg = header + "\n".join(msg)
+    full_msg = header + "\n".join(page_data)
+
+    # 添加翻页提示
+    full_msg += f"\n\n第 {page}/{total_pages} 页\n使用命令 '我的背包 {page + 1}' 查看下一页" if page < total_pages else "\n\n这是最后一页。"
 
     try:
         # 将所有消息作为一条消息发送
@@ -1064,6 +1124,7 @@ async def main_back_(bot: Bot, event: GroupMessageEvent):
         await main_back.finish("查看背包失败!", reply_message=True)
 
     await main_back.finish()
+
 
 
 

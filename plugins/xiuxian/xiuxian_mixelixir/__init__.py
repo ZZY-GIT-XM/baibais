@@ -6,6 +6,7 @@ from nonebot.params import EventPlainText
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
+    Message,
     GroupMessageEvent,
     MessageSegment,
     ActionFailed
@@ -19,6 +20,7 @@ from ..xiuxian_utils.utils import (
     check_user, send_msg_handler, 
     get_msg_pic, CommandObjectID
 )
+from nonebot.params import CommandArg
 from ..xiuxian_utils.item_json import Items
 from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict
 from ..xiuxian_config import convert_rank, XiuConfig
@@ -29,6 +31,8 @@ sql_message = XiuxianDateManage()  # sql类
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
 items = Items()
 cache_help = {}
+PAGE_SIZE = 6  # 每页显示的物品数量
+
 
 mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
 mix_make = on_command("配方", priority=5, permission=GROUP, block=True)
@@ -563,13 +567,14 @@ async def mix_elixir_(bot: Bot, event: GroupMessageEvent, mode: str = EventPlain
 
 
 @elixir_back.handle(parameterless=[Cooldown(at_sender=False)])
-async def elixir_back_(bot: Bot, event: GroupMessageEvent):
+async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """丹药背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
+
     if not isUser:
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
@@ -577,38 +582,61 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await elixir_back.finish()
+
     user_id = user_info['user_id']
     msg = get_user_elixir_back_msg(user_id)
 
-    if len(msg) >= 98: #背包更新
-        # 将第一条消息和第二条消息合并为一条消息
-        msg1 = [f"{user_info['user_name']}的丹药背包"] + msg[:98]
-        msg2 = [f"{user_info['user_name']}的丹药背包"] + msg[98:]
-        try:
-            await send_msg_handler(bot, event, '背包', bot.self_id, msg1)
-            if msg2:
-                # 如果有第三条及以后的消息，需要等待一段时间再发送，避免触发限制
-                await asyncio.sleep(1)
-                await send_msg_handler(bot, event, '背包', bot.self_id, msg2)
-        except ActionFailed:
-            await elixir_back.finish("查看背包失败!", reply_message=True)
-    else:
-        msg = [f"{user_info['user_name']}的丹药背包"] + msg
-        try:
-            await send_msg_handler(bot, event, '背包', bot.self_id, msg)
-        except ActionFailed:
-            await elixir_back.finish("查看背包失败!", reply_message=True)
+    # 尝试获取页码
+    try:
+        page = int(args.extract_plain_text().strip())
+    except ValueError:
+        page = 1  # 如果没有提供页码或格式不正确，默认为第一页
+
+    # 将背包数据转化为列表，便于分页
+    data_list = []
+    for item in msg:
+        data_list.append(item)
+
+    # 计算总页数
+    total_items = len(data_list)
+    total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE  # 向上取整
+
+    # 检查当前页码是否有效
+    if page < 1 or page > total_pages:
+        await bot.send_group_msg(group_id=int(send_group_id),
+                            message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
+        await elixir_back.finish()
+
+    # 获取当前页的数据
+    start_idx = (page - 1) * PAGE_SIZE
+    end_idx = min(start_idx + PAGE_SIZE, total_items)
+    page_data = data_list[start_idx:end_idx]
+
+    # 合并所有消息为一个字符串
+    header = f"{user_info['user_name']}的丹药背包\n"
+    full_msg = header + "\n".join(page_data)
+
+    # 添加翻页提示
+    full_msg += f"\n\n第 {page}/{total_pages} 页\n使用命令 '丹药背包 {page + 1}' 查看下一页" if page < total_pages else "\n\n这是最后一页。"
+
+    try:
+        # 将所有消息作为一条消息发送
+        await bot.send_group_msg(group_id=int(send_group_id), message=full_msg)
+    except ActionFailed:
+        await elixir_back.finish("查看丹药背包失败!", reply_message=True)
 
     await elixir_back.finish()
 
+
 @yaocai_back.handle(parameterless=[Cooldown(at_sender=False)])
-async def yaocai_back_(bot: Bot, event: GroupMessageEvent):
+async def yaocai_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """药材背包
     ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
     "remake", "day_num", "all_num", "action_time", "state"]
     """
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
+
     if not isUser:
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
@@ -616,29 +644,53 @@ async def yaocai_back_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await yaocai_back.finish()
+
     user_id = user_info['user_id']
     msg = get_user_yaocai_back_msg(user_id)
 
-    if len(msg) >= 98: #背包更新
-        # 将第一条消息和第二条消息合并为一条消息
-        msg1 = [f"{user_info['user_name']}的药材背包"] + msg[:98]
-        msg2 = [f"{user_info['user_name']}的药材背包"] + msg[98:]
-        try:
-            await send_msg_handler(bot, event, '背包', bot.self_id, msg1)
-            if msg2:
-                # 如果有第三条及以后的消息，需要等待一段时间再发送，避免触发限制
-                await asyncio.sleep(1)
-                await send_msg_handler(bot, event, '背包', bot.self_id, msg2)
-        except ActionFailed:
-            await yaocai_back.finish("查看背包失败!", reply_message=True)
-    else:
-        msg = [f"{user_info['user_name']}的药材背包"] + msg
-        try:
-            await send_msg_handler(bot, event, '背包', bot.self_id, msg)
-        except ActionFailed:
-            await yaocai_back.finish("查看背包失败!", reply_message=True)
+    # 尝试获取页码
+    try:
+        page = int(args.extract_plain_text().strip())
+    except ValueError:
+        page = 1  # 如果没有提供页码或格式不正确，默认为第一页
+
+
+
+    # 将药材背包数据转化为列表，便于分页
+    data_list = []
+    for item in msg:
+        data_list.append(item)
+
+    # 计算总页数
+    total_items = len(data_list)
+    total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE  # 向上取整
+
+    # 检查当前页码是否有效
+    if page < 1 or page > total_pages:
+        await bot.send_group_msg(group_id=int(send_group_id),
+                            message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
+        await yaocai_back.finish()
+
+    # 获取当前页的数据
+    start_idx = (page - 1) * PAGE_SIZE
+    end_idx = min(start_idx + PAGE_SIZE, total_items)
+    page_data = data_list[start_idx:end_idx]
+
+    # 合并所有消息为一个字符串
+    header = f"{user_info['user_name']}的药材背包\n"
+    full_msg = header + "\n".join(page_data)
+
+    # 添加翻页提示
+    full_msg += f"\n\n第 {page}/{total_pages} 页\n使用命令 '药材背包 {page + 1}' 查看下一页" if page < total_pages else "\n\n这是最后一页。"
+
+    try:
+        # 将所有消息作为一条消息发送
+        await bot.send_group_msg(group_id=int(send_group_id), message=full_msg)
+    except ActionFailed:
+        await yaocai_back.finish("查看药材背包失败!", reply_message=True)
 
     await yaocai_back.finish()
+
 
 
 async def check_yaocai_name_in_back(user_id, yaocai_name, yaocai_num):
