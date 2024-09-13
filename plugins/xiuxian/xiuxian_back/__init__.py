@@ -1049,29 +1049,22 @@ async def main_back_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await main_back.finish()
+
     user_id = user_info['user_id']
     msg = get_user_main_back_msg(user_id)
 
-    if len(msg) >= 98: #背包更新
-        # 将第一条消息和第二条消息合并为一条消息
-        msg1 = [f"{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"] + msg[:98]
-        msg2 = [f"{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"] + msg[98:]
-        try:
-            await send_msg_handler(bot, event, '背包', bot.self_id, msg1)
-            if msg2:
-                # 如果有第三条及以后的消息，需要等待一段时间再发送，避免触发限制
-                await asyncio.sleep(1)
-                await send_msg_handler(bot, event, '背包', bot.self_id, msg2)
-        except ActionFailed:
-            await main_back.finish("查看背包失败!", reply_message=True)
-    else:
-        msg = [f"{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚"] + msg
-        try:
-            await send_msg_handler(bot, event, '背包', bot.self_id, msg)
-        except ActionFailed:
-            await main_back.finish("查看背包失败!", reply_message=True)
+    # 合并所有消息为一个字符串
+    header = f"{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚\n"
+    full_msg = header + "\n".join(msg)
+
+    try:
+        # 将所有消息作为一条消息发送
+        await bot.send_group_msg(group_id=int(send_group_id), message=full_msg)
+    except ActionFailed:
+        await main_back.finish("查看背包失败!", reply_message=True)
 
     await main_back.finish()
+
 
 
 

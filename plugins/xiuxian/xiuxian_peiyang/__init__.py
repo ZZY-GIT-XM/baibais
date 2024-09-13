@@ -132,17 +132,17 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     # 判断结果
     if 1 <= value <= win_rate:  # 单倍胜率
         sql_message.update_ls(user_id, int(investment_amount), 1)
-        msg = f"【{user_info['user_name']}】道友慧眼识珠，培养的天才茁壮成长，为您带来了丰厚的回报——{investment_amount}块灵石！"
+        msg = f"道友慧眼识珠，培养的天才茁壮成长，为您带来了丰厚的回报! \n收获{investment_amount}块灵石！\n现有灵石：{int(user_message['stone']) + int(investment_amount)}块"
         consecutive_wins += 1
         consecutive_losses = 0
     elif win_rate < value <= (win_rate + lose_rate):  # 输掉的概率
         sql_message.update_ls(user_id, int(investment_amount), 2)
-        msg = f"虽然这次消耗{investment_amount}块灵石未能收获，但【{user_info['user_name']}】道友培养的天才正在努力成长，期待下一次的丰收吧！"
+        msg = f"消耗{investment_amount}块灵石未能收获，期待下一次的丰收吧！\n现有灵石：{int(user_message['stone']) - int(investment_amount)}块"
         consecutive_losses += 1
         consecutive_wins = 0
     else:  # 五倍概率
         sql_message.update_ls(user_id, int(investment_amount) * 5, 1)
-        msg = f"恭喜【{user_info['user_name']}】道友！您独具慧眼，发现了绝世天才，此次收获灵石{int(investment_amount) * 5}块！"
+        msg = f"恭喜【{user_info['user_name']}】道友！您独具慧眼，发现了绝世天才! \n收获{int(investment_amount) * 5}块灵石！\n现有灵石：{int(user_message['stone']) + int(investment_amount) * 5}块"
         consecutive_wins += 1
         consecutive_losses = 0
 
