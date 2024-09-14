@@ -190,6 +190,7 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await ling_tian_up.finish()
+
     user_id = user_info['user_id']
     if int(user_info['blessed_spot_flag']) == 0:
         msg = f"{user_info['user_name']} 道友还没有洞天福地呢，请发送洞天福地购买吧~"
@@ -199,6 +200,7 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
         else:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await ling_tian_up.finish()
+
     LINGTIANCONFIG = {
         "1": {
             "level_up_cost": 3500000
@@ -216,12 +218,28 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
             "level_up_cost": 15000000
         }
     }
+
+    # 获取用户的破限次数
+    user_poxian = user_info['poxian_num']
+
+    # 计算当前灵田的最大数量
+    max_lingtian = len(LINGTIANCONFIG) + user_poxian +1 # 初始等级为6级
+
     mix_elixir_info = get_player_info(user_id, "mix_elixir_info")
     now_num = mix_elixir_info['灵田数量']
-    if now_num == len(LINGTIANCONFIG) + 1:
+
+    if now_num >= max_lingtian:
         msg = f"{user_info['user_name']} 道友的灵田已全部开垦完毕，无法继续开垦了！"
     else:
-        cost = LINGTIANCONFIG[str(now_num)]['level_up_cost']
+        # 计算升级成本
+        if now_num <= len(LINGTIANCONFIG):
+            base_cost = LINGTIANCONFIG[str(now_num)]['level_up_cost']
+        else:
+            base_cost = LINGTIANCONFIG[str(len(LINGTIANCONFIG))]['level_up_cost'] * (2 ** (now_num - len(LINGTIANCONFIG)))
+
+        additional_cost = user_poxian * 5000000  # 每次破限增加5000000灵石
+        cost = base_cost + additional_cost
+
         if int(user_info['stone']) < cost:
             msg = f"{user_info['user_name']} 本次开垦需要灵石：{cost}，道友的灵石不足！"
         else:
@@ -229,6 +247,7 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
             mix_elixir_info['灵田数量'] = now_num + 1
             save_player_info(user_id, mix_elixir_info, 'mix_elixir_info')
             sql_message.update_ls(user_id, cost, 2)
+
     if XiuConfig().img:
         pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
         await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
