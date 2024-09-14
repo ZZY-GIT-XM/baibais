@@ -321,9 +321,9 @@ def get_equipment_msg(l_msg, user_id, goods_id, goods_num):
     msg += f"\n拥有数量:{goods_num}"
     is_use = check_equipment_use_msg(user_id, goods_id)
     if is_use:
-        msg += f"\n↑已装备🔼↑"
+        msg += f"\n↑已装备↑"
     else:
-        msg += f"\n↑可装备🔼↑"
+        msg += f"\n↑可装备↑"
     l_msg.append(msg)
     return l_msg
 

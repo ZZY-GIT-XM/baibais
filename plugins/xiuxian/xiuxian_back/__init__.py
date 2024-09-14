@@ -20,7 +20,7 @@ from .back_util import (
     get_user_main_back_msg, check_equipment_can_use,
     get_use_equipment_sql, get_shop_data, save_shop,
     get_item_msg, get_item_msg_rank, check_use_elixir,
-    get_use_jlq_msg, get_no_use_equipment_sql
+    get_use_jlq_msg, get_no_use_equipment_sql, get_user_skill_back_msg
 )
 from .backconfig import get_auction_config, savef_auction, remove_auction_item
 from ..xiuxian_utils.item_json import Items
@@ -1088,7 +1088,10 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     # 定义分页大小
     PAGE_SIZE = 5
 
-    msg = get_user_main_back_msg(user_id)
+    skill_msg = get_user_skill_back_msg(user_id)
+
+    msg = get_user_main_back_msg(user_id) + skill_msg
+
 
     # 将药材背包数据转化为列表，便于分页
     data_list = []
