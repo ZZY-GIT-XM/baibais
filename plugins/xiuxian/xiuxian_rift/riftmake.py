@@ -410,5 +410,17 @@ class Rift:
         self.name = ''
         self.rank = 0
         self.count = 0
-        self.l_user_id = []
+        self.l_user_id = []  # 记录已经参加的用户
         self.time = 0
+        self.participants = []
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "rank": self.rank,
+            "count": self.count,
+            "l_user_id": self.l_user_id,
+            "time": self.time,
+            "participants": self.participants
+        }
+

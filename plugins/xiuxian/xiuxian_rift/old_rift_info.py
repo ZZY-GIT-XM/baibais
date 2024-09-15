@@ -1,29 +1,25 @@
 import json
+from datetime import datetime
 from pathlib import Path
 import os
-import datetime
 from .riftmake import Rift
-
 
 class OLD_RIFT_INFO(object):
     def __init__(self):
         self.dir_path = Path(__file__).parent
         self.data_path = os.path.join(self.dir_path, "rift_info.json")
-        try:
-            with open(self.data_path, 'r', encoding='utf-8') as f:
-                self.data = json.load(f)
-        except:
-            self.info = {}
-            data = json.dumps(self.info, ensure_ascii=False, indent=4)
-            with open(self.data_path, mode="x", encoding="UTF-8") as f:
-                f.write(data)
-                f.close()
-            with open(self.data_path, 'r', encoding='utf-8') as f:
-                self.data = json.load(f)
+
+        # 确保文件存在并初始化为空字典
+        if not os.path.exists(self.data_path):
+            with open(self.data_path, 'w', encoding='utf-8') as f:
+                json.dump({}, f, ensure_ascii=False, indent=4)
+
+        with open(self.data_path, 'r', encoding='utf-8') as f:
+            self.data = json.load(f)
 
     def __save(self):
         """
-        :return:保存
+        :return: 保存
         """
         with open(self.data_path, 'w', encoding='utf-8') as f:
             json.dump(self.data, f, cls=MyEncoder, ensure_ascii=False, indent=4)
@@ -34,14 +30,16 @@ class OLD_RIFT_INFO(object):
         :param group_rift:
         """
         self.data = {}
-        for x in group_rift:
-            rift_data = {str(x): {"name": group_rift[x].name,
-                                  "rank": group_rift[x].rank,
-                                  "count": group_rift[x].count,
-                                  "l_user_id": group_rift[x].l_user_id,
-                                  "time": group_rift[x].time
-                                  }
-                         }
+        for group_id, rift in group_rift.items():
+            rift_data = {
+                str(group_id): {
+                    "name": rift.name,
+                    "rank": rift.rank,
+                    "count": rift.count,
+                    "l_user_id": rift.l_user_id,
+                    "time": rift.time
+                }
+            }
             self.data.update(rift_data)
         self.__save()
         return True
@@ -51,30 +49,24 @@ class OLD_RIFT_INFO(object):
         读取rift信息
         """
         group_rift = {}
-        for x in self.data:
+        for group_id, rift_data in self.data.items():
             rift = Rift()
-            rift.name = self.data[x]["name"]
-            rift.rank = self.data[x]["rank"]
-            rift.count = self.data[x]["count"]
-            rift.time = self.data[x]["time"]
-            group_rift[x] = rift
-        self.data = {}
-        self.__save()
+            rift.name = rift_data["name"]
+            rift.rank = rift_data["rank"]
+            rift.count = rift_data["count"]
+            rift.l_user_id = rift_data["l_user_id"]
+            rift.time = rift_data["time"]
+            group_rift[group_id] = rift
         return group_rift
 
-
+# 实例化对象
 old_rift_info = OLD_RIFT_INFO()
-
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
             return obj.strftime("%Y-%m-%d %H:%M:%S")
-        if isinstance(obj, bytes):
+        elif isinstance(obj, bytes):
             return str(obj, encoding='utf-8')
-        if isinstance(obj, int):
-            return int(obj)
-        elif isinstance(obj, float):
-            return float(obj)
         else:
             return super(MyEncoder, self).default(obj)

@@ -266,12 +266,12 @@ async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = Command
     else:
         # markdown 模版代入
         # md = {"markdown": {"custom_template_id": "102125567_1723942446"},"keyboard": {"id": "102125567_1723650390"}}
-        md = {"keyboard": {"id": "102125567_1723650390"}}
+        md = {"keyboard": {"id": "102125567_1726136879"}}
         json1 = json.dumps(md)
         bytes = json1.encode('utf-8')
         data = base64.b64encode(bytes).decode('utf-8')
         msg = __xiuxian_notes__
-        markdown_message = f"[CQ:markdown,data=base64://{data}]"
+        markdown_message = f"[CQ:markdown,data=base64://{data}]" + msg
         await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message)
         await help_in.finish()
 
