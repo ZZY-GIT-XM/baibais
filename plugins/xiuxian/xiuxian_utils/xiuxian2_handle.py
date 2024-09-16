@@ -230,6 +230,25 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             return user_data_dict
         else:
             return None
+
+    def get_random_user_id(self):
+        """
+        从数据库中随机获取一个用户ID。
+
+        :return: 随机用户ID
+        """
+        cur = self.conn.cursor()
+        # 获取所有用户的ID
+        sql = "SELECT user_id FROM user_xiuxian"
+        cur.execute(sql)
+        user_ids = [row[0] for row in cur.fetchall()]
+
+        # 如果没有用户，则返回None
+        if not user_ids:
+            return None
+
+        # 随机选取一个用户ID
+        return random.choice(user_ids)
         
     def get_user_info_with_name(self, user_id):
         """根据user_name获取用户信息"""

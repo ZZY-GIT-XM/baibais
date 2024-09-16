@@ -378,10 +378,10 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 await do_work.finish()
             else:
                 msg, give_exp, s_o_f, item_id, big_suc = workhandle().do_work(2,
-                                                                              work_list=user_cd_message['scheduled_time'],
-                                                                              level=user_level,
-                                                                              exp=user_info['exp'],
-                                                                              user_id=user_info['user_id'])
+                                                                            work_list=user_cd_message['scheduled_time'],
+                                                                            level=user_level,
+                                                                            exp=user_info['exp'],
+                                                                            user_id=user_info['user_id'])
                 item_flag = False
                 item_info = None
                 item_msg = None
