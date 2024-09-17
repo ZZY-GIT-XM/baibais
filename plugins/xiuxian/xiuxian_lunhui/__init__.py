@@ -78,7 +78,7 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await lunhui.finish()
     
-    if user_root == '真·轮回道果' or user_poxian >= 10:
+    if user_root == '真·轮回道果' and user_poxian >= 10:
         msg = "道友需渡万世轮回！"
         if XiuConfig().img:
             pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
@@ -88,6 +88,18 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
         await lunhui.finish()
         
     if list_level_all.index(level) >= list_level_all.index(XiuConfig().lunhui_min_level):
+        # 获取当前用户的 type_speeds
+        current_type_speeds = jsondata.root_data()[user_root]['type_speeds']
+
+        # 获取“真·轮回道果”的 type_speeds
+        zhen_twolun_speeds = jsondata.root_data()['轮回道果']['type_speeds']
+
+        # 判断是否需要更换灵根
+        if current_type_speeds < zhen_twolun_speeds:
+            sql_message.update_root(user_id, 6)  # 更换轮回灵根为“轮回道果”
+            new_root = '轮回道果'
+        else:
+            new_root = user_root  # 保持原灵根
         exp = user_msg['exp']
         now_exp = exp - 100
         sql_message.updata_level(user_id, '江湖好手') #重置用户境界
@@ -99,7 +111,6 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
         sql_message.updata_user_sub_buff(user_id, 0) #重置用户辅修功法
         sql_message.updata_user_sec_buff(user_id, 0) #重置用户神通
         sql_message.update_user_atkpractice(user_id, 0) #重置用户攻修等级
-        sql_message.update_root(user_id, 6) #更换轮回灵根
         sql_message.update_poxian_num(user_id) #更新用户打破极限的次数
         msg = f"千世轮回磨不灭，重回绝颠谁能敌，恭喜大能{user_name}轮回成功！当前破限次数为{user_poxian + 1}!"
         if XiuConfig().img:
@@ -147,6 +158,18 @@ async def twolun_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
         await twolun.finish() 
     
     if list_level_all.index(level) >= list_level_all.index(XiuConfig().twolun_min_level) and user_poxian >= 10:
+        # 获取当前用户的 type_speeds
+        current_type_speeds = jsondata.root_data()[user_root]['type_speeds']
+
+        # 获取“真·轮回道果”的 type_speeds
+        zhen_twolun_speeds = jsondata.root_data()['真·轮回道果']['type_speeds']
+
+        # 判断是否需要更换灵根
+        if current_type_speeds < zhen_twolun_speeds:
+            sql_message.update_root(user_id, 7)  # 更换轮回灵根为“真·轮回道果”
+            new_root = '真·轮回道果'
+        else:
+            new_root = user_root  # 保持原灵根
         exp = user_msg['exp']
         now_exp = exp - 100
         sql_message.updata_level(user_id, '江湖好手') #重置用户境界
@@ -154,7 +177,6 @@ async def twolun_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandO
         sql_message.update_stone(user_id, 0) #重置用户灵石
         sql_message.update_j_exp(user_id, now_exp) #重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
-        sql_message.update_root(user_id, 7) #更换轮回灵根
         sql_message.update_poxian_num(user_id) #更新用户打破极限的次数
         msg = f"万世道果集一身，脱出凡道入仙道，恭喜大能{user_name}万世轮回成功！当前破限次数为{user_poxian + 1}"
         if XiuConfig().img:

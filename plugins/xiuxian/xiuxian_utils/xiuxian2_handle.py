@@ -1,3 +1,5 @@
+from nb_cli.cli.commands import self
+
 try:
     import ujson as json
 except ImportError:
@@ -242,11 +244,9 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         sql = "SELECT user_id FROM user_xiuxian"
         cur.execute(sql)
         user_ids = [row[0] for row in cur.fetchall()]
-
         # 如果没有用户，则返回None
         if not user_ids:
             return None
-
         # 随机选取一个用户ID
         return random.choice(user_ids)
         
@@ -396,9 +396,17 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cur = self.conn.cursor()
         level = jsondata.level_data()
         root = jsondata.root_data()
-        sql = f"UPDATE user_xiuxian SET power=round(exp*?*?,0) WHERE user_id=?"
-        cur.execute(sql, (root[UserMessage['root_type']]["type_speeds"], level[UserMessage['level']]["spend"], user_id))
+        poxian_num = UserMessage['poxian_num']# 获取用户当前破限次数
+        if poxian_num <= 10: # 根据破限次数计算增幅系数
+            bonus = 1 + (poxian_num * 0.1)  # 1~10次，每次增加10%
+        else:
+            bonus = 1 + (10 * 0.1) + ((poxian_num - 10) * 0.2)  # 11次及以上，每次增加20%
+        # 计算最终的战力值
+        power = round(UserMessage['exp'] * root[UserMessage['root_type']]["type_speeds"] * level[UserMessage['level']]["spend"] * bonus, 0)
+        sql = f"UPDATE user_xiuxian SET power=? WHERE user_id=?" # 更新数据库中的战力值
+        cur.execute(sql, (power, user_id))
         self.conn.commit()
+
 
     def update_ls(self, user_id, price, key):
         """更新灵石  1为增加，2为减少"""

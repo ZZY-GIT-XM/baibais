@@ -240,25 +240,25 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     number = main_rate_buff["number"] if main_rate_buff is not None else 0
 
     msg = f"""
-    道号: {user_name}
-    ID: {user_id}
-    境界: {user_info['level']}
-    修为: {number_to(user_info['exp'])}
-    灵石: {number_to(user_info['stone'])}
-    战力: {number_to(int(user_info['exp'] * level_rate_with_poxian * realm_rate))}
-    灵根: {user_info['root']}({user_info['root_type']}+{int(level_rate_with_poxian * 100)}%)
-    破限增幅: {total_poxian_percent}%
-    突破状态: {exp_meg}概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%
-    攻击力: {number_to(int(atk_with_poxian))}，攻修等级{user_info['atkpractice']}级
-    所在宗门: {sectmsg}
-    宗门职位: {sectzw}
-    主修功法: {main_buff_name}
-    辅修功法: {sub_buff_name}
-    副修神通: {sec_buff_name}
-    法器: {weapon_name}
-    防具: {armor_name}
-    注册位数: 道友是踏入修仙世界的第{int(user_num)}人
-    修为排行: 道友的修为排在第{int(user_rank)}位
-    灵石排行: 道友的灵石排在第{int(user_stone)}位
+道号: {user_name}
+ID: {user_id}
+境界: {user_info['level']}
+修为: {number_to(user_info['exp'])}
+灵石: {number_to(user_info['stone'])}
+战力: {number_to(int(user_info['exp'] * level_rate_with_poxian * realm_rate))}
+灵根: {user_info['root']}({user_info['root_type']}+{int(level_rate_with_poxian * 100)}%)
+破限增幅: {total_poxian_percent}%
+突破状态: {exp_meg}概率：{jsondata.level_rate_data()[user_info['level']] + leveluprate + number}%
+攻击力: {number_to(int(atk_with_poxian))}，攻修等级{user_info['atkpractice']}级
+所在宗门: {sectmsg}
+宗门职位: {sectzw}
+主修功法: {main_buff_name}
+辅修功法: {sub_buff_name}
+副修神通: {sec_buff_name}
+法器: {weapon_name}
+防具: {armor_name}
+注册位数: 道友是踏入修仙世界的第{int(user_num)}人
+修为排行: 道友的修为排在第{int(user_rank)}位
+灵石排行: 道友的灵石排在第{int(user_stone)}位
 """
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)

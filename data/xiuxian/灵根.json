@@ -1,6 +1,6 @@
 {
     "混沌灵根": {
-        "type_rate": 3,
+        "type_rate": 24,
         "type_list": [
             "全属性灵根"
         ],
@@ -8,7 +8,7 @@
         "type_flag": []
     },
     "融合灵根": {
-        "type_rate": 6,
+        "type_rate": 54,
         "type_list": [
             "融合万物灵根"
         ],
@@ -16,7 +16,7 @@
         "type_flag": []
     },
     "超灵根": {
-        "type_rate": 10,
+        "type_rate": 90,
         "type_list": [
             "日灵根",
             "月灵根"
@@ -25,7 +25,7 @@
         "type_flag": []
     },
     "龙灵根": {
-        "type_rate": 13,
+        "type_rate": 117,
         "type_list": [
             "空间灵根",
             "时间灵根",
@@ -35,7 +35,7 @@
         "type_flag": []
     },
     "天灵根": {
-        "type_rate": 18,
+        "type_rate": 162,
         "type_list": [
             "金灵根",
             "木灵根",
@@ -47,7 +47,7 @@
         "type_flag": []
     },
     "变异灵根": {
-        "type_rate": 18,
+        "type_rate": 162,
         "type_list": [
             "雷灵根",
             "冰灵根",
@@ -59,7 +59,7 @@
         "type_flag": []
     },
     "真灵根": {
-        "type_rate": 10,
+        "type_rate": 90,
         "type_list": [
             "金",
             "木",
@@ -74,7 +74,7 @@
         ]
     },
     "伪灵根": {
-        "type_rate": 25,
+        "type_rate": 225,
         "type_list": [
             "器师",
             "器师",
@@ -84,7 +84,7 @@
         "type_flag": []
     },
     "机械核心": {
-        "type_rate": 1,
+        "type_rate": 27,
         "type_list": [
             "可变式羽翼核心",
             "自适应科技战甲"
@@ -93,7 +93,7 @@
         "type_flag": []
     },
     "异世界之力": {
-        "type_rate": 1,
+        "type_rate": 9,
         "type_list": [
             "直死之魔眼",
             "死亡笔记",
@@ -101,6 +101,390 @@
             "泰拉光棱剑"
         ],
         "type_speeds": 2.5,
+        "type_flag": []
+    },
+    "极夜灵根": {
+        "type_rate": 27,
+        "type_list": ["极夜冰魄灵根"],
+        "type_speeds": 3.0,
+        "type_flag": []
+    },
+    "九幽灵根": {
+        "type_rate": 27,
+        "type_list": ["九幽冥府灵根"],
+        "type_speeds": 3.0,
+        "type_flag": []
+    },
+    "天命灵根": {
+        "type_rate": 18,
+        "type_list": ["天命之子灵根"],
+        "type_speeds": 2.9,
+        "type_flag": []
+    },
+    "神赐灵根": {
+        "type_rate": 18,
+        "type_list": ["神赐之光灵根"],
+        "type_speeds": 2.9,
+        "type_flag": []
+    },
+    "天枢灵根": {
+        "type_rate": 13,
+        "type_list": ["天枢星宿灵根"],
+        "type_speeds": 2.8,
+        "type_flag": []
+    },
+    "太乙灵根": {
+        "type_rate": 13,
+        "type_list": ["太乙仙灵灵根"],
+        "type_speeds": 2.8,
+        "type_flag": []
+    },
+    "仙源灵根": {
+        "type_rate": 9,
+        "type_list": ["仙源之泉灵根"],
+        "type_speeds": 2.7,
+        "type_flag": []
+    },
+    "幽泉灵根": {
+        "type_rate": 9,
+        "type_list": ["幽泉之灵灵根"],
+        "type_speeds": 2.7,
+        "type_flag": []
+    },
+    "幽冥灵根": {
+        "type_rate": 6,
+        "type_list": ["幽冥之灵灵根"],
+        "type_speeds": 2.6,
+        "type_flag": []
+    },
+    "神隐灵根": {
+        "type_rate": 6,
+        "type_list": ["神隐之雾灵根"],
+        "type_speeds": 2.6,
+        "type_flag": []
+    },
+    "青莲灵根": {
+        "type_rate": 4,
+        "type_list": ["青莲之灵灵根"],
+        "type_speeds": 2.5,
+        "type_flag": []
+    },
+    "赤焰灵根": {
+        "type_rate": 4,
+        "type_list": ["赤焰之心灵根"],
+        "type_speeds": 2.5,
+        "type_flag": []
+    },
+    "紫霄灵根": {
+        "type_rate": 3,
+        "type_list": ["紫霄之雷灵根"],
+        "type_speeds": 2.4,
+        "type_flag": []
+    },
+    "碧海灵根": {
+        "type_rate": 3,
+        "type_list": ["碧海之心灵根"],
+        "type_speeds": 2.4,
+        "type_flag": []
+    },
+    "寒冰灵根": {
+        "type_rate": 2,
+        "type_list": ["寒冰之心灵根"],
+        "type_speeds": 2.3,
+        "type_flag": []
+    },
+    "炎阳灵根": {
+        "type_rate": 2,
+        "type_list": ["炎阳之心灵根"],
+        "type_speeds": 2.3,
+        "type_flag": []
+    },
+    "幽蓝灵根": {
+        "type_rate": 1,
+        "type_list": ["幽蓝之光灵根"],
+        "type_speeds": 2.2,
+        "type_flag": []
+    },
+    "苍穹灵根": {
+        "type_rate": 1,
+        "type_list": ["苍穹之心灵根"],
+        "type_speeds": 2.2,
+        "type_flag": []
+    },
+    "玄武灵根": {
+        "type_rate": 1,
+        "type_list": ["玄武之心灵根"],
+        "type_speeds": 2.1,
+        "type_flag": []
+    },
+    "朱雀灵根": {
+        "type_rate": 1,
+        "type_list": ["朱雀之火灵根"],
+        "type_speeds": 2.1,
+        "type_flag": []
+    },
+    "青铜灵根": {
+        "type_rate": 1,
+        "type_list": ["青铜之心灵根"],
+        "type_speeds": 2.0,
+        "type_flag": []
+    },
+    "铁血灵根": {
+        "type_rate": 1,
+        "type_list": ["铁血之心灵根"],
+        "type_speeds": 2.0,
+        "type_flag": []
+    },
+    "地脉灵根": {
+        "type_rate": 1,
+        "type_list": ["地脉之心灵根"],
+        "type_speeds": 1.9,
+        "type_flag": []
+    },
+    "天脉灵根": {
+        "type_rate": 1,
+        "type_list": ["天脉之心灵根"],
+        "type_speeds": 1.9,
+        "type_flag": []
+    },
+    "凡尘灵根": {
+        "type_rate": 1,
+        "type_list": ["凡尘之心灵根"],
+        "type_speeds": 1.8,
+        "type_flag": []
+    },
+    "世俗灵根": {
+        "type_rate": 1,
+        "type_list": ["世俗之心灵根"],
+        "type_speeds": 1.8,
+        "type_flag": []
+    },
+    "虚空灵根": {
+        "type_rate": 27,
+        "type_list": ["虚空之眼灵根"],
+        "type_speeds": 3.0,
+        "type_flag": []
+    },
+    "幽冥之魂灵根": {
+        "type_rate": 27,
+        "type_list": ["幽冥之魂灵根"],
+        "type_speeds": 3.0,
+        "type_flag": []
+    },
+    "星河灵根": {
+        "type_rate": 18,
+        "type_list": ["星河之心灵根"],
+        "type_speeds": 2.9,
+        "type_flag": []
+    },
+    "圣光灵根": {
+        "type_rate": 18,
+        "type_list": ["圣光之心灵根"],
+        "type_speeds": 2.9,
+        "type_flag": []
+    },
+    "玄冰灵根": {
+        "type_rate": 13,
+        "type_list": ["玄冰之心灵根"],
+        "type_speeds": 2.8,
+        "type_flag": []
+    },
+    "天罡灵根": {
+        "type_rate": 13,
+        "type_list": ["天罡星灵灵根"],
+        "type_speeds": 2.8,
+        "type_flag": []
+    },
+    "幽影灵根": {
+        "type_rate": 9,
+        "type_list": ["幽影之心灵根"],
+        "type_speeds": 2.7,
+        "type_flag": []
+    },
+    "圣火灵根": {
+        "type_rate": 9,
+        "type_list": ["圣火之心灵根"],
+        "type_speeds": 2.7,
+        "type_flag": []
+    },
+    "幽梦灵根": {
+        "type_rate": 6,
+        "type_list": ["幽梦之心灵根"],
+        "type_speeds": 2.6,
+        "type_flag": []
+    },
+    "圣水灵根": {
+        "type_rate": 6,
+        "type_list": ["圣水之心灵根"],
+        "type_speeds": 2.6,
+        "type_flag": []
+    },
+    "幻影灵根": {
+        "type_rate": 4,
+        "type_list": ["幻影之心灵根"],
+        "type_speeds": 2.5,
+        "type_flag": []
+    },
+    "圣木灵根": {
+        "type_rate": 4,
+        "type_list": ["圣木之心灵根"],
+        "type_speeds": 2.5,
+        "type_flag": []
+    },
+    "圣金灵根": {
+        "type_rate": 3,
+        "type_list": ["圣金之心灵根"],
+        "type_speeds": 2.4,
+        "type_flag": []
+    },
+    "圣土灵根": {
+        "type_rate": 3,
+        "type_list": ["圣土之心灵根"],
+        "type_speeds": 2.4,
+        "type_flag": []
+    },
+    "圣雷灵根": {
+        "type_rate": 2,
+        "type_list": ["圣雷之心灵根"],
+        "type_speeds": 2.3,
+        "type_flag": []
+    },
+    "圣冰灵根": {
+        "type_rate": 2,
+        "type_list": ["圣冰之心灵根"],
+        "type_speeds": 2.3,
+        "type_flag": []
+    },
+    "圣暗灵根": {
+        "type_rate": 1,
+        "type_list": ["圣暗之心灵根"],
+        "type_speeds": 2.2,
+        "type_flag": []
+    },
+    "圣风灵根": {
+        "type_rate": 1,
+        "type_list": ["圣风之心灵根"],
+        "type_speeds": 2.2,
+        "type_flag": []
+    },
+    "圣光灵根": {
+        "type_rate": 1,
+        "type_list": ["圣光之心灵根"],
+        "type_speeds": 2.1,
+        "type_flag": []
+    },
+    "圣火灵根": {
+        "type_rate": 1,
+        "type_list": ["圣火之心灵根"],
+        "type_speeds": 2.1,
+        "type_flag": []
+    },
+    "圣水灵根": {
+        "type_rate": 1,
+        "type_list": ["圣水之心灵根"],
+        "type_speeds": 2.0,
+        "type_flag": []
+    },
+    "圣木灵根": {
+        "type_rate": 1,
+        "type_list": ["圣木之心灵根"],
+        "type_speeds": 2.0,
+        "type_flag": []
+    },
+    "圣金灵根": {
+        "type_rate": 1,
+        "type_list": ["圣金之心灵根"],
+        "type_speeds": 1.9,
+        "type_flag": []
+    },
+    "圣土灵根": {
+        "type_rate": 1,
+        "type_list": ["圣土之心灵根"],
+        "type_speeds": 1.9,
+        "type_flag": []
+    },
+    "圣雷灵根": {
+        "type_rate": 1,
+        "type_list": ["圣雷之心灵根"],
+        "type_speeds": 1.8,
+        "type_flag": []
+    },
+    "圣冰灵根": {
+        "type_rate": 1,
+        "type_list": ["圣冰之心灵根"],
+        "type_speeds": 1.8,
+        "type_flag": []
+    },
+    "圣暗灵根": {
+        "type_rate": 1,
+        "type_list": ["圣暗之心灵根"],
+        "type_speeds": 1.7,
+        "type_flag": []
+    },
+    "圣风灵根": {
+        "type_rate": 1,
+        "type_list": ["圣风之心灵根"],
+        "type_speeds": 1.7,
+        "type_flag": []
+    },
+    "圣光灵根": {
+        "type_rate": 1,
+        "type_list": ["圣光之心灵根"],
+        "type_speeds": 1.6,
+        "type_flag": []
+    },
+    "圣火灵根": {
+        "type_rate": 1,
+        "type_list": ["圣火之心灵根"],
+        "type_speeds": 1.6,
+        "type_flag": []
+    },
+    "圣水灵根": {
+        "type_rate": 1,
+        "type_list": ["圣水之心灵根"],
+        "type_speeds": 1.5,
+        "type_flag": []
+    },
+    "圣木灵根": {
+        "type_rate": 1,
+        "type_list": ["圣木之心灵根"],
+        "type_speeds": 1.5,
+        "type_flag": []
+    },
+    "圣金灵根": {
+        "type_rate": 1,
+        "type_list": ["圣金之心灵根"],
+        "type_speeds": 1.4,
+        "type_flag": []
+    },
+    "圣土灵根": {
+        "type_rate": 1,
+        "type_list": ["圣土之心灵根"],
+        "type_speeds": 1.4,
+        "type_flag": []
+    },
+    "圣雷灵根": {
+        "type_rate": 1,
+        "type_list": ["圣雷之心灵根"],
+        "type_speeds": 1.3,
+        "type_flag": []
+    },
+    "圣冰灵根": {
+        "type_rate": 1,
+        "type_list": ["圣冰之心灵根"],
+        "type_speeds": 1.3,
+        "type_flag": []
+    },
+    "圣暗灵根": {
+        "type_rate": 1,
+        "type_list": ["圣暗之心灵根"],
+        "type_speeds": 1.2,
+        "type_flag": []
+    },
+    "圣风灵根": {
+        "type_rate": 1,
+        "type_list": ["圣风之心灵根"],
+        "type_speeds": 1.2,
         "type_flag": []
     },
     "轮回道果": {

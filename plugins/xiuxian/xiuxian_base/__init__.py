@@ -99,39 +99,39 @@ __xiuxian_notes__ = f"""
 """.strip()
 
 __level_help_jingjie__ = """
-                       --境界列表--
-           祭道境——仙帝境——虚神境——轮回境
-           金仙境——创世境——混沌境——斩我境
-           虚道境——天神境——圣祭境——真一境
-           神火境——尊者境——列阵境——铭纹境
-           化灵境——洞天境——搬血境——江湖人
+--境界列表--
+祭道境——仙帝境——虚神境——轮回境
+金仙境——创世境——混沌境——斩我境
+虚道境——天神境——圣祭境——真一境
+神火境——尊者境——列阵境——铭纹境
+化灵境——洞天境——搬血境——江湖人
 """.strip()
 
 __level_help_linggen__ = """
-                       --灵根列表--
-               轮回——异界——机械——混沌
-           融——超——龙——天——异——真——伪
+--灵根列表--
+轮回——异界——机械——混沌
+融——超——龙——天——异——真——伪
 """.strip()
 
 __level_help_pinjie__ = """
-                       --功法品阶--
-                           无上
-                         仙阶极品
-                   仙阶上品——仙阶下品
-                   天阶上品——天阶下品
-                   地阶上品——地阶下品
-                   玄阶上品——玄阶下品
-                   黄阶上品——黄阶下品
-                   人阶上品——人阶下品
+--功法品阶--
+无上
+仙阶极品
+仙阶上品——仙阶下品
+天阶上品——天阶下品
+地阶上品——地阶下品
+玄阶上品——玄阶下品
+黄阶上品——黄阶下品
+人阶上品——人阶下品
 
-                       --法器品阶--
-                           无上
-                         极品仙器
-                   上品仙器——下品仙器
-                   上品通天——下品通天
-                   上品纯阳——下品纯阳
-                   上品法器——下品法器
-                   上品符器——下品符器
+--法器品阶--
+无上
+极品仙器
+上品仙器——下品仙器
+上品通天——下品通天
+上品纯阳——下品纯阳
+上品法器——下品法器
+上品符器——下品符器
 """.strip()
 
 # 重置每日签到
@@ -181,8 +181,8 @@ hanzi_list = [
     "衣", "帽", "鞋", "袜", "裙", "裤", "衫", "袍", "褂", "靴",
 ]
 
-# 生成随机名字的函数
 def generate_random_name(length_range=(3, 5)):
+    """随机生成名称"""
     length = random.randint(*length_range)
     return ''.join(random.choices(hanzi_list, k=length))
 
@@ -346,64 +346,34 @@ async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = Comm
 async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """刷新灵根信息"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
+
+    # 限制灵根集合
+    unique_linggens = {"轮回道果", "真·轮回道果"}
+
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await restart.finish()
 
     if user_info['stone'] < XiuConfig().remake:
-        msg = "你的灵石还不够呢，快去赚点灵石吧！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message="你的灵石还不够呢，快去赚点灵石吧！")
         await restart.finish()
 
-    state["user_id"] = user_info['user_id']  # 将用户信息存储在状态中
+    state["user_id"] = user_info['user_id']
+
+    # 检查当前灵根是否为绝世灵根
+    current_root_type = user_info.get('root_type', '')  # 假设 user_info 中有 'root_type' 字段
+    if current_root_type in unique_linggens:
+        await bot.send_group_msg(group_id=int(send_group_id), message=f"您的灵根已为当世无上灵根之一：{current_root_type}，无法更换。")
+        await restart.finish()
 
     # 随机获得一个灵根
-    name, root_type = XiuxianJsonDate().linggen_get()  # 获取灵根，灵根类型
+    name, root_type = XiuxianJsonDate().linggen_get()
 
-    msg = f"逆天之行，重获新生，新的灵根为: {name}，类型为：{root_type}"
-
-    if XiuConfig().img:
-        pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-    else:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    msg = f"@{event.sender.nickname}\n逆天之行，重获新生，新的灵根为: {name}，类型为：{root_type}"
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
 
 
-@restart.receive()
-async def handle_user_choice(bot: Bot, event: GroupMessageEvent, state: T_State):
-    user_choice = event.get_plaintext().strip()
-    linggen_options = state["linggen_options"]
-    user_id = state["user_id"]  # 从状态中获取用户ID
-    selected_name, selected_root_type = max(linggen_options, key=lambda x: jsondata.root_data()[x[1]]["type_speeds"])
-
-    if user_choice.isdigit():  # 判断数字
-        user_choice = int(user_choice)
-        if 1 <= user_choice <= 10:
-            selected_name, selected_root_type = linggen_options[user_choice - 1]
-            msg = f"你选择了 {selected_name} 呢！\n"
-    else:
-        msg = "输入有误，帮你自动选择最佳灵根了嗷！\n"
-
-    msg += sql_message.ramaker(selected_name, selected_root_type, user_id)
-
-    try:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=event.group_id, message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=event.group_id, message=msg)
-    except ActionFailed:
-        await bot.send_group_msg(group_id=event.group_id, message="修仙界网络堵塞，发送失败!")
-    await restart.finish()
 
 
 @rank.handle(parameterless=[Cooldown(at_sender=False)])
@@ -415,19 +385,17 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
     message = re.findall(rank_msg, message)
     if message:
         message = message[0]
+
     if message in ["排行榜", "修仙排行榜", "境界排行榜", "修为排行榜"]:
         p_rank = sql_message.realm_top()
         msg = f"✨位面境界排行榜TOP50✨\n"
         num = 0
         for i in p_rank:
             num += 1
-            msg += f"第{num}位 {i[0]} {i[1]},修为{number_to(i[2])}\n"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            msg += f"第{num}位 {i[0]} {i[1]}, 修为{number_to(i[2])}\n"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await rank.finish()
+
     elif message == "灵石排行榜":
         a_rank = sql_message.stone_top()
         msg = f"✨位面灵石排行榜TOP50✨\n"
@@ -435,12 +403,9 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
         for i in a_rank:
             num += 1
             msg += f"第{num}位  {i[0]}  灵石：{number_to(i[1])}枚\n"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await rank.finish()
+
     elif message == "战力排行榜":
         c_rank = sql_message.power_top()
         msg = f"✨位面战力排行榜TOP50✨\n"
@@ -448,12 +413,9 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
         for i in c_rank:
             num += 1
             msg += f"第{num}位  {i[0]}  战力：{number_to(i[1])}\n"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await rank.finish()
+
     elif message in ["宗门排行榜", "宗门建设度排行榜"]:
         s_rank = sql_message.scale_top()
         msg = f"✨位面宗门建设排行榜TOP50✨\n"
@@ -463,40 +425,26 @@ async def rank_(bot: Bot, event: GroupMessageEvent):
             msg += f"第{num}位  {i[1]}  建设度：{number_to(i[2])}\n"
             if num == 50:
                 break
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await rank.finish()
 
-# 修改 remaname_ 函数
+
+
 @remaname.handle(parameterless=[Cooldown(at_sender=False)])
 async def remaname_(bot: Bot, event: GroupMessageEvent):
     """修改道号"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await remaname.finish()
-    
-    user_id = user_info['user_id']
-    
-    # 生成随机名字
-    user_name = generate_random_name()
-    
-    # 更新数据库中的名字记录
-    msg = sql_message.update_user_name(user_id, user_name)
-    if XiuConfig().img:
-        pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-    else:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await remaname.finish()
+
+    user_id = user_info['user_id']
+    user_name = generate_random_name()# 生成随机名字
+    msg = sql_message.update_user_name(user_id, user_name)# 更新数据库中的名字记录
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await remaname.finish()
+
 
 
 @level_up.handle(parameterless=[Cooldown(stamina_cost=12, at_sender=False)])
@@ -1313,14 +1261,11 @@ async def gmm_command_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     give_qq = None  # 艾特的时候存到这里
     msg = args.extract_plain_text().strip()
+
     if not args:
-        msg = f"请输入正确指令！例如：轮回力量 x(1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世)"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await gm_command.finish()
+        msg = "请输入正确指令！例如：轮回力量 x(1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世)"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await gmm_command.finish()
 
     for arg in args:
         if arg.type == "at":
@@ -1331,20 +1276,13 @@ async def gmm_command_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         root_name = sql_message.update_root(give_qq, msg)
         sql_message.update_power2(give_qq)
         msg = f"{give_user['user_name']}道友的灵根已变更为{root_name}！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await gmm_command.finish(MessageSegment.image(pic))
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await gmm_command.finish()
     else:
-        msg = f"对方未踏入修仙界，不可修改！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await gmm_command.finish(MessageSegment.image(pic))
+        msg = "对方未踏入修仙界，不可修改！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await gmm_command.finish()
+
 
 
 @rob_stone.handle(parameterless=[Cooldown(stamina_cost=15, at_sender=False)])

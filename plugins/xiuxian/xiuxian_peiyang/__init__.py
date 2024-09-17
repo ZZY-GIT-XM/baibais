@@ -172,10 +172,10 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
     # 生成特殊事件及权重
     special_events_weights = {
-        'normal': 10,
+        'normal': 50,
         'mystery': 10,
         'crack': 10,
-        'blessing_stone': 10,
+        'blessing_stone': 5,
         'shatter': 10,
         'purify': 10,
         'blessing': 10,
