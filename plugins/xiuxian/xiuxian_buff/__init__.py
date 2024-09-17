@@ -251,14 +251,9 @@ async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await blessed_spot_rename.finish()
 
-    # 生成随机名称
-    new_name = generate_random_blessed_spot_name()
-
-    # 更新数据库中的洞天福地名称
-    sql_message.update_user_blessed_spot_name(user_id, new_name)
-
+    new_name = generate_random_blessed_spot_name()# 生成随机名称
+    sql_message.update_user_blessed_spot_name(user_id, new_name)# 更新数据库中的洞天福地名称
     msg = f"{user_info['user_name']} 道友的洞天福地成功改名为：{new_name}"
-
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await blessed_spot_rename.finish()
 
@@ -597,11 +592,7 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
     user_id = user_info['user_id']
     user_mes = sql_message.get_user_info_with_id(user_id)  # 获取用户信息
@@ -634,20 +625,12 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         pass
     else:
         msg = "请输入正确的灵石数量！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
     stone_num = int(stone_num[0])
     if use_stone <= stone_num:
         msg = "你的灵石还不够呢，快去赚点灵石吧！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
 
     exp = int(stone_num / 10) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
@@ -657,22 +640,14 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         sql_message.update_power2(user_id)  # 更新战力
         msg = f"修炼结束，本次修炼到达上限，共增加修为：{user_get_exp_max},消耗灵石：{user_get_exp_max * 10}"
         sql_message.update_ls(user_id, int(user_get_exp_max * 10), 2)
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
     else:
         sql_message.update_exp(user_id, exp)
         sql_message.update_power2(user_id)  # 更新战力
         msg = f"修炼结束，本次修炼共增加修为：{exp},消耗灵石：{stone_num}"
         sql_message.update_ls(user_id, int(stone_num), 2)
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
 
 @in_closing.handle(parameterless=[Cooldown(at_sender=False)])
