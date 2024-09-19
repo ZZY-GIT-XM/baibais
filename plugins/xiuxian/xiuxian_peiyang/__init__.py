@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import json
 import random
 from re import I
 from typing import Any, Tuple
@@ -15,6 +17,7 @@ from nonebot.log import logger
 from nonebot.params import RegexGroup
 
 from ..xiuxian_config import XiuConfig
+from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown
 from ..xiuxian_utils.utils import (
     check_user
@@ -23,6 +26,12 @@ from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
 
 cache_help = {}
 sql_message = XiuxianDateManage()  # sql类
+
+md = {"keyboard": {"id": "102125567_1726457673"}}
+json1 = json.dumps(md)
+bytes = json1.encode('utf-8')
+data = base64.b64encode(bytes).decode('utf-8')
+markdown_message = f"[CQ:markdown,data=base64://{data}]"
 
 __peiyang_help__ = f"""
 鉴定灵石帮助:
@@ -101,8 +110,9 @@ async def peiyang_help_(bot: Bot, event: GroupMessageEvent):
     """鉴定灵石帮助"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     msg = __peiyang_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
     await peiyang_help.finish()
+
 
 
 @peiyang.handle(parameterless=[Cooldown(cd_time=XiuConfig().peiyang_cd, at_sender=False)])
@@ -121,19 +131,22 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     # 随机1~1000的值
     value = random.randint(1, 1000)
 
-    if user_info['level'] < XiuConfig().peiyang_min:
-        msg = f"鉴定灵石需要道友境界至少为{XiuConfig().peiyang_min}"
+    level = user_info['level']
+    list_level_all = list(jsondata.level_data().keys())
+
+    if list_level_all.index(level) < list_level_all.index(XiuConfig().peiyang_min):
+        msg = f"鉴定秘术需要道友境界至少为{XiuConfig().peiyang_min}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await peiyang.finish()
 
     if int(investment_amount) <= 0:
         msg = "鉴定灵石的数量不能为零或负数，鉴石失败！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
         await peiyang.finish()
 
     if int(user_message['stone']) < int(investment_amount):
         msg = "道友的灵石不足，请重新输入！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
         await peiyang.finish()
 
     consecutive_wins, consecutive_losses = sql_message.get_consecutive_wins_and_losses(user_id)
@@ -175,7 +188,7 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         'normal': 50,
         'mystery': 10,
         'crack': 10,
-        'blessing_stone': 5,
+        'blessing_stone': 500,
         'shatter': 10,
         'purify': 10,
         'blessing': 10,
@@ -212,13 +225,13 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     elif special_event == 'blessing_stone':
         sql_message.update_ls(user_id, 500000, 1)
         event_msg = f"在鉴定过程中，您发现了一块天赐神石！恭喜【{user_info['user_name']}】道友！您获得了天赐神石，直接获得500000块灵石！\n现有灵石：{int(user_message['stone']) + 500000}块"
-        await bot.send_group_msg(group_id=int(send_group_id), message=event_msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+event_msg)
         await peiyang.finish()
 
     elif special_event == 'shatter':
         sql_message.update_ls(user_id, int(investment_amount), 2)
         event_msg = f"在鉴定过程中，灵石突然完全破碎！道友此次鉴石，灵石完全破碎，损失所有投资的灵石。\n现有灵石：{int(user_message['stone']) - int(investment_amount)}块"
-        await bot.send_group_msg(group_id=int(send_group_id), message=event_msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+event_msg)
         await peiyang.finish()
 
     elif special_event == 'purify':
@@ -248,7 +261,7 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
             if other_user_id == user_id:
                 msg = "您随机选中了自己！本次胜利则获得双倍，失败则损失双倍。"
-                await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+                await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
                 await peiyang.finish()
             else:
                 event_msg = f"您随机到了与{other_user_info_name}道友共享收益或损失。"
@@ -339,7 +352,7 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
     # 合并事件消息和收获消息
     final_msg = f"{event_msg}\n{msg}" if event_msg else msg
-    await bot.send_group_msg(group_id=int(send_group_id), message=final_msg)
+    await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+final_msg)
 
     # 更新用户的连胜和连败次数
     sql_message.update_consecutive_wins_and_losses(user_id, consecutive_wins, consecutive_losses)
