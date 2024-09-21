@@ -635,11 +635,7 @@ async def yaocai_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     isUser, user_info, msg = check_user(event)
 
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await yaocai_back.finish()
 
     user_id = user_info['user_id']
@@ -673,6 +669,7 @@ async def yaocai_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 
     # 合并所有消息为一个字符串
     header = f"{user_info['user_name']}的药材背包\n"
+    header += f"☆------拥有药材------☆\n"
     full_msg = header + "\n".join(page_data)
 
     # 添加翻页提示

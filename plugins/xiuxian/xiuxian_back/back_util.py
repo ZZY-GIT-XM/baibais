@@ -237,35 +237,76 @@ def get_user_skill_back_msg(user_id):
 
 def get_user_yaocai_back_msg(user_id):
     """
-    获取背包内的药材信息
+    获取背包内的药材信息，并按品级排序，在同一品级内按药材名称的 GBK 编码排序。
+
+    参数:
+    user_id (int): 用户ID。
+
+    返回:
+    list: 包含药材信息的消息列表。
     """
-    l_yaocai_msg = []
-    l_msg = []
-    user_backs = sql_message.get_back_msg(user_id)  # list(back)
-    if user_backs is None:
+    l_msg = []  # 初始化消息列表
+    user_backs = sql_message.get_back_msg(user_id)  # 获取用户背包信息
+    if user_backs is None:  # 如果用户背包信息不存在，则返回空列表
         return l_msg
-    for user_back in user_backs:
-        if user_back['goods_type'] == "药材":
-            l_yaocai_msg = get_yaocai_msg(l_yaocai_msg, user_back['goods_id'], user_back['goods_num'])
-            
-    if l_yaocai_msg:
-        l_msg.append("☆------拥有药材------☆")
-        for msg in l_yaocai_msg:
-            l_msg.append(msg)
-    return l_msg
+
+    yaocai_info = {}  # 初始化药材信息字典
+    yaocai_nums = {}  # 初始化药材数量字典
+
+    for user_back in user_backs:  # 遍历用户背包中的物品
+        if user_back['goods_type'] == "药材":  # 如果物品类型为药材，则记录药材信息和数量
+            yaocai_info[user_back['goods_id']] = user_back
+            yaocai_nums[user_back['goods_id']] = user_back['goods_num']
+
+    items_info = {goods_id: items.get_data_by_item_id(goods_id) for goods_id in yaocai_info.keys()}  # 获取所有药材的详细信息
+    sorted_items_info = sort_items_by_level_and_name(items_info)  # 按药材的品级排序药材信息，并在同一品级内按药材名称的 GBK 编码排序
+
+    if sorted_items_info:  # 如果排序后的药材信息存在，则继续处理
+        current_level = None  # 初始化当前处理的药材品级
+
+        for goods_id, item_info in sorted_items_info.items():  # 遍历排序后的药材信息
+
+            if item_info['level'] != current_level:  # 如果当前药材品级不同于之前处理的品级，则添加新的品级标题
+                current_level = item_info['level']
+                l_msg.append(f"☆品级：{current_level}☆")
+
+            goods_num = yaocai_nums[goods_id]  # 获取药材的数量
+            msg = f"名字：{item_info['name']}\n"  # 构建药材信息的字符串
+            # msg += f"品级：{item_info['level']}\n"
+            msg += get_yaocai_info(item_info)
+            msg += f"\n拥有数量:{goods_num}\n"
+            l_msg.append(msg)  # 将药材信息添加到消息列表中
+
+    return l_msg  # 返回最终的消息列表
 
 
-def get_yaocai_msg(l_msg, goods_id, goods_num):
+def sort_items_by_level_and_name(items_dict):
     """
-    获取背包内的药材信息
+    根据药材的品级进行排序，并在同一品级内按药材名称的 GBK 编码排序。
+
+    参数:
+    items_dict (dict): 包含药材ID和其详细信息的字典。
+
+    返回:
+    dict: 按品级排序后的药材信息字典，并在同一品级内按药材名称的 GBK 编码排序。
     """
-    item_info = items.get_data_by_item_id(goods_id)
-    msg = f"名字：{item_info['name']}\n"
-    msg += f"品级：{item_info['level']}\n"
-    msg += get_yaocai_info(item_info)
-    msg += f"\n拥有数量:{goods_num}"
-    l_msg.append(msg)
-    return l_msg
+    # 定义品级顺序映射
+    level_order = {
+        "一品药材": 1,
+        "二品药材": 2,
+        "三品药材": 3,
+        "四品药材": 4,
+        "五品药材": 5,
+        "六品药材": 6,
+        "七品药材": 7,
+        "八品药材": 8,
+        "九品药材": 9,
+    }
+
+    # 按品级排序，并在同一品级内按药材名称的 GBK 编码排序
+    sorted_items = sorted(items_dict.items(), key=lambda x: (level_order[x[1]['level']], x[1]['name'].encode('gbk')))
+
+    return dict(sorted_items)  # 将排序后的结果转换为字典并返回
 
 
 def get_jlq_msg(l_msg, goods_id, goods_num):

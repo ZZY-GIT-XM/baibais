@@ -134,13 +134,34 @@ __level_help_pinjie__ = """
 上品符器——下品符器
 """.strip()
 
+
 # 重置每日签到
 @scheduler.scheduled_job("cron", hour=0, minute=0)
 async def xiuxian_sing_():
     sql_message.sign_remake()
     logger.opt(colors=True).info(f"<green>每日修仙签到重置成功！</green>")
 
-hanzi_list = [
+# 姓氏列表
+surnames = [
+    "赵", "钱", "孙", "李", "周", "吴", "郑", "王", "冯", "陈", "褚", "卫", "蒋", "沈", "韩", "杨", "朱", "秦",
+    "尤", "许", "何", "吕", "施", "张", "孔", "曹", "严", "华", "金", "魏", "陶", "姜", "戚", "谢", "邹", "喻",
+    "柏", "水", "窦", "章", "云", "苏", "潘", "葛", "奚", "范", "彭", "郎", "鲁", "韦", "昌", "马", "苗", "凤",
+    "花", "方", "俞", "任", "袁", "柳", "酆", "鲍", "史", "唐", "费", "廉", "柯", "毕", "郝", "邬", "安", "常",
+    "乐", "于", "时", "傅", "皮", "卞", "齐", "康", "伍", "余", "元", "卜", "顾", "孟", "平", "黄", "和", "穆",
+    "萧", "尹", "姚", "邵", "湛", "汪", "祁", "毛", "禹", "狄", "米", "贝", "明", "臧", "计", "伏", "成", "戴",
+    "谈", "宋", "茅", "庞", "熊", "纪", "舒", "屈", "项", "祝", "董", "沈", "连", "牟", "凌", "耿", "康", "井",
+    "段", "富", "巫", "乌", "焦", "巴", "谷", "车", "侯", "宓", "蓬", "全", "郗", "班", "仰", "秋", "仲", "伊",
+    "宫", "宁", "仇", "栾", "暴", "甘", "钭", "厉", "戎", "祖", "武", "符", "刘", "景", "詹", "束", "龙", "叶",
+    "幸", "司", "琉璃", "上官", "欧阳", "东方", "西门", "南宫", "北冥", "公孙", "独孤", "慕容", "司马", "令狐",
+    "诸葛", "端木", "尉迟", "公羊", "司空", "轩辕", "皇甫", "宇文", "长孙", "拓跋", "呼延", "太叔", "子车",
+    "灵", "幻", "真", "圣", "神", "仙", "魔", "妖", "鬼",
+    "云", "风", "雷", "电", "火", "水", "木", "金", "土", "山", "海", "天", "地", "星", "月", "日", "雪", "冰", "霜",
+    "松", "竹", "梅", "兰", "花", "草", "柳", "桃", "荷", "菊", "枫", "杉", "柏", "桂", "樱", "槐", "杏", "梨",
+    "龙", "凤", "鹤", "鹰", "虎", "豹", "狼", "鹿", "鹤", "熊", "猿", "狐"
+]
+
+# 名字字符列表
+names_characters = [
     # 数字
     "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
     # 十二地支
@@ -153,10 +174,6 @@ hanzi_list = [
     "春", "夏", "秋", "冬",
     # 时间
     "晨", "暮", "夜", "昼",
-    # 方位
-    "东", "南", "西", "北", "中",
-    # 形容词
-    "长", "短", "高", "低", "大", "小", "快", "慢", "前", "后", "左", "右", "上", "下", "内", "外",
     # 动物
     "龙", "虎", "豹", "狼", "鹿", "鹤", "鹰", "鸟", "鱼", "蛇", "鼠", "牛", "马", "羊", "猴", "鸡", "狗", "猪",
     # 更多动物
@@ -165,8 +182,6 @@ hanzi_list = [
     "红", "绿", "蓝", "黄", "黑", "白", "紫", "橙", "棕", "灰", "青", "褐",
     # 植物
     "花", "草", "树", "叶", "果", "根", "茎", "枝", "松", "竹", "梅", "兰",
-    # 人物
-    "父", "母", "兄", "弟", "姐", "妹", "男", "女", "老", "少", "师", "友", "朋", "邻", "亲", "宾",
     # 情感
     "喜", "怒", "哀", "乐", "爱", "恨", "悲", "欢", "笑", "哭",
     # 文化
@@ -176,15 +191,28 @@ hanzi_list = [
     # 抽象概念
     "灵", "玄", "幻", "真", "圣", "神", "仙", "魔", "妖", "鬼", "侠", "客", "师", "徒", "道", "法", "剑", "刀", "弓", "箭",
     # 日常物品
-    "笔", "墨", "纸", "砚", "灯", "扇", "镜", "梳", "碗", "杯", "桌", "椅", "床", "门", "窗", "帘",
-    # 衣服
-    "衣", "帽", "鞋", "袜", "裙", "裤", "衫", "袍", "褂", "靴",
+    "墨", "灯", "镜", "晨曦", "晚霞", "明岚", "静澜", "沐清", "素心", "梦璃", "琪瑶", "淳风", "靖宇", "景云", "涵烟", "灿星", "淼淼",
+    "苍穹", "潇雨", "落英", "烟波", "青岚", "梓萱", "楚歌", "琪瑞", "桃夭", "柳絮", "菊香", "松涛", "梅香", "竹韵", "荷露", "逸尘", "仙羽",
+    "玄机", "灵均", "清扬", "慧空", "静逸", "明岚", "沐风", "安歌", "飞鸿", "智渊", "明澈", "悠然", "心怡", "静思", "晓月", "明轩"
 ]
 
 def generate_random_name(length_range=(3, 5)):
     """随机生成名称"""
-    length = random.randint(*length_range)
-    return ''.join(random.choices(hanzi_list, k=length))
+    min_length, max_length = length_range
+    total_length = random.randint(min_length, max_length)
+
+    # 选择一个姓氏
+    surname = random.choice(surnames)
+
+    # 计算名字长度
+    name_length = max(1, total_length - len(surname))
+
+    # 选择名字
+    name = ''.join(random.choices(names_characters, k=name_length))
+
+    # 返回姓和名的组合
+    return surname + name
+
 
 @run_xiuxian.handle(parameterless=[Cooldown(at_sender=False)])
 async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
@@ -212,7 +240,6 @@ async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     except ActionFailed:
         await run_xiuxian.finish("修仙界网络堵塞，发送失败!", reply_message=True)
-
 
 
 @sign_in.handle(parameterless=[Cooldown(at_sender=False)])
@@ -280,7 +307,6 @@ async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = Comm
     await level_help_pinjie.finish()
 
 
-
 @restart.handle(parameterless=[Cooldown(at_sender=False)])
 async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
     """刷新灵根信息"""
@@ -303,7 +329,8 @@ async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
     # 检查当前灵根是否为绝世灵根
     current_root_type = user_info.get('root_type', '')  # 假设 user_info 中有 'root_type' 字段
     if current_root_type in unique_linggens:
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"您的灵根已为当世无上灵根之一：{current_root_type}，无法更换。")
+        await bot.send_group_msg(group_id=int(send_group_id),
+                                 message=f"您的灵根已为当世无上灵根之一：{current_root_type}，无法更换。")
         await restart.finish()
 
     # 随机获得一个灵根
@@ -311,8 +338,6 @@ async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
 
     msg = f"@{event.sender.nickname}\n逆天之行，重获新生，新的灵根为: {name}，类型为：{root_type}"
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-
-
 
 
 @rank.handle(parameterless=[Cooldown(at_sender=False)])
@@ -378,8 +403,8 @@ async def remaname_(bot: Bot, event: GroupMessageEvent):
         await remaname.finish()
 
     user_id = user_info['user_id']
-    user_name = generate_random_name()# 生成随机名字
-    msg = sql_message.update_user_name(user_id, user_name)# 更新数据库中的名字记录
+    user_name = generate_random_name()  # 生成随机名字
+    msg = sql_message.update_user_name(user_id, user_name)  # 更新数据库中的名字记录
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await remaname.finish()
 
@@ -617,7 +642,6 @@ async def level_up_drjd_(bot: Bot, event: GroupMessageEvent):
         await level_up_drjd.finish()
 
 
-
 @level_up_dr.handle(parameterless=[Cooldown(stamina_cost=8, at_sender=False)])
 async def level_up_dr_(bot: Bot, event: GroupMessageEvent):
     """渡厄 突破"""
@@ -805,8 +829,6 @@ async def give_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
         await give_stone.finish()
 
 
-
-
 @steal_stone.handle(parameterless=[Cooldown(stamina_cost=10, at_sender=False)])
 async def steal_stone_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """偷灵石"""
@@ -880,7 +902,6 @@ async def steal_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         await steal_stone.finish()
 
 
-
 @gm_command.handle(parameterless=[Cooldown(at_sender=False)])
 async def gm_command_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """GM加灵石"""
@@ -913,7 +934,6 @@ async def gm_command_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
             except ActionFailed:  # 发送群消息失败
                 continue
         await gm_command.finish()
-
 
 
 @cz.handle(parameterless=[Cooldown(at_sender=False)])
@@ -1029,8 +1049,10 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     if args_str:
         give_name = args_str.split()[0]
 
-    player1 = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '爆伤': None, '防御': 0}
-    player2 = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '爆伤': None, '防御': 0}
+    player1 = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '爆伤': None,
+               '防御': 0}
+    player2 = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '爆伤': None,
+               '防御': 0}
 
     user_2 = sql_message.get_user_info_with_name(give_name) if give_name else None
     if user_mes and user_2:
@@ -1095,8 +1117,12 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             player1['气血'] = hp_with_poxian1
             player1['攻击'] = atk_with_poxian1
             player1['真元'] = mp_with_poxian1
-            player1['会心'] = int((0.01 + (xiuxian_impart.get_user_info_with_id(user_id)['impart_know_per'] if xiuxian_impart.get_user_info_with_id(user_id) is not None else 0)) * 100 * (1 + total_poxian_percent1 / 100))
-            player1['爆伤'] = int((1.5 + (xiuxian_impart.get_user_info_with_id(user_id)['impart_burst_per'] if xiuxian_impart.get_user_info_with_id(user_id) is not None else 0)) * (1 + total_poxian_percent1 / 100))
+            player1['会心'] = int((0.01 + (xiuxian_impart.get_user_info_with_id(user_id)[
+                                               'impart_know_per'] if xiuxian_impart.get_user_info_with_id(
+                user_id) is not None else 0)) * 100 * (1 + total_poxian_percent1 / 100))
+            player1['爆伤'] = int((1.5 + (xiuxian_impart.get_user_info_with_id(user_id)[
+                                              'impart_burst_per'] if xiuxian_impart.get_user_info_with_id(
+                user_id) is not None else 0)) * (1 + total_poxian_percent1 / 100))
             user_buff_data = UserBuffDate(user_id)
             user_armor_data = user_buff_data.get_user_armor_buff_data()
             if user_armor_data is not None:
@@ -1110,8 +1136,12 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             player2['气血'] = hp_with_poxian2
             player2['攻击'] = atk_with_poxian2
             player2['真元'] = mp_with_poxian2
-            player2['会心'] = int((0.01 + (xiuxian_impart.get_user_info_with_id(user_2['user_id'])['impart_know_per'] if xiuxian_impart.get_user_info_with_id(user_2['user_id']) is not None else 0)) * 100 * (1 + total_poxian_percent2 / 100))
-            player2['爆伤'] = int((1.5 + (xiuxian_impart.get_user_info_with_id(user_2['user_id'])['impart_burst_per'] if xiuxian_impart.get_user_info_with_id(user_2['user_id']) is not None else 0)) * (1 + total_poxian_percent2 / 100))
+            player2['会心'] = int((0.01 + (xiuxian_impart.get_user_info_with_id(user_2['user_id'])[
+                                               'impart_know_per'] if xiuxian_impart.get_user_info_with_id(
+                user_2['user_id']) is not None else 0)) * 100 * (1 + total_poxian_percent2 / 100))
+            player2['爆伤'] = int((1.5 + (xiuxian_impart.get_user_info_with_id(user_2['user_id'])[
+                                              'impart_burst_per'] if xiuxian_impart.get_user_info_with_id(
+                user_2['user_id']) is not None else 0)) * (1 + total_poxian_percent2 / 100))
             user_buff_data = UserBuffDate(user_2['user_id'])
             user_armor_data = user_buff_data.get_user_armor_buff_data()
             if user_armor_data is not None:
