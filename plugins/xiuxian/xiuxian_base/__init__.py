@@ -904,7 +904,7 @@ async def steal_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 
 @gm_command.handle(parameterless=[Cooldown(at_sender=False)])
 async def gm_command_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """GM加灵石"""
+    """神秘力量 GM加灵石"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     msg_text = args.extract_plain_text().strip()
     stone_num_match = re.findall(r"\d+", msg_text)  # 提取数字
@@ -1103,13 +1103,29 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             total_poxian_percent1 = min(poxian_num1 * 10, 10 * 10 + (poxian_num1 - 10) * 20)
             total_poxian_percent2 = min(poxian_num2 * 10, 10 * 10 + (poxian_num2 - 10) * 20)
 
+            # 获取轮回点数
+            user1_cultEff = user_info['cultEff'] / 100
+            user1_seclEff = user_info['seclEff'] / 100
+            user1_maxR = user_info['maxR'] / 100
+            user1_maxH = user_info['maxH'] * 100000
+            user1_maxM = user_info['maxM'] * 100000
+            user1_maxA = user_info['maxA'] * 10000
+
+            # 获取轮回点数
+            user2_cultEff = user_2['cultEff'] / 100
+            user2_seclEff = user_2['seclEff'] / 100
+            user2_maxR = user_2['maxR'] / 100
+            user2_maxH = user_2['maxH'] * 100000
+            user2_maxM = user_2['maxM'] * 100000
+            user2_maxA = user_2['maxA'] * 10000
+
             # 应用破限增幅
-            atk_with_poxian1 = user_info['atk'] * (1 + total_poxian_percent1 / 100)
-            atk_with_poxian2 = user_2['atk'] * (1 + total_poxian_percent2 / 100)
-            hp_with_poxian1 = user_info['hp'] * (1 + total_poxian_percent1 / 100)
-            hp_with_poxian2 = user_2['hp'] * (1 + total_poxian_percent2 / 100)
-            mp_with_poxian1 = user_info['mp'] * (1 + total_poxian_percent1 / 100)
-            mp_with_poxian2 = user_2['mp'] * (1 + total_poxian_percent2 / 100)
+            atk_with_poxian1 = (user_info['atk']+user1_maxA) * (1 + total_poxian_percent1 / 100)
+            atk_with_poxian2 = (user_2['atk']+user2_maxA) * (1 + total_poxian_percent2 / 100)
+            hp_with_poxian1 = (user_info['hp']+user1_maxH) * (1 + total_poxian_percent1 / 100)
+            hp_with_poxian2 = (user_2['hp']+user2_maxH) * (1 + total_poxian_percent2 / 100)
+            mp_with_poxian1 = (user_info['mp']+user1_maxM) * (1 + total_poxian_percent1 / 100)
+            mp_with_poxian2 = (user_2['mp']+user2_maxM) * (1 + total_poxian_percent2 / 100)
 
             # 设置玩家数据
             player1['user_id'] = user_info['user_id']

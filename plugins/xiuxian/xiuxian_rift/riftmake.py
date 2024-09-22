@@ -144,11 +144,28 @@ async def get_boss_battle_info(user_info, rift_rank, bot_id):
     else:
         player['会心'] = (armor_crit_buff + main_crit_buff) * 100
 
+    # 加入破限轮回的计算
+    poxian_num = userinfo['poxian_num']
+    # 获取轮回点数
+    user_cultEff = user_info['cultEff'] / 100
+    user_seclEff = user_info['seclEff'] / 100
+    user_maxR = user_info['maxR'] / 100
+    user_maxH = user_info['maxH'] * 100000
+    user_maxM = user_info['maxM'] * 100000
+    user_maxA = user_info['maxA'] * 10000
+    # 计算破限带来的总增幅百分比
+    total_poxian_percent = 0
+    if poxian_num <= 10:
+        total_poxian_percent += poxian_num * 10
+    else:
+        total_poxian_percent += 10 * 10  # 前10次破限的总增幅
+        total_poxian_percent += (poxian_num - 10) * 20  # 超过10次之后的增幅
+
     player['user_id'] = userinfo['user_id']
     player['道号'] = userinfo['user_name']
-    player['气血'] = userinfo['hp']
-    player['攻击'] = userinfo['atk']
-    player['真元'] = userinfo['mp']
+    player['气血'] = (userinfo['hp']+user_maxH) * (1 + total_poxian_percent / 100)
+    player['攻击'] = (userinfo['atk']+user_maxA) * (1 + total_poxian_percent / 100)
+    player['真元'] = (userinfo['mp']+user_maxM) * (1 + total_poxian_percent / 100)
     player['exp'] = userinfo['exp']
 
     base_exp = userinfo['exp']

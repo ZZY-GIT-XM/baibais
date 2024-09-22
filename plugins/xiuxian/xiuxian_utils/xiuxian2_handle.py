@@ -85,7 +85,14 @@ class XiuxianDateManage:
       "level_up_rate" integer DEFAULT 0,
       "consecutive_wins" integer DEFAULT 0,
       "consecutive_losses" integer DEFAULT 0,
-      "poxian_num" integer DEFAULT 0
+      "poxian_num" integer DEFAULT 0,
+      "rbPts" integer DEFAULT 0,
+      "cultEff" integer DEFAULT 0,
+      "seclEff" integer DEFAULT 0,
+      "maxR" integer DEFAULT 0,
+      "maxH" integer DEFAULT 0,
+      "maxM" integer DEFAULT 0,
+      "maxA" integer DEFAULT 0
     );""")
             elif i == "user_cd":
                 try:
@@ -203,7 +210,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
     def _create_user(self, user_id: str, root: str, type: str, power: str, create_time, user_name) -> None:
         """在数据库中创建用户并初始化"""
         c = self.conn.cursor()
-        sql = f"INSERT INTO user_xiuxian (user_id,stone,root,root_type,level,power,create_time,user_name,exp,sect_id,sect_position,user_stamina) VALUES (?,0,?,?,'江湖好手',?,?,?,100,NULL,NULL,?)"
+        sql = f"INSERT INTO user_xiuxian (user_id,stone,root,root_type,level,power,create_time,user_name,exp,sect_id,sect_position,user_stamina,consecutive_wins,consecutive_losses,poxian_num,rbPts,cultEff,seclEff,maxR,maxH,maxM,maxA) VALUES (?,0,?,?,'江湖好手',?,?,?,100,NULL,NULL,?,0,0,0,0,0,0,0,0,0,0)"
         c.execute(sql, (user_id, root, type, power, create_time, user_name,XiuConfig().max_stamina))
         self.conn.commit()
 
@@ -406,7 +413,6 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         sql = f"UPDATE user_xiuxian SET power=? WHERE user_id=?" # 更新数据库中的战力值
         cur.execute(sql, (power, user_id))
         self.conn.commit()
-
 
     def update_ls(self, user_id, price, key):
         """更新灵石  1为增加，2为减少"""
@@ -816,6 +822,120 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cur.execute(sql, (int(exp), user_id))
         self.conn.commit()
 
+    def add_rebirth_points(self, user_id, points):
+        """
+        增加轮回点数
+        :param user_id: 用户ID
+        :param points: 要增加的点数
+        """
+        sql = "UPDATE user_xiuxian SET rbPts=rbPts+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+    def subtract_rebirth_points(self, user_id, points):
+        """减少轮回点数"""
+        sql = "UPDATE user_xiuxian SET rbPts=rbPts-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def add_cultivation_efficiency(self, user_id, points):
+        """轮回点增加修炼效率"""
+        sql = "UPDATE user_xiuxian SET cultEff=cultEff+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def subtract_cultivation_efficiency(self, user_id, points):
+        """轮回点减少修炼效率"""
+        sql = "UPDATE user_xiuxian SET cultEff=cultEff-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def add_seclusion_efficiency(self, user_id, points):
+        """轮回点增加闭关效率"""
+        sql = "UPDATE user_xiuxian SET seclEff=seclEff+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def subtract_seclusion_efficiency(self, user_id, points):
+        """轮回点减少闭关效率"""
+        sql = "UPDATE user_xiuxian SET seclEff=seclEff-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def add_max_root(self, user_id, points):
+        """轮回点增加灵根上限"""
+        sql = "UPDATE user_xiuxian SET maxR=maxR+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def subtract_max_root(self, user_id, points):
+        """轮回点减少灵根上限"""
+        sql = "UPDATE user_xiuxian SET maxR=maxR-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def add_max_hp(self, user_id, points):
+        """轮回点增加气血上限"""
+        sql = "UPDATE user_xiuxian SET maxH=maxH+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def subtract_max_hp(self, user_id, points):
+        """轮回点减少气血上限"""
+        sql = "UPDATE user_xiuxian SET maxH=maxH-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def add_max_mp(self, user_id, points):
+        """轮回点增加真元上限"""
+        sql = "UPDATE user_xiuxian SET maxM=maxM+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def subtract_max_mp(self, user_id, points):
+        """轮回点减少真元上限"""
+        sql = "UPDATE user_xiuxian SET maxM=maxM-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def add_max_attack(self, user_id, points):
+        """轮回点增加攻击上限"""
+        sql = "UPDATE user_xiuxian SET maxA=maxA+? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def subtract_max_attack(self, user_id, points):
+        """轮回点减少攻击上限"""
+        sql = "UPDATE user_xiuxian SET maxA=maxA-? WHERE user_id=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(points), user_id))
+        self.conn.commit()
+
+    def update_user_info(self, user_id, updates):
+        """
+        更新用户信息
+        :param user_id: 用户ID
+        :param updates: 字典形式的更新字段及其值，例如 {'rbPts': 10, 'maxH': 50}
+        """
+        cursor = self.conn.cursor()
+        set_clause = ', '.join([f'{key}={value}' for key, value in updates.items()])
+        query = f"UPDATE user_xiuxian SET {set_clause} WHERE user_id=?"
+        cursor.execute(query, (user_id,))
+        self.conn.commit()
+
+
     def del_exp_decimal(self, user_id, exp):
         """去浮点"""
         sql = "UPDATE user_xiuxian SET exp=? WHERE user_id=?"
@@ -841,8 +961,6 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         cur.execute(sql, )
         result = cur.fetchall()
         return result
-
-
 
 
     def stone_top(self):

@@ -264,11 +264,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await qc.finish()
     user_id = user_info['user_id']
     user1 = sql_message.get_user_real_info(user_id)
@@ -286,29 +282,17 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             user2 = sql_message.get_user_real_info(user_2name['user_id'])
             if user_2name['user_id'] == user_id:
                 msg = "道友不会左右互搏之术！"
-                if XiuConfig().img:
-                    pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-                    await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-                else:
-                    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+                await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                 await qc.finish()
         else:
             # 如果没有找到匹配的玩家名字
             msg = "未找到名字为 '{}' 的玩家，请确保名字正确。".format(give_qq)
-            if XiuConfig().img:
-                pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-                await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-            else:
-                await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await qc.finish()
     else:
         # 如果没有提供玩家名字
         msg = "请输入要切磋的玩家名字。"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await qc.finish()
 
     if user1 and user2:
@@ -335,15 +319,31 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             total_poxian_percent2 += 10 * 10  # 前10次破限的总增幅
             total_poxian_percent2 += (poxian_num2 - 10) * 20  # 超过10次之后的增幅
 
+        # 获取轮回点数
+        user1_cultEff = user1['cultEff'] / 100
+        user1_seclEff = user1['seclEff'] / 100
+        user1_maxR = user1['maxR'] / 100
+        user1_maxH = user1['maxH'] * 100000
+        user1_maxM = user1['maxM'] * 100000
+        user1_maxA = user1['maxA'] * 10000
+
+        # 获取轮回点数
+        user2_cultEff = user2['cultEff'] / 100
+        user2_seclEff = user2['seclEff'] / 100
+        user2_maxR = user2['maxR'] / 100
+        user2_maxH = user2['maxH'] * 100000
+        user2_maxM = user2['maxM'] * 100000
+        user2_maxA = user2['maxA'] * 10000
+
         # 应用破限增幅到攻击力
-        atk_with_poxian1 = user1['atk'] * (1 + total_poxian_percent1 / 100)
-        atk_with_poxian2 = user2['atk'] * (1 + total_poxian_percent2 / 100)
+        atk_with_poxian1 = (user1['atk'] + user1_maxA) * (1 + total_poxian_percent1 / 100)
+        atk_with_poxian2 = (user2['atk'] + user2_maxA) * (1 + total_poxian_percent2 / 100)
         # 应用破限增幅到气血
-        hp_with_poxian1 = user1['hp'] * (1 + total_poxian_percent1 / 100)
-        hp_with_poxian2 = user2['hp'] * (1 + total_poxian_percent2 / 100)
+        hp_with_poxian1 = (user1['hp'] + user1_maxH)* (1 + total_poxian_percent1 / 100)
+        hp_with_poxian2 = (user2['hp'] + user2_maxH)* (1 + total_poxian_percent2 / 100)
         # 应用破限增幅到真元
-        mp_with_poxian1 = user1['mp'] * (1 + total_poxian_percent1 / 100)
-        mp_with_poxian2 = user2['mp'] * (1 + total_poxian_percent2 / 100)
+        mp_with_poxian1 = (user1['mp'] + user1_maxM) * (1 + total_poxian_percent1 / 100)
+        mp_with_poxian2 = (user2['mp'] + user2_maxM) * (1 + total_poxian_percent2 / 100)
 
         user1_weapon_data = UserBuffDate(user_id).get_user_weapon_data()
         user1_armor_crit_buff = UserBuffDate(user_id).get_user_armor_buff_data()
@@ -402,19 +402,11 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         result, victor = Player_fight(player1, player2, 1, bot.self_id)
         await send_msg_handler(bot, event, result)
         msg = f"获胜的是{victor}"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await qc.finish()
     else:
         msg = "修仙界没有对方的信息，快邀请对方加入修仙界吧！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await qc.finish()
 
 
@@ -692,6 +684,14 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
     use_exp = user_mes['exp']
     use_poxian = user_mes['poxian_num']  # 获取用户破限信息
 
+    # 获取轮回点数
+    use_cultEff = user_mes['cultEff'] / 100
+    use_seclEff = user_mes['seclEff'] / 100
+    use_maxR = user_mes['maxR'] / 100
+    use_maxH = user_mes['maxH'] * 100000
+    use_maxM = user_mes['maxM'] * 100000
+    use_maxA = user_mes['maxA'] * 10000
+
     # 计算破限带来的总增幅百分比
     total_poxian_percent = 0
     if use_poxian <= 10:
@@ -737,7 +737,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
 
         exp = int(
             (exp_time * XiuConfig().closing_exp) * (
-                (level_rate * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
+                ((level_rate+use_maxR) * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
             # 洞天福地为加法
         )  # 本次闭关获取的修为
         # 计算传承增益
@@ -764,7 +764,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                     user_stone = 0
                 if exp <= user_stone:
                     exp = exp * 2
-                    exp_poxian = exp * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
+                    exp_poxian = (exp * (1 + use_seclEff)) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
                     sql_message.in_closing(user_id, user_type)
                     sql_message.update_exp(user_id, exp_poxian)
                     sql_message.update_ls(user_id, int(exp / 2), 2)
@@ -778,7 +778,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await out_closing.finish()
                 else:
-                    exp = exp + (user_stone * (1 + total_poxian_percent / 100))  # 加入破限增幅部分
+                    exp = ((exp + user_stone) * (1 + use_seclEff)) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
                     sql_message.in_closing(user_id, user_type)
                     sql_message.update_exp(user_id, exp)
                     sql_message.update_ls(user_id, user_stone, 2)
@@ -791,7 +791,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await out_closing.finish()
             else:
-                exp = exp * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
+                exp = exp * (1+use_seclEff) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
                 sql_message.in_closing(user_id, user_type)
                 sql_message.update_exp(user_id, exp)
                 sql_message.update_power2(user_id)  # 更新战力
@@ -820,6 +820,14 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
     level = user_mes['level']
     use_exp = user_mes['exp']
     use_poxian = user_mes['poxian_num']  # 获取用户破限信息
+
+    # 获取轮回点数
+    use_cultEff = user_mes['cultEff'] / 100
+    use_seclEff = user_mes['seclEff'] / 100
+    use_maxR = user_mes['maxR'] / 100
+    use_maxH = user_mes['maxH'] * 100000
+    use_maxM = user_mes['maxM'] * 100000
+    use_maxA = user_mes['maxA'] * 10000
 
     # 计算破限带来的总增幅百分比
     total_poxian_percent = 0
@@ -866,12 +874,12 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
 
         exp = int(
             (1 * XiuConfig().closing_exp * XiuConfig().cultivation_exp) * (
-                (level_rate * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
+                ((level_rate+use_maxR) * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
         )  # 本次闭关获取的修为
         # 计算传承增益
         impart_data = xiuxian_impart.get_user_info_with_id(user_id)
         impart_exp_up = impart_data['impart_exp_up'] if impart_data is not None else 0
-        exp = int(exp * (1 + impart_exp_up))
+        exp = int(exp * (1 + impart_exp_up) * use_cultEff *(1 + total_poxian_percent / 100))
 
         # 如果修为达到上限或大于距离上限所需的值
         if exp > user_get_exp_max:
@@ -926,6 +934,14 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     else:
         total_poxian_percent += 10 * 10  # 前10次破限的总增幅
         total_poxian_percent += (user_poxian - 10) * 20  # 超过10次之后的增幅
+
+    # 获取轮回点数
+    user_cultEff = user_msg['cultEff'] / 100
+    user_seclEff = user_msg['seclEff'] / 100
+    user_maxR = user_msg['maxR'] / 100
+    user_maxH = user_msg['maxH'] * 100000
+    user_maxM = user_msg['maxM'] * 100000
+    user_maxA = user_msg['maxA'] * 10000
 
     if user_main_data is not None:
         main_def = user_main_data['def_buff'] * 100  # 我的状态功法减伤
@@ -991,12 +1007,12 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
 
     msg = f"""      
 道号：{user_msg['user_name']}               
-气血:{number_to(user_msg['hp'] * (1 + total_poxian_percent / 100))}/{number_to(int((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) * (1 + total_poxian_percent / 100)))}({((user_msg['hp'] / ((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per)))) * 100:.2f}%)
-真元:{number_to(user_msg['mp'] * (1 + total_poxian_percent / 100))}/{number_to(user_msg['exp'] * (1 + total_poxian_percent / 100))}({((user_msg['mp'] / user_msg['exp']) * 100):.2f}%)
-攻击:{number_to(user_msg['atk'] * (1 + total_poxian_percent / 100))}
+气血:{number_to((user_msg['hp'] + user_maxH)* (1 + total_poxian_percent / 100))}/{number_to(int(((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) + user_maxH) * (1 + total_poxian_percent / 100)))}({(((user_msg['hp'] + user_maxH)/ (((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per))+user_maxH))) * 100:.2f}%)
+真元:{number_to((user_msg['mp'] + user_maxM) * (1 + total_poxian_percent / 100))}/{number_to((user_msg['exp']+user_maxM) * (1 + total_poxian_percent / 100))}({(((user_msg['mp']+user_maxM) / (user_msg['exp']+user_maxM)) * 100):.2f}%)
+攻击:{number_to((user_msg['atk'] + user_maxA)* (1 + total_poxian_percent / 100))}
 破限增幅: {total_poxian_percent}%
 攻击修炼:{user_msg['atkpractice']}级(提升攻击力{user_msg['atkpractice'] * 4}%)
-修炼效率:{int(((level_rate * realm_rate) * (1 + main_buff_rate_buff)) * 100 * (1 + total_poxian_percent / 100))}%
+修炼效率:{int((((level_rate+user_maxR) * realm_rate) * (1 + main_buff_rate_buff)) * 100 * (1 + total_poxian_percent / 100))}%
 会心:{round((crit_buff + impart_know_per * 100 + armor_crit_buff + main_crit_buff) * (1 + total_poxian_percent / 100), 1)}%
 减伤率:{def_buff + weapon_def + main_def}%
 boss战增益:{int(boss_atk * 100 * (1 + total_poxian_percent / 100))}%

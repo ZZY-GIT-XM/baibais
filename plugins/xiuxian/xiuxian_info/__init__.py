@@ -23,11 +23,7 @@ async def xiuxian_message_img_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await xiuxian_message_img.finish()
     user_id = user_info['user_id']
     user_info = sql_message.get_user_real_info(user_id)
@@ -86,9 +82,18 @@ async def xiuxian_message_img_(bot: Bot, event: GroupMessageEvent):
         total_poxian_percent += 10 * 10  # 前10次破限的总增幅
         total_poxian_percent += (user_poxian - 10) * 20  # 超过10次之后的增幅
 
-    # 应用破限增幅到战力和攻击力
-    level_rate_with_poxian = level_rate * (1 + total_poxian_percent / 100)
-    atk_with_poxian = user_info['atk'] * (1 + total_poxian_percent / 100)
+
+    # 获取轮回点数
+    user_cultEff = user_info['cultEff']
+    user_seclEff = user_info['seclEff']
+    user_maxR = user_info['maxR']
+    user_maxH = user_info['maxH']
+    user_maxM = user_info['maxM']
+    user_maxA = user_info['maxA']
+
+    # 应用破限增幅到战力和攻击力 轮回点的增幅为加算
+    level_rate_with_poxian = (level_rate + (user_maxR / 100)) * (1 + total_poxian_percent / 100)
+    atk_with_poxian = (user_info['atk'] + (user_maxA * 10000))* (1 + total_poxian_percent / 100)
 
     main_buff_name = f"无"
     sub_buff_name = f"无"
@@ -152,11 +157,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await xiuxian_message.finish()
     user_id = user_info['user_id']
     user_info = sql_message.get_user_real_info(user_id)
@@ -215,9 +216,18 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         total_poxian_percent += 10 * 10  # 前10次破限的总增幅
         total_poxian_percent += (user_poxian - 10) * 20  # 超过10次之后的增幅
 
-    # 应用破限增幅到战力和攻击力
-    level_rate_with_poxian = level_rate * (1 + total_poxian_percent / 100)
-    atk_with_poxian = user_info['atk'] * (1 + total_poxian_percent / 100)
+
+    # 获取轮回点数
+    user_cultEff = user_info['cultEff']
+    user_seclEff = user_info['seclEff']
+    user_maxR = user_info['maxR']
+    user_maxH = user_info['maxH']
+    user_maxM = user_info['maxM']
+    user_maxA = user_info['maxA']
+
+    # 应用破限增幅到战力和攻击力 轮回点的增幅为加算
+    level_rate_with_poxian = (level_rate + (user_maxR / 100)) * (1 + total_poxian_percent / 100)
+    atk_with_poxian = (user_info['atk'] + (user_maxA * 10000)) * (1 + total_poxian_percent / 100)
 
     main_buff_name = f"无"
     sub_buff_name = f"无"

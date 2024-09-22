@@ -114,12 +114,10 @@ async def peiyang_help_(bot: Bot, event: GroupMessageEvent):
     await peiyang_help.finish()
 
 
-
 @peiyang.handle(parameterless=[Cooldown(cd_time=XiuConfig().peiyang_cd, at_sender=False)])
 async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
     """鉴定灵石"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
-
     isUser, user_info, msg = check_user(event)
     user_id = user_info['user_id']
     if not isUser:

@@ -58,7 +58,9 @@ class XiuConfig:
                                  "level_up_rate", "sect_id",
                                  "sect_position", "hp", "mp", "atk",
                                  "atkpractice", "sect_task", "sect_contribution",
-                                 "sect_elixir_get", "blessed_spot_flag", "blessed_spot_name", "user_stamina", "consecutive_wins", "consecutive_losses"]
+                                 "sect_elixir_get", "blessed_spot_flag", "blessed_spot_name",
+                                 "user_stamina", "consecutive_wins", "consecutive_losses", "poxian_num",
+                                 "rbPts", "cultEff", "seclEff", "maxR", "maxH", "maxM", "maxA"]
         self.sql_user_cd = ["user_id", "type", "create_time", "scheduled_time", "last_check_info_time"]
         self.sql_sects = ["sect_id", "sect_name", "sect_owner", "sect_scale", "sect_used_stone", "sect_fairyland",
                           "sect_materials", "mainbuff", "secbuff", "elixir_room_level"]
@@ -73,7 +75,7 @@ class XiuConfig:
         self.user_info_image = True  # 是否使用图片发送个人信息
         self.level_up_cd = 0  # 突破CD(分钟)
         self.closing_exp = 60  # 闭关每分钟获取的修为
-        self.cultivation_exp = 50  # 单次修炼获取的修为相对于闭关1分钟修炼的倍数
+        self.cultivation_exp = 6  # 单次修炼获取的修为相对于闭关1分钟修炼的倍数
         self.put_bot = []  # 接收消息qq,主qq，框架将只处理此qq的消息
         self.main_bo = []  # 负责发送消息的qq
         self.shield_group = []  # 屏蔽的群聊
