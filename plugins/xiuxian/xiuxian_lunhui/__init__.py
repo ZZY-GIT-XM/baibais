@@ -20,12 +20,22 @@ from ..xiuxian_utils.utils import (
 )
 
 __warring_help__ = """
-详情：
-散尽修为，轮回重修，将万世的道果凝聚为极致天赋
-修为、功法、神通将被清空！！
-进入千世轮回：获得轮回灵根，增加破限次数，破限10次可进入万世轮回，可定制极品仙器(在做)
-进入万世轮回：获得真轮回灵根，可定制无上仙器(在做)
-自废修为：字面意思，仅搬血境可用
+轮回重修帮助：
+- 详情：
+  - 散尽修为，轮回重修，将万世的道果凝聚为极致天赋。
+  - 修为、功法、神通将被清空！
+  - 进入千世轮回：获得轮回灵根，增加破限次数，破限10次可进入万世轮回，可定制极品仙器（在做）。
+  - 进入万世轮回：获得真轮回灵根，可定制无上仙器（在做）。
+  - 自废修为：字面意思，仅搬血境可用。
+- 使用方法：
+  - 输入「进入千世轮回/进入万世轮回」开始轮回重修。
+  - 输入「自废修为」将废除当前修为。
+  - 输入「轮回加点 查询」查看当前状态和剩余破限次数。
+- 注意事项：
+  - 轮回重修后，修为、功法、神通将被清空。
+  - 千世轮回每次获得最终增幅10%(真元/血量/灵根/闭关收益/修炼收益)
+  - 万世轮回每次获得最终增幅20%(真元/血量/灵根/闭关收益/修炼收益)
+  - 自废修为仅在搬血境可用。
 """.strip()
 
 __rebirth_help__ = """
@@ -36,7 +46,7 @@ __rebirth_help__ = """
   - 属性名称对应如下：
     - 修炼：增加修炼效率（每点增加修炼效率1%）
     - 闭关：增加闭关效率（每点增加闭关效率1%）
-    - 灵根：增加灵根效率上限（每点增加灵根效率上限1%）
+    - 灵根：增加灵根效率（每点增加灵根效率1%）
     - 血量：增加血量上限（每点增加血量100000）
     - 真元：增加真元上限（每点增加真元100000）
     - 攻击：增加攻击力上限（每点增加攻击力10000）
@@ -57,6 +67,7 @@ lunhui = on_command('进入千世轮回', priority=15, permission=GROUP,block=Tr
 twolun = on_command('进入万世轮回', priority=15, permission=GROUP,block=True)
 resetting = on_command('自废修为', priority=15, permission=GROUP,block=True)
 rebirth_help = on_command('轮回加点帮助', priority=15, permission=GROUP, block=True)
+lunhui_jiadian = on_regex(r'^轮回加点\s*(.*?)\s*(\d*)$', flags=re.IGNORECASE, priority=15, permission=GROUP, block=True)
 
 
 @warring_help.handle(parameterless=[Cooldown(at_sender=False)])
@@ -129,6 +140,7 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent):
         sql_message.updata_user_sec_buff(user_id, 0) #重置用户神通
         sql_message.update_user_atkpractice(user_id, 0) #重置用户攻修等级
         sql_message.update_poxian_num(user_id) #更新用户打破极限的次数
+        sql_message.add_rebirth_points(user_id,20) #获得轮回点数
         msg = f"千世轮回磨不灭，重回绝颠谁能敌，恭喜大能{user_name}轮回成功！当前破限次数为{user_poxian + 1}!"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await lunhui.finish()
@@ -181,6 +193,7 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
         sql_message.update_j_exp(user_id, now_exp) #重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
         sql_message.update_poxian_num(user_id) #更新用户打破极限的次数
+        sql_message.add_rebirth_points(user_id,50) #获得轮回点数
         msg = f"万世道果集一身，脱出凡道入仙道，恭喜大能{user_name}万世轮回成功！当前破限次数为{user_poxian + 1}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await twolun.finish()
@@ -232,13 +245,11 @@ ATTRIBUTE_MAP = {
 ATTRIBUTE_DESCRIPTIONS = {
     '修炼': '（每点增加修炼效率1%）',
     '闭关': '（每点增加闭关效率1%）',
-    '灵根': '（每点增加灵根效率上限1%）',
+    '灵根': '（每点增加灵根效率1%）',
     '血量': '（每点增加血量100000）',
     '真元': '（每点增加真元100000）',
     '攻击': '（每点增加攻击力10000）'
 }
-
-lunhui_jiadian = on_regex(r'^轮回加点\s*(.*?)\s*(\d*)$', flags=re.IGNORECASE, priority=15, permission=GROUP, block=True)
 
 @lunhui_jiadian.handle(parameterless=[Cooldown(at_sender=False)])
 async def add_rebirth_points(bot: Bot, event: GroupMessageEvent, args: Tuple[str, str] = RegexGroup()):

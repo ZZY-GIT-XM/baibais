@@ -785,7 +785,6 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         else:
             return None
 
-
     def in_closing(self, user_id, the_type):
         """
         更新用户操作CD

@@ -32,12 +32,13 @@ async def xiuxian_beg_():
     logger.opt(colors=True).info(f"<green>仙途奇缘重置成功！</green>")
 
 __beg_help__ = """
-详情:
-为了让初入仙途的道友们更顺利地踏上修炼之路，特别开辟了额外的机缘
-天降灵石，助君一臂之力。
-若有心人借此谋取不正之利，必将遭遇天道轮回，异象降临，后果自负。
-诸位道友，若不信此言，可自行一试，便知天机不可泄露，天道不容欺。
+详情：
+为了让初入仙途的道友们更顺利地踏上修炼之路，特别开辟了额外的机缘：
+- 天降灵石，助君一臂之力。
+- 若有心人借此谋取不正当利益，必将遭遇天道轮回，异象降临，后果自负。
+- 诸位道友，若不信此言，可自行一试，便知天机不可泄露，天道不容欺。
 """.strip()
+
 
 beg_stone = on_command("仙途奇缘", permission=GROUP, priority=7, block=True)
 beg_help = on_command("仙途奇缘帮助", permission=GROUP, priority=7, block=True)
