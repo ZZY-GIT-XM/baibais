@@ -56,15 +56,16 @@ my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, bl
 __buff_help__ = f"""
 功法帮助信息:
 指令：
-1、我的功法:查看自身功法以及背包内的所有功法信息
-2、切磋XX:切磋对应人员,不会消耗气血
-3、洞天福地购买:购买洞天福地
-4、洞天福地查看:查看自己的洞天福地
-5、洞天福地改名+名字：修改自己洞天福地的名字
-6、灵田开垦:提升灵田的等级,提高灵田结算的药材数量
-7、抑制黑暗动乱:清除修为浮点数
-8、我的双修次数:查看剩余双修次数
+- 我的功法：查看自身功法以及背包内的所有功法信息
+- 切磋 [道号]：切磋对应道友，不会消耗气血
+- 洞天福地购买：购买洞天福地
+- 洞天福地查看：查看自己的洞天福地
+- 洞天福地改名 + 名字：修改自己洞天福地的名字
+- 灵田开垦：提升灵田的等级，提高灵田结算的药材数量
+- 抑制黑暗动乱：清除修为浮点数
+- 我的双修次数：查看剩余双修次数
 """.strip()
+
 
 
 # 每日0点重置用户宗门任务次数、宗门丹药领取次数
@@ -791,7 +792,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await out_closing.finish()
             else:
-                exp = exp * (1+use_seclEff) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
+                exp = exp * (1 + use_seclEff) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
                 sql_message.in_closing(user_id, user_type)
                 sql_message.update_exp(user_id, exp)
                 sql_message.update_power2(user_id)  # 更新战力
@@ -879,7 +880,7 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
         # 计算传承增益
         impart_data = xiuxian_impart.get_user_info_with_id(user_id)
         impart_exp_up = impart_data['impart_exp_up'] if impart_data is not None else 0
-        exp = int(exp * (1 + impart_exp_up) * use_cultEff *(1 + total_poxian_percent / 100))
+        exp = int(exp * (1 + impart_exp_up) * (1 + use_cultEff) * (1 + total_poxian_percent / 100))
 
         # 如果修为达到上限或大于距离上限所需的值
         if exp > user_get_exp_max:

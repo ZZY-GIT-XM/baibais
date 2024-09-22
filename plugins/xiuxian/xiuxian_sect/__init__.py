@@ -74,30 +74,31 @@ sect_elixir_room_make = on_command("宗门丹房建设", aliases={"建设宗门�
 sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药领取"}, priority=5, permission=GROUP, block=True)
 sect_rename = on_command("宗门改名", priority=5,  permission=GROUP, block=True)
 __sect_help__ = f"""
-指令：
-- 我的宗门: 查看当前所处宗门信息。
-- 创建宗门: 创建宗门，需求：{XiuConfig().sect_create_cost} 灵石，需求境界 {XiuConfig().sect_min_level}。
-- 加入宗门: 加入一个宗门，需要带上宗门 ID。
-- 宗门职位变更: 宗主可以改变宗门成员的职位等级【0 1 2 3 4】，分别对应【宗主 长老 亲传 内门 外门】（外门弟子无法获得宗门修炼资源）。
-- 宗门捐献: 建设宗门，提高宗门建设度，每 {config["等级建设度"]} 建设度会提高 1 级攻击修炼等级上限。
-- 宗门改名: 宗主可以改变宗门名称。
-- 退出宗门: 退出当前宗门。
-- 踢出宗门: 踢出对应宗门成员，需要输入正确的 QQ 号或 @ 对方。
-- 宗主传位: 宗主可以传位给宗门成员。
-- 升级攻击修炼: 升级道友的攻击修炼等级，每级修炼等级提升 4% 攻击力，后面可以接升级等级。
-- 宗门列表: 查看所有宗门列表。
-- 宗门任务接取、我的宗门任务: 接取宗门任务，可以增加宗门建设度和资材，每日上限：{config["每日宗门任务次上限"]} 次。
-- 宗门任务完成: 完成所接取的宗门任务，完成间隔时间：{config["宗门任务完成cd"]} 秒。
-- 宗门任务刷新: 刷新当前所接取的宗门任务，刷新间隔时间：{config["宗门任务刷新cd"]} 秒。
-- 宗门功法、神通搜寻: 宗主可消耗宗门资材和宗门灵石来搜寻 100 次功法或者神通。
-- 学习宗门功法、神通: 宗门成员可消耗宗门资材来学习宗门功法或者神通，后面接功法名称。
-- 宗门功法查看: 查看当前宗门已有的功法。
-- 宗门成员查看、查看宗门成员: 查看所在宗门的成员信息。
-- 宗门丹房建设、建设宗门丹房: 建设宗门丹房，可以让每个宗门成员每日领取丹药。
-- 宗门丹药领取、领取宗门丹药: 领取宗门丹药。
-非指令：
-- 拥有定时任务: 每日 {config["发放宗门资材"]["时间"]} 点发放 {config["发放宗门资材"]["倍率"]} 倍对应宗门建设度的资材。
-- 道统传承: 宗主 | 长老 | 亲传弟子 | 内门弟子 | 外门弟子 | 散修 单次稳定获得百分比修为上限分别为：{jsondata.sect_config_data()[str(0)]["max_exp"]}，{jsondata.sect_config_data()[str(1)]["max_exp"]}，{jsondata.sect_config_data()[str(2)]["max_exp"]}，{jsondata.sect_config_data()[str(3)]["max_exp"]}，{jsondata.sect_config_data()[str(4)]["max_exp"]}，{jsondata.sect_config_data()[str(4)]["max_exp"]}。
+宗门帮助信息:
+- 指令：
+  - 我的宗门: 查看当前所处宗门信息。
+  - 创建宗门: 创建宗门，需求：{XiuConfig().sect_create_cost} 灵石，需求境界 {XiuConfig().sect_min_level}。
+  - 加入宗门: 加入一个宗门，需要带上宗门 ID。
+  - 宗门职位变更: 宗主可以改变宗门成员的职位等级【0 1 2 3 4】，分别对应【宗主 长老 亲传 内门 外门】（外门弟子无法获得宗门修炼资源）。
+  - 宗门捐献: 建设宗门，提高宗门建设度，每 {config["等级建设度"]} 建设度会提高 1 级攻击修炼等级上限。
+  - 宗门改名: 宗主可以改变宗门名称。
+  - 退出宗门: 退出当前宗门。
+  - 踢出宗门: 踢出对应宗门成员，需要输入正确的 QQ 号或 @ 对方。
+  - 宗主传位: 宗主可以传位给宗门成员。
+  - 升级攻击修炼: 升级道友的攻击修炼等级，每级修炼等级提升 4% 攻击力，后面可以接升级等级。
+  - 宗门列表: 查看所有宗门列表。
+  - 宗门任务接取、我的宗门任务: 接取宗门任务，可以增加宗门建设度和资材，每日上限：{config["每日宗门任务次上限"]} 次。
+  - 宗门任务完成: 完成所接取的宗门任务，完成间隔时间：{config["宗门任务完成cd"]} 秒。
+  - 宗门任务刷新: 刷新当前所接取的宗门任务，刷新间隔时间：{config["宗门任务刷新cd"]} 秒。
+  - 宗门功法、神通搜寻: 宗主可消耗宗门资材和宗门灵石来搜寻 100 次功法或者神通。
+  - 学习宗门功法、神通: 宗门成员可消耗宗门资材来学习宗门功法或者神通，后面接功法名称。
+  - 宗门功法查看: 查看当前宗门已有的功法。
+  - 宗门成员查看、查看宗门成员: 查看所在宗门的成员信息。
+  - 宗门丹房建设、建设宗门丹房: 建设宗门丹房，可以让每个宗门成员每日领取丹药。
+  - 宗门丹药领取、领取宗门丹药: 领取宗门丹药。
+- 非指令：
+  - 拥有定时任务: 每日 {config["发放宗门资材"]["时间"]} 点发放 {config["发放宗门资材"]["倍率"]} 倍对应宗门建设度的资材。
+  - 道统传承: 宗主 | 长老 | 亲传弟子 | 内门弟子 | 外门弟子 | 散修 单次稳定获得百分比修为上限分别为：{jsondata.sect_config_data()[str(0)]["max_exp"]}，{jsondata.sect_config_data()[str(1)]["max_exp"]}，{jsondata.sect_config_data()[str(2)]["max_exp"]}，{jsondata.sect_config_data()[str(3)]["max_exp"]}，{jsondata.sect_config_data()[str(4)]["max_exp"]}，{jsondata.sect_config_data()[str(4)]["max_exp"]}。
 """.strip()
 
 
@@ -164,13 +165,9 @@ async def auto_sect_owner_change_():
 async def sect_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
     """宗门帮助"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
-    if session_id in cache_help:
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help[session_id]))
-        await sect_help.finish()
-    else:
-        msg = __sect_help__
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await sect_help.finish()
+    msg = __sect_help__
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await sect_help.finish()
 
 
 @sect_elixir_room_make.handle(parameterless=[Cooldown(stamina_cost=2, at_sender=False)])

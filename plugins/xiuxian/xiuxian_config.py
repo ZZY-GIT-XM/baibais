@@ -52,22 +52,22 @@ class XiuConfig:
     def __init__(self):
         self.sql_table = ["user_xiuxian", "user_cd", "sects", "back", "BuffInfo"]
         self.sql_user_xiuxian = ["id", "user_id", "user_name", "stone", "root",
-                                 "root_type", "level", "power",
-                                 "create_time", "is_sign", "is_beg", "is_ban",
-                                 "exp", "work_num", "level_up_cd",
-                                 "level_up_rate", "sect_id",
-                                 "sect_position", "hp", "mp", "atk",
-                                 "atkpractice", "sect_task", "sect_contribution",
-                                 "sect_elixir_get", "blessed_spot_flag", "blessed_spot_name",
-                                 "user_stamina", "consecutive_wins", "consecutive_losses", "poxian_num",
-                                 "rbPts", "cultEff", "seclEff", "maxR", "maxH", "maxM", "maxA"]
+                                "root_type", "level", "power",
+                                "create_time", "is_sign", "is_beg", "is_ban",
+                                "exp", "work_num", "level_up_cd",
+                                "level_up_rate", "sect_id",
+                                "sect_position", "hp", "mp", "atk",
+                                "atkpractice", "sect_task", "sect_contribution",
+                                "sect_elixir_get", "blessed_spot_flag", "blessed_spot_name",
+                                "user_stamina", "consecutive_wins", "consecutive_losses", "poxian_num",
+                                "rbPts", "cultEff", "seclEff", "maxR", "maxH", "maxM", "maxA"]
         self.sql_user_cd = ["user_id", "type", "create_time", "scheduled_time", "last_check_info_time"]
         self.sql_sects = ["sect_id", "sect_name", "sect_owner", "sect_scale", "sect_used_stone", "sect_fairyland",
-                          "sect_materials", "mainbuff", "secbuff", "elixir_room_level"]
+                        "sect_materials", "mainbuff", "secbuff", "elixir_room_level"]
         self.sql_buff = ["id", "user_id", "main_buff", "sec_buff", "faqi_buff", "fabao_weapon", "armor_buff",
-                         "atk_buff", "sub_buff", "blessed_spot"]
+                        "atk_buff", "sub_buff", "blessed_spot"]
         self.sql_back = ["user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
-                         "remake", "day_num", "all_num", "action_time", "state", "bind_num"]
+                        "remake", "day_num", "all_num", "action_time", "state", "bind_num"]
         self.sql_user_auctions = [""]
         # 上面是数据库校验,别动
         self.level = convert_rank('江湖好手')[1]  # 境界列表，别动
