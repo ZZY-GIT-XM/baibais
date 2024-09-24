@@ -804,7 +804,6 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                 await out_closing.finish()
 
 
-
 @cultivation_command.handle()
 async def start_cultivation(bot: Bot, event: GroupMessageEvent):
     """开始修炼"""
@@ -901,7 +900,6 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         # 结束处理
         await cultivation_command.finish()
-
 
 
 @mind_state.handle(parameterless=[Cooldown(at_sender=False)])

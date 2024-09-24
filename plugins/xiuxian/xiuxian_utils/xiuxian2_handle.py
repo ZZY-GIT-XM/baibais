@@ -194,7 +194,7 @@ class XiuxianDateManage:
                 sql = f"ALTER TABLE back ADD COLUMN {b} INTEGER DEFAULT 0;"
                 logger.opt(colors=True).info(f"<green>{sql}</green>")
                 c.execute(sql)
-        
+
         # 检查并更新 last_check_info_time 列的记录
         c.execute(f"""UPDATE user_cd
 SET last_check_info_time = ?
@@ -409,7 +409,7 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
         else:
             bonus = 1 + (10 * 0.1) + ((poxian_num - 10) * 0.2)  # 11次及以上，每次增加20%
         # 计算最终的战力值
-        power = round(UserMessage['exp'] * root[UserMessage['root_type']]["type_speeds"] * level[UserMessage['level']]["spend"] * bonus, 0)
+        power = round(UserMessage['exp'] * root[UserMessage['root_type']]["type_speeds"] * level[UserMessage['level']]["spend"] * bonus * (1 + (UserMessage['maxR']/100)), 0)
         sql = f"UPDATE user_xiuxian SET power=? WHERE user_id=?" # 更新数据库中的战力值
         cur.execute(sql, (power, user_id))
         self.conn.commit()

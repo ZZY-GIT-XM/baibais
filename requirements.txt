@@ -8,4 +8,5 @@ asyncio
 aiohttp
 pydantic
 aiofiles
+psycopg2-binary
 nonebot_plugin_apscheduler 

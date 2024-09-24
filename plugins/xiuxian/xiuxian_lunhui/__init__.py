@@ -49,13 +49,14 @@ __rebirth_help__ = """
     - 灵根：增加灵根效率（每点增加灵根效率1%）
     - 血量：增加血量上限（每点增加血量100000）
     - 真元：增加真元上限（每点增加真元100000）
-    - 攻击：增加攻击力上限（每点增加攻击力10000）
+    - 攻击：增加攻击上限（每点增加攻击10000）
   - 输入「轮回加点 重置」重置所有已分配的轮回点数。
   - 输入「轮回加点 查询」查看当前已分配的属性点数和剩余未分配的轮回点数。
 - 注意事项：
   - 分配的点数不能超过当前拥有的轮回点数。
   - 重置会将所有已分配的点数返回到轮回点数池中。
   - 查询功能可以帮助你了解当前属性点数分配情况及剩余轮回点数。
+  - 千世轮回每次可得20轮回点,万世轮回每次可得50轮回点。
 """.strip()
 
 
@@ -248,7 +249,7 @@ ATTRIBUTE_DESCRIPTIONS = {
     '灵根': '（每点增加灵根效率1%）',
     '血量': '（每点增加血量100000）',
     '真元': '（每点增加真元100000）',
-    '攻击': '（每点增加攻击力10000）'
+    '攻击': '（每点增加攻击10000）'
 }
 
 @lunhui_jiadian.handle(parameterless=[Cooldown(at_sender=False)])
@@ -267,12 +268,6 @@ async def add_rebirth_points(bot: Bot, event: GroupMessageEvent, args: Tuple[str
     user_msg = sql_message.get_user_info_with_id(user_id)
     rbPts = user_msg['rbPts']
 
-    # 如果轮回点数小于等于0，直接提示用户
-    if rbPts <= 0:
-        msg = "您当前没有可用的轮回点数，请先获得轮回点数后再尝试加点。"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui_jiadian.finish()
-
     # 获取用户输入的纯文本
     input_attr, points_str = args
 
@@ -289,6 +284,12 @@ async def add_rebirth_points(bot: Bot, event: GroupMessageEvent, args: Tuple[str
     # 处理重置情况
     if input_attr == "重置":
         await reset_rebirth_points(bot, send_group_id, user_id, user_msg)
+        await lunhui_jiadian.finish()
+
+    # 如果轮回点数小于等于0，直接提示用户
+    if rbPts <= 0:
+        msg = "您当前没有可用的轮回点数，请先获得轮回点数后再尝试加点。"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await lunhui_jiadian.finish()
 
     # 检查属性名称是否有效，并转换为小写

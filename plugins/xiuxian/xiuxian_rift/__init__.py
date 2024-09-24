@@ -112,10 +112,7 @@ async def set_rift_():
 async def rift_help_(bot: Bot, event: GroupMessageEvent):
     """秘境帮助"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
-
-    # 构造帮助信息
     msg = __rift_help__
-
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await rift_help.finish()
 
@@ -213,8 +210,6 @@ async def create_rift_(bot: Bot, event: GroupMessageEvent):
         await create_rift.finish()
     else:
         await create_rift.finish()
-
-
 
 
 @explore_rift.handle(parameterless=[Cooldown(stamina_cost=6, at_sender=False)])
