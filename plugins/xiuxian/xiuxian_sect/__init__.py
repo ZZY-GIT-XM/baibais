@@ -1,5 +1,6 @@
 import re
 import random
+import string
 from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, OtherSet, BuffJsonDate,
     get_main_info_msg, UserBuffDate, get_sec_msg
@@ -956,68 +957,93 @@ async def sect_owner_change_(bot: Bot, event: GroupMessageEvent, args: Message =
         await sect_owner_change.finish()
 
 
-@sect_rename.handle(parameterless=[Cooldown(cd_time=XiuConfig().sect_rename_cd * 86400,at_sender=False)])
+
+
+@sect_rename.handle(parameterless=[Cooldown(cd_time=XiuConfig().sect_rename_cd * 86400, at_sender=False)])
 async def sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """宗门改名"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
+
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await sect_rename.finish()
+
     if not user_info['sect_id']:
         msg = f"道友还未加入一方宗门。"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await sect_rename.finish()
+
     position_this = [k for k, v in jsondata.sect_config_data().items() if v.get("title", "") == "宗主"]
     owner_position = int(position_this[0]) if len(position_this) == 1 else 0
+
     if user_info['sect_position'] != owner_position:
         msg = f"只有宗主才能进行改名！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await sect_rename.finish()
+
     else:
-        update_sect_name = args.extract_plain_text().strip()
         sect_id = user_info['sect_id']
         sect_info = sql_message.get_sect_info(sect_id)
         enabled_groups = JsonConfig().get_enabled_groups()
-        len_sect_name = len(update_sect_name.encode('gbk'))
 
-        if len_sect_name > 20:
-            msg = f"道友输入的宗门名字过长,请重新输入！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await sect_rename.finish()
+        # 生成随机名称
+        new_name = generate_random_sect_name()
 
-        elif update_sect_name is None:
-            msg = f"道友确定要改名无名之宗门？还请三思。"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await sect_rename.finish()
+        # 检查名称是否重复
+        while sql_message.check_sect_name_exists(new_name):
+            new_name = generate_random_sect_name()
 
-        elif sect_info['sect_used_stone'] < XiuConfig().sect_rename_cost:
+        # 检查宗门灵石是否足够
+        if sect_info['sect_used_stone'] < XiuConfig().sect_rename_cost:
             msg = f"道友宗门灵石储备不足，还需{number_to(XiuConfig().sect_rename_cost - sect_info['sect_used_stone'])}灵石!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await sect_rename.finish()
 
-        elif sql_message.update_sect_name(sect_id, update_sect_name) is False:
-            msg = f"已存在同名宗门(自己宗门名字一样的就不要改了),请重新输入！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await sect_rename.finish()
-        else:
-            sql_message.update_sect_name(sect_id, update_sect_name)
-            sql_message.update_sect_used_stone(sect_id, XiuConfig().sect_rename_cost, 2)
-            msg = f"""
+        # 更新宗门名称
+        sql_message.update_sect_name(sect_id, new_name)
+        sql_message.update_sect_used_stone(sect_id, XiuConfig().sect_rename_cost, 2)
+
+        msg = f"""
 传宗门——{sect_info['sect_name']}
 宗主{user_info['user_name']}法旨:
-宗门改名为{update_sect_name}！
+宗门改名为{new_name}！
 星斗更迭，法器灵通，神光熠熠。
 愿同门共沐神光，共护宗门千世荣光！
 青天无云，道韵长存，灵气飘然。
 愿同门同心同德，共铸宗门万世辉煌！"""
-            for group_id in enabled_groups:
-                bot = await assign_bot_group(group_id=group_id)
-                try:
-                    await bot.send_group_msg(group_id=int(group_id), message=msg)
-                except ActionFailed:
-                    continue
-            await sect_rename.finish()
+
+        for group_id in enabled_groups:
+            bot = await assign_bot_group(group_id=group_id)
+            try:
+                await bot.send_group_msg(group_id=int(group_id), message=msg)
+            except ActionFailed:
+                continue
+
+        await sect_rename.finish()
+
+def generate_random_sect_name():
+    """生成随机洞天福地名称"""
+    names = ["幻月洞天", "幽影魔域", "九天玄界", "碧落仙源", "幽冥天", "万古冰原", "星河秘境", "云隐仙居",
+"翠影灵谷", "龙翔九天", "紫霄神境", "幽冥神殿", "天罡秘境", "碧落琼楼", "幽冥禁地", "万古药园",
+"星辰幻境", "仙灵福地", "幽冥深渊", "碧落天池", "九天仙境", "幽冥鬼谷", "万古神泉", "星河神域",
+"碧落灵界", "玄冰洞天", "幽冥绝域", "万古仙山", "星河灵域", "碧落瑶台", "幽冥鬼界", "万古灵墟",
+"星辰秘藏", "幽冥古洞", "碧落神渊", "九天云外", "幽冥雾海", "万古剑冢", "幽冥魔宫", "万古龙脉",
+"星辰宝殿", "幽冥鬼域", "碧落天宫", "九天玄霄", "幽冥鬼森", "万古冰魄", "星河秘府", "碧落神宫",
+"幽冥魔渊", "九天琼台", "幽冥炼狱", "万古仙域", "星河洞天", "九天云阙", "幽冥秘境", "万古仙潭",
+"星河幻境", "碧落瑶池", "九天神域", "幽冥魔窟", "万古神木", "星河灵泉", "碧落神坛", "幽冥鬼蜮",
+"九天灵霄", "幽冥古刹", "万古神坛", "碧落仙府", "烈焰火山口", "寒冰极地渊", "风雷谷秘境",
+"蓬莱仙岛域", "昆仑仙境地", "瑶姬天池畔", "幽影迷雾林", "星辰陨落谷", "金丹洞天府", "元婴秘境园",
+"化神天宫阙", "碧澜灵泉源", "幽冥魔域森", "万古仙灵域", "星辰瑶池境", "天罡神雷峰", "碧落云隐境",
+"幽冥影月潭", "万古冰魄谷", "星河轮回道", "碧落神霄殿", "幽冥夜魔岭", "万古剑意山", "星河幻梦泽",
+"碧落仙境源", "幽冥鬼雾林", "九天雷火域", "苍穹灵霄阁", "碧落瑶光池"]
+    return random.choice(names)
+
+def check_sect_name_exists(name):
+    """检查宗门名称是否已经存在"""
+    existing_names = sql_message.get_all_sect_names()
+    return name in existing_names
+
 
 
 @create_sect.handle(parameterless=[Cooldown(at_sender=False)])

@@ -680,6 +680,32 @@ WHERE last_check_info_time = '0' OR last_check_info_time IS NULL
             self.conn.commit()
             return True
 
+    def get_all_sect_names(self):
+        """
+        获取所有宗门名称
+        :return: 所有宗门名称列表
+        """
+        cur = self.conn.cursor()
+        sql = "SELECT sect_name FROM sects"
+        cur.execute(sql)
+        results = cur.fetchall()
+        sect_names = [row[0] for row in results]
+        cur.close()
+        return sect_names
+
+    def check_sect_name_exists(self, sect_name):
+        """
+        检查宗门名称是否存在
+        :param sect_name: 宗门名称
+        :return: 布尔值，表示宗门名称是否存在
+        """
+        cur = self.conn.cursor()
+        sql = "SELECT COUNT(*) FROM sects WHERE sect_name=?"
+        cur.execute(sql, (sect_name,))
+        count = cur.fetchone()[0]
+        cur.close()
+        return count > 0
+
     def get_sect_info_by_qq(self, user_id):
         """
         通过用户qq获取宗门信息
