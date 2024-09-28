@@ -150,3 +150,5 @@ dmypy.json
 /.idea/toolchains.xml
 /.idea/vcs.xml
 /.idea/baibais.iml
+/plugins/xiuxian/xiuxian_utils/names.txt
+/.idea/dbnavigator.xml

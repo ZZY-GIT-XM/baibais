@@ -109,6 +109,7 @@ self.layout_bot_dict = {{}}  # QQ所负责的群聊{{群 :bot}}   其中 bot类�
 - [NoneBot2](https://github.com/nonebot/nonebot2)：本插件实装的开发框架，NB天下第一可爱。
 - [nonebot_plugin_xiuxian](https://github.com/s52047qwas/nonebot_plugin_xiuxian)：原版修仙
 - [nonebot_plugin_xiuxian_2](https://github.com/QingMuCat/nonebot_plugin_xiuxian_2)：原版修仙2
+- [nonebot_plugin_xiuxian_2_pmv](https://github.com/MyXiaoNan/nonebot_plugin_xiuxian_2_pmv)：修仙2.2魔改版
 
 # 🎉 支持
 - 大家喜欢的话可以给这个项目点个star
