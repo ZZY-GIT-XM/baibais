@@ -83,7 +83,6 @@ class XiuConfig:
         # 上面是数据库校验,别动
         self.level = convert_rank('江湖好手')[1]  # 境界列表，别动
         self.img = False  # 是否使用图片发送消息
-        self.user_info_image = True  # 是否使用图片发送个人信息
         self.level_up_cd = 0  # 突破CD(分钟)
         self.closing_exp = 60  # 闭关每分钟获取的修为
         self.cultivation_exp = 6  # 单次修炼获取的修为相对于闭关1分钟修炼的倍数
