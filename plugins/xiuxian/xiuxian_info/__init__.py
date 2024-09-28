@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -92,8 +94,15 @@ async def xiuxian_message_img_(bot: Bot, event: GroupMessageEvent):
     user_maxA = user_info['maxA']
 
     # 应用破限增幅到战力和攻击力 轮回点的增幅为加算
-    level_rate_with_poxian = (level_rate + (user_maxR / 100)) * (1 + total_poxian_percent / 100)
-    atk_with_poxian = (user_info['atk'] + (user_maxA * 10000))* (1 + total_poxian_percent / 100)
+    level_rate_decimal = Decimal(str(level_rate))
+    user_maxR_decimal = Decimal(str(user_maxR))
+    user_info_atk_decimal = Decimal(str(user_info['atk']))
+    user_maxA_decimal = Decimal(str(user_maxA))
+
+    level_rate_with_poxian = (level_rate_decimal + (user_maxR_decimal / Decimal('100'))) * (
+                1 + total_poxian_percent / Decimal('100'))
+    atk_with_poxian = (user_info_atk_decimal + (user_maxA_decimal * Decimal('10000'))) * (
+                1 + total_poxian_percent / Decimal('100'))
 
     main_buff_name = f"无"
     sub_buff_name = f"无"
@@ -114,8 +123,11 @@ async def xiuxian_message_img_(bot: Bot, event: GroupMessageEvent):
     sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     number = main_rate_buff["number"] if main_rate_buff is not None else 0
+    level_rate_with_poxian = Decimal(str(level_rate_with_poxian))
+    realm_rate = Decimal(str(realm_rate))
     DETAIL_MAP = {
         "道号": f"{user_name}",
+        "性别": f"{user_info['user_sex']}",
         "境界": f"{user_info['level']}",
         "修为": f"{number_to(user_info['exp'])}",
         "灵石": f"{number_to(user_info['stone'])}",
@@ -226,8 +238,16 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     user_maxA = user_info['maxA']
 
     # 应用破限增幅到战力和攻击力 轮回点的增幅为加算
-    level_rate_with_poxian = (level_rate + (user_maxR / 100)) * (1 + total_poxian_percent / 100)
-    atk_with_poxian = (user_info['atk'] + (user_maxA * 10000)) * (1 + total_poxian_percent / 100)
+    level_rate_decimal = Decimal(str(level_rate))
+    user_maxR_decimal = Decimal(str(user_maxR))
+    user_info_atk_decimal = Decimal(str(user_info['atk']))
+    user_maxA_decimal = Decimal(str(user_maxA))
+    total_poxian_percent_decimal = Decimal(str(total_poxian_percent))
+
+    level_rate_with_poxian = (level_rate_decimal + (user_maxR_decimal / Decimal('100'))) * (
+                1 + total_poxian_percent_decimal / Decimal('100'))
+    atk_with_poxian = (user_info_atk_decimal + (user_maxA_decimal * Decimal('10000'))) * (
+                1 + total_poxian_percent_decimal / Decimal('100'))
 
     main_buff_name = f"无"
     sub_buff_name = f"无"
@@ -249,18 +269,25 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     leveluprate = int(user_info['level_up_rate'])  # 用户失败次数加成
     number = main_rate_buff["number"] if main_rate_buff is not None else 0
 
-    # 道号集合
-    # dao_hao_set = {"张三", "李四", "王五"}
-    # 检查道号是否在集合中
-    # if user_name in dao_hao_set:
-        # 如果道号在集合里，使用第一段信息
+    # 信息带有表情的ID集合
+    id_set = {"232391978", "985955029", "325667774", "837850320", "553077843"}
+    gender_emoji = {
+        '男': '🧚‍♂️',  # 男性仙人
+        '女': '🧚‍♀️',  # 女性仙人
+        '其他': '🧍‍♂️'  # 其他性别
+    }
+    emoji = gender_emoji.get(user_info['user_sex'], '🧍‍♂️')  # 默认使用思考脸
 
-    if user_poxian >= 100:
+    level_rate_with_poxian = Decimal(str(level_rate_with_poxian))
+    realm_rate = Decimal(str(realm_rate))
+
+    if user_poxian >= 100 or user_id in id_set:
         msg = f""" 
 🌟 道号: {user_name}
+{emoji} 性别: {user_info['user_sex']}
 🔢 ID: {user_id}
 ✨ 境界: {user_info['level']}
-⚡ 修为: {number_to(user_info['exp'])}
+⚡  修为: {number_to(user_info['exp'])}
 💎 灵石: {number_to(user_info['stone'])}
 💥 战力: {number_to(int(user_info['exp'] * level_rate_with_poxian * realm_rate))}
 🌱 灵根: {user_info['root']}({user_info['root_type']}+{int(level_rate_with_poxian * 100)}%)
@@ -281,6 +308,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
     else:
         msg = f"""
 道号: {user_name}
+性别: {user_info['user_sex']}
 ID: {user_id}
 境界: {user_info['level']}
 修为: {number_to(user_info['exp'])}

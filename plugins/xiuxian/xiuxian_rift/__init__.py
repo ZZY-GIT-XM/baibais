@@ -80,9 +80,9 @@ async def save_rift_():
     logger.opt(colors=True).info("<green>rift数据已保存</green>")
 
 
-# 定时任务生成群秘境
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_():
+    """定时任务生成群秘境"""
     global group_rift
     group_rift = config.get("group_rift", {})
 
@@ -123,7 +123,6 @@ async def view_rift_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     group_id = str(event.group_id)
-
     # 从全局变量中获取秘境信息
     rift = group_rift.get(group_id, {})
 
@@ -159,7 +158,6 @@ async def create_rift_(bot: Bot, event: GroupMessageEvent):
     """生成秘境"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     group_id = str(event.group_id)
-
     # 使用全局配置
     is_blocked = group_id in config.get('blocked', [])  # 检查群聊是否被屏蔽
 

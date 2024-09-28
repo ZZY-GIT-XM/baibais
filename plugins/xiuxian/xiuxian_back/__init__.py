@@ -836,42 +836,54 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await main_back.finish()
 
     user_id = user_info['user_id']
+
+    # 检查背包是否为空
+    msg = get_user_main_back_msg(user_id)
+    if not msg:
+        await bot.send_group_msg(group_id=int(send_group_id), message="您的背包为空！")
+        await main_back.finish()
+
     # 尝试获取页码
     try:
         page = int(args.extract_plain_text().strip())
     except ValueError:
         page = 1  # 如果没有提供页码或格式不正确，默认为第一页
+
     # 定义分页大小
     PAGE_SIZE = 5
     skill_msg = get_user_skill_back_msg(user_id)
-    msg = get_user_main_back_msg(user_id) + skill_msg
     # 将药材背包数据转化为列表，便于分页
-    data_list = []
-    for item in msg:
-        data_list.append(item)
+    data_list = [item for item in msg]
+
     # 计算总页数
     total_items = len(data_list)
     total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE  # 向上取整
+
     # 检查当前页码是否有效
     if page < 1 or page > total_pages:
         await bot.send_group_msg(group_id=int(send_group_id),
                                  message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
         await main_back.finish()
+
     # 获取当前页的数据
     start_idx = (page - 1) * PAGE_SIZE
     end_idx = min(start_idx + PAGE_SIZE, total_items)
     page_data = data_list[start_idx:end_idx]
+
     # 合并所有消息为一个字符串
     header = f"{user_info['user_name']}的背包，持有灵石：{number_to(user_info['stone'])}枚\n"
     full_msg = header + "\n".join(page_data)
+
     # 添加翻页提示
     full_msg += f"\n\n第 {page}/{total_pages} 页\n使用命令 '我的背包 {page + 1}' 查看下一页" if page < total_pages else "\n\n这是最后一页。"
+
     try:
         # 将所有消息作为一条消息发送
         await bot.send_group_msg(group_id=int(send_group_id), message=full_msg)
     except ActionFailed:
         await main_back.finish("查看背包失败!", reply_message=True)
     await main_back.finish()
+
 
 
 @no_use_zb.handle(parameterless=[Cooldown(at_sender=False)])
@@ -981,7 +993,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await use.finish()
     elif goods_type == "技能":
-        user_buff_info = UserBuffDate(user_id).BuffInfo
+        user_buff_info = UserBuffDate(user_id).buffinfo
         skill_info = items.get_data_by_item_id(goods_id)
         skill_type = skill_info['item_type']
         if skill_type == "神通":

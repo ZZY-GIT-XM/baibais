@@ -59,7 +59,7 @@ def get_use_equipment_sql(user_id, goods_id):
     """
     sql_str = []
     item_info = items.get_data_by_item_id(goods_id)
-    user_buff_info = UserBuffDate(user_id).BuffInfo
+    user_buff_info = UserBuffDate(user_id).buffinfo
     now_time = datetime.now()
     item_type = ''
     if item_info['item_type'] == "法器":
@@ -89,7 +89,7 @@ def get_no_use_equipment_sql(user_id, goods_id):
     返回sql,和法器或防具
     """
     item_info = items.get_data_by_item_id(goods_id)
-    user_buff_info = UserBuffDate(user_id).BuffInfo
+    user_buff_info = UserBuffDate(user_id).buffinfo
     now_time = datetime.now()
     sql_str = []
     item_type = ""
@@ -638,7 +638,7 @@ def get_use_jlq_msg(user_id, goods_id):
         msg = f"道友还未拥有洞天福地，无法使用该物品"
     else:
         item_info = items.get_data_by_item_id(goods_id)
-        user_buff_data = UserBuffDate(user_id).BuffInfo
+        user_buff_data = UserBuffDate(user_id).buffinfo
         if int(user_buff_data['blessed_spot']) >= item_info['修炼速度']:
             msg = f"该聚灵旗的等级不能满足道友的福地了，使用了也没效果"
         else:

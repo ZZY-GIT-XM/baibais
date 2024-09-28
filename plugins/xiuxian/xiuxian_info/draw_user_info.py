@@ -73,6 +73,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     line_draw.text((w, h), word, first_color, font_36, 'lm')
     # 绘制QQ信息
     img.paste(line, (130, 520), line)
+    user_sex = DETAIL_MAP["性别"]
 
     DETAIL_baseinfo = {
         "灵根": DETAIL_MAP["灵根"],
@@ -100,7 +101,7 @@ async def draw_user_info_img(user_id, DETAIL_MAP):
     await asyncio.gather(*tasks1)
 
     baseinfo = Image.open(TEXT_PATH / 'line2.png').resize((900, 100)).convert("RGBA")
-    baseword = '【基本信息】'
+    baseword = f'【基本信息「{user_sex}」】'
     w, h = await linewh(baseinfo, baseword)
     baseinfo_draw = ImageDraw.Draw(baseinfo)
     baseinfo_draw.text((w, h), baseword, first_color, font_40, 'lm')

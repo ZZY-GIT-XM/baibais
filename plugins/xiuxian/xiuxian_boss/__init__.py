@@ -80,6 +80,7 @@ def check_rule_bot_boss_s() -> Rule:  # 消息检测，是超管或者指定的q
 
 create = on_command("生成世界boss", aliases={"生成世界Boss", "生成世界BOSS"}, priority=5,
                     rule=check_rule_bot_boss_s(), block=True)
+batch_create = on_command("生成boss", priority=5, rule=check_rule_bot_boss_s(), block=True)
 create_appoint = on_command("生成指定世界boss", aliases={"生成指定世界boss", "生成指定世界BOSS", "生成指定BOSS", "生成指定boss"}, priority=5,
                             rule=check_rule_bot_boss_s())
 boss_info = on_command("查询世界boss", aliases={"查询世界Boss", "查询世界BOSS", "查询boss", "世界Boss查询", "世界BOSS查询", "boss查询"}, priority=6, permission=GROUP, block=True)
@@ -592,6 +593,44 @@ async def create_(bot: Bot, event: GroupMessageEvent):
     msg = f"已生成{bossinfo['jj']}Boss:{bossinfo['name']},诸位道友请击败Boss获得奖励吧!"
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await create.finish()
+
+@batch_create.handle(parameterless=[Cooldown(at_sender=False)])
+async def batch_create_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """批量生成世界boss"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    group_id = str(event.group_id)
+    isInGroup = isInGroups(event)
+    if not isInGroup:  # 不在配置表内
+        msg = f"本群尚未开启世界Boss,请联系管理员开启!"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await batch_create.finish()
+    # 解析命令参数
+    arg_str = args.extract_plain_text().strip()
+    try:
+        num_bosses = int(arg_str)
+    except ValueError:
+        msg = "请输入正确的数量！例如：生成boss 100"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await batch_create.finish()
+    try:
+        group_boss[group_id]
+    except:
+        group_boss[group_id] = []
+    current_count = len(group_boss[group_id])
+    max_count = config['Boss个数上限']
+    if current_count + num_bosses > max_count:
+        msg = f"本群世界Boss已达到上限{max_count}个，无法继续生成"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await batch_create.finish()
+    messages = []
+    for _ in range(num_bosses):
+        bossinfo = createboss()
+        group_boss[group_id].append(bossinfo)
+        msg = f"已生成 {bossinfo['jj']} Boss: {bossinfo['name']} ,诸位道友请击败Boss获得奖励吧!\n"
+        messages.append(msg)
+    final_msg = "".join(messages)
+    await bot.send_group_msg(group_id=int(send_group_id), message=final_msg)
+    await batch_create.finish()
 
 @create_appoint.handle()
 async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):

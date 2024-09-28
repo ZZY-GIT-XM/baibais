@@ -26,16 +26,16 @@ __warring_help__ = """
   - 修为、功法、神通将被清空！
   - 进入千世轮回：获得轮回灵根，增加破限次数，破限10次可进入万世轮回，可定制极品仙器（在做）。
   - 进入万世轮回：获得真轮回灵根，可定制无上仙器（在做）。
-  - 自废修为：字面意思，仅搬血境可用。
+  - 重入修仙：字面意思，仅搬血境可用。
 - 使用方法：
   - 输入「进入千世轮回/进入万世轮回」开始轮回重修。
-  - 输入「自废修为」将废除当前修为。
+  - 输入「重入修仙」将重新开始。
   - 输入「轮回加点 查询」查看当前状态和剩余破限次数。
 - 注意事项：
   - 轮回重修后，修为、功法、神通将被清空。
   - 千世轮回每次获得最终增幅10%(真元/血量/灵根/闭关收益/修炼收益)
   - 万世轮回每次获得最终增幅20%(真元/血量/灵根/闭关收益/修炼收益)
-  - 自废修为仅在搬血境可用。
+  - 重入修仙仅在搬血境可用。
 """.strip()
 
 __rebirth_help__ = """
@@ -66,7 +66,7 @@ sql_message = XiuxianDateManage()  # sql类
 warring_help = on_fullmatch("轮回重修帮助", priority=12, permission=GROUP, block=True)
 lunhui = on_command('进入千世轮回', priority=15, permission=GROUP,block=True)
 twolun = on_command('进入万世轮回', priority=15, permission=GROUP,block=True)
-resetting = on_command('自废修为', priority=15, permission=GROUP,block=True)
+resetting = on_command('重入修仙', priority=15, permission=GROUP,block=True)
 rebirth_help = on_command('轮回加点帮助', priority=15, permission=GROUP, block=True)
 lunhui_jiadian = on_regex(r'^轮回加点\s*(.*?)\s*(\d*)$', flags=re.IGNORECASE, priority=15, permission=GROUP, block=True)
 
@@ -206,7 +206,7 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
 
 @resetting.handle(parameterless=[Cooldown(at_sender=False)])
 async def resetting_(bot: Bot, event: GroupMessageEvent):
-    """自废修为"""
+    """重入修仙"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
@@ -217,13 +217,14 @@ async def resetting_(bot: Bot, event: GroupMessageEvent):
     user_msg = sql_message.get_user_info_with_id(user_id) 
     user_name = user_msg['user_name']
         
-    if user_msg['level'] in ['搬血境初期', '搬血境中期', '搬血境圆满']:
+    if user_msg['level'] in ['搬血境初期', '搬血境中期', '搬血境圆满'] and user_msg['poxian_num'] == 0:
         exp = user_msg['exp']
         now_exp = exp
         sql_message.updata_level(user_id, '江湖好手') #重置用户境界
         sql_message.update_levelrate(user_id, 0) #重置突破成功率
         sql_message.update_j_exp(user_id, now_exp) #重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
+        sql_message.update_user_random_gender(user_id) #重置用户性别
         msg = f"{user_name}现在是一介凡人了！！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await resetting.finish()
@@ -348,29 +349,26 @@ async def query_rebirth_points(bot: Bot, send_group_id: int, user_msg: dict):
     # 发送查询结果
     await bot.send_group_msg(group_id=int(send_group_id), message=query_result)
 
+
 async def reset_rebirth_points(bot: Bot, send_group_id: int, user_id: int, user_msg: dict):
     # 计算所有已分配的属性点数
     allocated_points = sum([user_msg[attr] for attr in ATTRIBUTE_MAP.values()])
-
     # 清空所有已分配的属性点
     reset_data = {attr: 0 for attr in ATTRIBUTE_MAP.values()}
-
     # 更新数据库中的用户信息，只更新需要重置的属性
     try:
         sql_message.update_user_info(user_id, reset_data)
     except Exception as e:
-        msg = f"更新数据库失败：{str(e)}"
+        msg = f"更新数据失败：{str(e)}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         return
-
-    # 更新rbPts，只加上已分配的属性点数
+    # 更新 rbPts，只加上已分配的属性点数
     try:
         sql_message.add_rebirth_points(user_id, allocated_points)
     except Exception as e:
-        msg = f"更新数据库失败：{str(e)}"
+        msg = f"新增数据失败：{str(e)}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         return
-
     # 输出结果
     msg = f"成功重置所有轮回点。\n当前未分配轮回点数：{user_msg['rbPts'] + allocated_points}"
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)

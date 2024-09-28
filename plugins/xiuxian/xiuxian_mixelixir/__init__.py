@@ -38,7 +38,7 @@ PAGE_SIZE = 6  # 每页显示的物品数量
 DANFANG_PATH = Path(__file__).parent / "danfang_info.json"# 丹方存储路径
 CACHE_TIMEOUT = timedelta(minutes=5) # 丹方缓存超时时间为5分钟
 
-mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
+# mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
 mix_make = on_command("配方", priority=5, permission=GROUP, block=True)
 elixir_help = on_fullmatch("炼丹帮助", priority=7, permission=GROUP, block=True)
 mix_elixir_help = on_fullmatch("炼丹配方帮助", priority=7, permission=GROUP, block=True)
@@ -573,15 +573,16 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     isUser, user_info, msg = check_user(event)
 
     if not isUser:
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await elixir_back.finish()
 
     user_id = user_info['user_id']
     msg = get_user_elixir_back_msg(user_id)
+
+    # 新增判断：如果背包数据为空，则提示用户
+    if not msg:
+        await bot.send_group_msg(group_id=int(send_group_id), message="背包为空")
+        await elixir_back.finish()
 
     # 尝试获取页码
     try:
@@ -601,7 +602,7 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     # 检查当前页码是否有效
     if page < 1 or page > total_pages:
         await bot.send_group_msg(group_id=int(send_group_id),
-                                 message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
+                                message=f"无效的页码。请输入有效的页码范围：1-{total_pages}")
         await elixir_back.finish()
 
     # 获取当前页的数据
@@ -621,8 +622,8 @@ async def elixir_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         await bot.send_group_msg(group_id=int(send_group_id), message=full_msg)
     except ActionFailed:
         await elixir_back.finish("查看丹药背包失败!", reply_message=True)
-
     await elixir_back.finish()
+
 
 
 @yaocai_back.handle(parameterless=[Cooldown(at_sender=False)])
@@ -640,6 +641,11 @@ async def yaocai_back_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 
     user_id = user_info['user_id']
     msg = get_user_yaocai_back_msg(user_id)
+
+    # 新增判断：如果背包数据为空，则提示用户
+    if not msg:
+        await bot.send_group_msg(group_id=int(send_group_id), message="药材背包为空")
+        await yaocai_back.finish()
 
     # 尝试获取页码
     try:

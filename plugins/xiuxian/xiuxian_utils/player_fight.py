@@ -1,4 +1,6 @@
 import random
+from decimal import Decimal
+
 from .xiuxian2_handle import XiuxianDateManage ,OtherSet, UserBuffDate, XIUXIAN_IMPART_BUFF
 from ..xiuxian_config import convert_rank
 from .utils import number_to
@@ -1477,7 +1479,6 @@ def get_turnatk(player, buff=0, user_battle_buff_date={}): #辅修功法14
         else:
             zwsh =0
         
-        
         main_critatk_data = user_buff_data.get_user_main_buff_data() #功法会心伤害
         player_sub_open = False #辅修功法14
         user_sub_buff_date = {}
@@ -1507,8 +1508,14 @@ def get_turnatk(player, buff=0, user_battle_buff_date={}): #辅修功法14
     weapon_critatk = weapon_critatk_data['critatk'] if weapon_critatk_data is not None else 0 #武器会心伤害
     main_critatk = main_critatk_data['critatk'] if main_critatk_data is not None else 0 #功法会心伤害
     isCrit = False
-    turnatk = int(round(random.uniform(0.95, 1.05), 2) 
-                  * (player['攻击'] *  (buff + sub_atk + 1) * (1 - boss_jg)) * (1 + zwsh))  # 攻击波动,buff是攻击buff
+
+    player['攻击'] = Decimal(str(player['攻击']))
+    buff = Decimal(str(buff))
+    sub_atk = Decimal(str(sub_atk))
+    zwsh = Decimal(str(zwsh))
+
+    turnatk = int(round(Decimal(str(random.uniform(0.95, 1.05))), 2)
+                  * (player['攻击'] *  (buff + sub_atk + 1) * (1 - Decimal(str(boss_jg)))) * (1 + zwsh))  # 攻击波动,buff是攻击buff
     if random.randint(0, 100) <= player['会心'] + (impart_know_per + sub_crit - boss_jh + random_hx )* 100:  # 会心判断
         turnatk = int(turnatk * (1.5 + impart_burst_per + weapon_critatk + main_critatk + sub_dmg - boss_jb)) #boss战、切磋、秘境战斗会心伤害公式（不包含抢劫）
         isCrit = True

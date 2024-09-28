@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Tuple
 
@@ -243,8 +244,12 @@ async def upgrade_membership(bot, send_group_id, user_info, bankinfo, user_id):
 def extend_bank_level(user_poxian, bank_level_dict=BANKLEVEL):
     # 扩展 BANKLEVEL
     max_level = len(bank_level_dict)
-    if user_poxian > 0:
-        for i in range(max_level + 1, max_level + 1 + user_poxian):
+    if isinstance(user_poxian, Decimal):
+        user_poxian_int = int(user_poxian)
+    else:
+        user_poxian_int = int(user_poxian)
+    if user_poxian_int > 0:
+        for i in range(max_level + 1, max_level + 1 + user_poxian_int):
             prev_level = i - 1
             bank_level_dict[str(i)] = {
                 "savemax": bank_level_dict[str(prev_level)]["savemax"] * 2,

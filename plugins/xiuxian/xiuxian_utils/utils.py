@@ -71,10 +71,13 @@ def check_user_type(user_id, need_type):
             msg = "道友现在什么都没干呢~"
 
         elif user_type == 4:
+            # 获取当前时间
             now_time = datetime.now()
-            in_closing_time = datetime.strptime(
-                user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
-            )  # 预计修炼结束的时间
+            # 确保 create_time 是字符串类型
+            create_time_str = user_cd_message['create_time'].strftime("%Y-%m-%d %H:%M:%S.%f")
+            # 解析字符串为 datetime 对象
+            in_closing_time = datetime.strptime(create_time_str, "%Y-%m-%d %H:%M:%S.%f")
+            # 计算时间差
             seconds_diff = (in_closing_time - now_time).total_seconds()
             remaining_seconds = int(seconds_diff)
             if remaining_seconds > 0:

@@ -1,6 +1,8 @@
 import asyncio
 import random
 import re
+from decimal import Decimal
+
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -37,7 +39,7 @@ two_exp_limit = 5  # 默认双修次数上限，修仙之人一天5次也不奇�
 
 two_exp_cd_up = require("nonebot_plugin_apscheduler").scheduler
 
-buffinfo = on_fullmatch("我的功法", priority=25, permission=GROUP, block=True)
+buffInfo = on_fullmatch("我的功法", priority=25, permission=GROUP, block=True)
 out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permission=GROUP, block=True)
 in_closing = on_fullmatch("闭关", priority=5, permission=GROUP, block=True)
 cultivation_command = on_command("修炼", priority=5, permission=GROUP, block=True)
@@ -153,7 +155,7 @@ async def blessed_spot_info_(bot: Bot, event: GroupMessageEvent):
         await blessed_spot_info.finish()
 
     msg = f"\n道友的洞天福地:\n"
-    user_buff_data = UserBuffDate(user_id).BuffInfo
+    user_buff_data = UserBuffDate(user_id).buffinfo
     if user_info['blessed_spot_name'] == 0:
         blessed_spot_name = "尚未命名"
     else:
@@ -361,6 +363,11 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             armor_crit_buff = 0
 
         if user1_weapon_data is not None:
+            user1_weapon_data['crit_buff'] = Decimal(str(user1_weapon_data['crit_buff']))
+            total_poxian_percent1 = Decimal(str(total_poxian_percent1))
+            armor_crit_buff = Decimal(str(armor_crit_buff))
+            main_crit_buff = Decimal(str(main_crit_buff))
+
             player1['会心'] = int(((user1_weapon_data['crit_buff'] * (1 + total_poxian_percent1 / 100)) + (
                 armor_crit_buff) + (main_crit_buff)) * 100)
         else:
@@ -721,13 +728,15 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await out_closing.finish()
     else:
-        # 用户状态为1
-        in_closing_time = datetime.strptime(
-            user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
-        )  # 进入闭关的时间
-        exp_time = (
-            OtherSet().date_diff(now_time, in_closing_time) // 60
-        )  # 闭关时长计算(分钟) = second // 60
+        # 获取当前时间
+        now_time = datetime.now()
+        # 确保 create_time 是字符串类型
+        create_time_str = user_cd_message['create_time'].strftime("%Y-%m-%d %H:%M:%S.%f")
+        # 解析字符串为 datetime 对象
+        in_closing_time = datetime.strptime(create_time_str, "%Y-%m-%d %H:%M:%S.%f")
+        # 计算时间差
+        exp_time = (now_time - in_closing_time).total_seconds() // 60
+        # 闭关时长计算(分钟) = second // 60
         level_rate = sql_message.get_root_rate(user_mes['root_type'])  # 灵根倍率
         realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率
         user_buff_data = UserBuffDate(user_id)
@@ -736,11 +745,22 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
         mainbuffcloexp = mainbuffdata['clo_exp'] if mainbuffdata != None else 0  # 功法闭关经验
         mainbuffclors = mainbuffdata['clo_rs'] if mainbuffdata != None else 0  # 功法闭关回复
 
+        # 将所有数值转换为 Decimal 类型
+        exp_time = Decimal(str(exp_time))
+        closing_exp = Decimal(str(XiuConfig().closing_exp))
+        level_rate = Decimal(str(level_rate))
+        use_maxR = Decimal(str(use_maxR))
+        realm_rate = Decimal(str(realm_rate))
+        mainbuffratebuff = Decimal(str(mainbuffratebuff))
+        mainbuffcloexp = Decimal(str(mainbuffcloexp))
+
+        # 计算经验
         exp = int(
-            (exp_time * XiuConfig().closing_exp) * (
-                ((level_rate+use_maxR) * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
-            # 洞天福地为加法
-        )  # 本次闭关获取的修为
+            (exp_time * closing_exp) * (
+                ((level_rate + use_maxR) * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp))
+            )
+        )
+        # 本次闭关获取的修为
         # 计算传承增益
         impart_data = xiuxian_impart.get_user_info_with_id(user_id)
         impart_exp_up = impart_data['impart_exp_up'] if impart_data is not None else 0
@@ -872,9 +892,21 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
         mainbuffcloexp = mainbuffdata['clo_exp'] if mainbuffdata is not None else 0  # 功法闭关经验
         mainbuffclors = mainbuffdata['clo_rs'] if mainbuffdata is not None else 0  # 功法闭关回复
 
+        # 将所有数值转换为 Decimal 类型
+        level_rate = Decimal(str(level_rate))
+        use_maxR = Decimal(str(use_maxR))
+        realm_rate = Decimal(str(realm_rate))
+        mainbuffratebuff = Decimal(str(mainbuffratebuff))
+        mainbuffcloexp = Decimal(str(mainbuffcloexp))
+
+        # 获取配置值并转换为 Decimal 类型
+        closing_exp = Decimal(str(XiuConfig().closing_exp))
+        cultivation_exp = Decimal(str(XiuConfig().cultivation_exp))
+
+        # 计算经验
         exp = int(
-            (1 * XiuConfig().closing_exp * XiuConfig().cultivation_exp) * (
-                ((level_rate+use_maxR) * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
+            (1 * closing_exp * cultivation_exp) * (
+                ((level_rate + use_maxR) * realm_rate * (1 + mainbuffratebuff) * (1 + mainbuffcloexp)))
         )  # 本次闭关获取的修为
         # 计算传承增益
         impart_data = xiuxian_impart.get_user_info_with_id(user_id)
@@ -1004,6 +1036,19 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
     number = user_main_critatk["number"] if user_main_critatk is not None else 0
 
+    level_rate = Decimal(str(level_rate))
+    user_maxR = Decimal(str(user_maxR))
+    realm_rate = Decimal(str(realm_rate))
+    main_buff_rate_buff = Decimal(str(main_buff_rate_buff))
+    total_poxian_percent = Decimal(str(total_poxian_percent))
+    crit_buff = Decimal(str(crit_buff))
+    impart_know_per = Decimal(str(impart_know_per))
+    armor_crit_buff = Decimal(str(armor_crit_buff))
+    main_crit_buff = Decimal(str(main_crit_buff))
+    impart_burst_per = Decimal(str(impart_burst_per))
+    weapon_critatk = Decimal(str(weapon_critatk))
+    main_critatk = Decimal(str(main_critatk))
+
     msg = f"""      
 道号：{user_msg['user_name']}               
 气血:{number_to((user_msg['hp'] + user_maxH)* (1 + total_poxian_percent / 100))}/{number_to(int(((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) + user_maxH) * (1 + total_poxian_percent / 100)))}({(((user_msg['hp'] + user_maxH)/ (((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per))+user_maxH))) * 100:.2f}%)
@@ -1015,21 +1060,21 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
 会心:{round((crit_buff + impart_know_per * 100 + armor_crit_buff + main_crit_buff) * (1 + total_poxian_percent / 100), 1)}%
 减伤率:{def_buff + weapon_def + main_def}%
 boss战增益:{int(boss_atk * 100 * (1 + total_poxian_percent / 100))}%
-会心伤害增益:{int((1.5 + impart_burst_per + weapon_critatk + main_critatk) * 100 * (1 + total_poxian_percent / 100))}%
+会心伤害增益:{int((Decimal('1.5') + impart_burst_per + weapon_critatk + main_critatk) * 100 * (1 + total_poxian_percent / 100))}%
 """
     sql_message.update_last_check_info_time(user_id)
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await mind_state.finish()
 
 
-@buffinfo.handle(parameterless=[Cooldown(at_sender=False)])
-async def buffinfo_(bot: Bot, event: GroupMessageEvent):
+@buffInfo.handle(parameterless=[Cooldown(at_sender=False)])
+async def buffInfo_(bot: Bot, event: GroupMessageEvent):
     """我的功法"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await buffinfo.finish()
+        await buffInfo.finish()
 
     user_id = user_info['user_id']
     # skill_msg = get_user_skill_back_msg(user_id)
@@ -1058,7 +1103,7 @@ async def buffinfo_(bot: Bot, event: GroupMessageEvent):
 
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     # await send_msg_handler(bot, event, '背包', bot.self_id, skill_msg)
-    await buffinfo.finish()
+    await buffInfo.finish()
 
 
 @del_exp_decimal.handle(parameterless=[Cooldown(at_sender=False)])
