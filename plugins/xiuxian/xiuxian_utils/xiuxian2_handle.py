@@ -1584,48 +1584,48 @@ class XiuxianDateManage:
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
 
-    def update_user_sub_buff(self, user_id, id):
+    def updata_user_sub_buff(self, user_id, id):
         """更新用户辅修功法信息"""
         sql = "UPDATE buffinfo SET sub_buff = %s WHERE user_id = %s"
         cur = self.conn.cursor()
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
 
-    def update_user_sec_buff(self, user_id, id):
+    def updata_user_sec_buff(self, user_id, id):
         """更新用户副功法信息"""
         sql = "UPDATE buffinfo SET sec_buff = %s WHERE user_id = %s"
         cur = self.conn.cursor()
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
 
-    def update_user_faqi_buff(self, user_id, id):
+    def updata_user_faqi_buff(self, user_id, id):
         """更新用户法器信息"""
         sql = "UPDATE buffinfo SET faqi_buff = %s WHERE user_id = %s"
         cur = self.conn.cursor()
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
-    def update_user_fabao_weapon(self, user_id, id):
+    def updata_user_fabao_weapon(self, user_id, id):
         """更新用户法宝信息"""
         sql = "UPDATE buffinfo SET fabao_weapon = %s WHERE user_id = %s"
         cur = self.conn.cursor()
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
 
-    def update_user_armor_buff(self, user_id, id):
+    def updata_user_armor_buff(self, user_id, id):
         """更新用户防具信息"""
         sql = "UPDATE buffinfo SET armor_buff = %s WHERE user_id = %s"
         cur = self.conn.cursor()
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
 
-    def update_user_atk_buff(self, user_id, buff):
+    def updata_user_atk_buff(self, user_id, buff):
         """更新用户永久攻击buff信息"""
         sql = "UPDATE buffinfo SET atk_buff = atk_buff + %s WHERE user_id = %s"
         cur = self.conn.cursor()
         cur.execute(sql, (buff, user_id,))
         self.conn.commit()
 
-    def update_user_blessed_spot(self, user_id, blessed_spot):
+    def updata_user_blessed_spot(self, user_id, blessed_spot):
         """更新用户洞天福地等级"""
         sql = "UPDATE buffinfo SET blessed_spot = %s WHERE user_id = %s"
         cur = self.conn.cursor()
