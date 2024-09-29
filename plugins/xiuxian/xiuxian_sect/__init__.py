@@ -19,7 +19,7 @@ from ..xiuxian_utils.lay_out import assign_bot, Cooldown, assign_bot_group
 from nonebot.params import CommandArg
 from ..xiuxian_utils.data_source import jsondata
 from datetime import datetime, timedelta
-from ..xiuxian_config import XiuConfig, convert_rank, JsonConfig
+from ..xiuxian_config import XiuConfig, convert_rank
 from .sectconfig import get_config
 from ..xiuxian_utils.utils import (
     check_user, number_to,
@@ -908,7 +908,7 @@ async def sect_owner_change_(bot: Bot, event: GroupMessageEvent, args: Message =
     """宗主传位"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
-    enabled_groups = JsonConfig().get_enabled_groups()
+    enabled_groups = sql_message.get_enabled_groups()
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await sect_owner_change.finish()
@@ -985,7 +985,7 @@ async def sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     else:
         sect_id = user_info['sect_id']
         sect_info = sql_message.get_sect_info(sect_id)
-        enabled_groups = JsonConfig().get_enabled_groups()
+        enabled_groups = sql_message.get_enabled_groups()
 
         # 生成随机名称
         new_name = generate_random_sect_name()

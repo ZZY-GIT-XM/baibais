@@ -52,6 +52,7 @@ sql_message = XiuxianDateManage()  # sql类
 set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
 reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
 
+
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
 shop = on_command("坊市查看", aliases={"查看坊市"}, priority=8, permission=GROUP, block=True)

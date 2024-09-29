@@ -26,7 +26,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage ,OtherSet, UserBuffDate,
     XIUXIAN_IMPART_BUFF, leave_harm_time
 )
-from ..xiuxian_config import convert_rank, XiuConfig, JsonConfig
+from ..xiuxian_config import convert_rank, XiuConfig
 from .makeboss import createboss, createboss_jj
 from .bossconfig import get_boss_config, savef_boss
 from .old_boss_info import old_boss_info
@@ -35,15 +35,14 @@ from ..xiuxian_utils.item_json import Items
 items = Items()
 from ..xiuxian_utils.utils import (
     number_to, check_user,
-    get_msg_pic, CommandObjectID,
-    pic_msg_format, send_msg_handler
+    CommandObjectID,
+    send_msg_handler
 )
 from .. import DRIVER
 # boss定时任务
 require('nonebot_plugin_apscheduler')
 from nonebot_plugin_apscheduler import scheduler
 
-conf_data = JsonConfig().read_data()
 config = get_boss_config()
 cache_help = {}
 del_boss_id = XiuConfig().del_boss_id
@@ -149,7 +148,7 @@ async def send_bot(group_id:str):
     if group_id not in groups:
         return
 
-    if group_id not in conf_data["group"]:
+    if not sql_message.is_xiuxian_enabled(group_id):
         return
 
     if len(group_boss[group_id]) >= config['Boss个数上限']:

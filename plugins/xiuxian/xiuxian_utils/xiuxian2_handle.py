@@ -1,4 +1,5 @@
 from nb_cli.cli.commands import self
+
 try:
     import ujson as json
 except ImportError:
@@ -62,7 +63,6 @@ class XiuxianDateManage:
             self.conn.close()
             logger.opt(colors=True).info("<green>修仙数据库关闭！</green>")
 
-
     def _check_data(self):
         """检查数据完整性"""
         try:
@@ -85,7 +85,8 @@ class XiuxianDateManage:
                     "xiuxian_liandanlu",
                     "xiuxian_shenwu",
                     "xiuxian_yaocai",
-                    "xiuxian_jingjie"
+                    "xiuxian_jingjie",
+                    "xiuxian_group_config"
                 ]
                 for table_name in tables:
                     try:
@@ -113,6 +114,7 @@ class XiuxianDateManage:
                 self._add_missing_columns(c, "xiuxian_shenwu", XiuConfig().sql_xiuxian_shenwu)
                 self._add_missing_columns(c, "xiuxian_yaocai", XiuConfig().sql_xiuxian_yaocai)
                 self._add_missing_columns(c, "xiuxian_jingjie", XiuConfig().sql_xiuxian_jingjie)
+                self._add_missing_columns(c, "xiuxian_group_config", XiuConfig().sql_xiuxian_group_config)
 
                 self.conn.commit()
         except psycopg2.Error as e:
@@ -402,6 +404,12 @@ class XiuxianDateManage:
                     sp NUMERIC NOT NULL, 
                     sp_ra NUMERIC(6,1) NOT NULL 
                 );
+            """,
+            "xiuxian_group_config": """
+                CREATE TABLE xiuxian_group_config (
+                    group_id BIGINT PRIMARY KEY,  -- 群聊id
+                    enabled BOOLEAN NOT NULL DEFAULT FALSE  -- 用于判断群聊是否有开启修仙功能
+                );
             """
         }
 
@@ -424,37 +432,40 @@ class XiuxianDateManage:
             if col not in existing_columns:
                 try:
                     data_type = 'TEXT'  # 默认类型为 TEXT
+                    # 先保留原有的逻辑部分
                     if col in ['power', 'atk', 'ac', 'spend', 'hp', 'mp', 'rate', 'exp', 'sp', 'sp_ra']:
                         data_type = 'NUMERIC'  # 对于数值类型的字段使用 NUMERIC
                     elif col == 'comment':
-                        data_type = 'INT'  # 对于整数类型的字段使用 INT
+                        data_type = 'TEXT'  # 对于文本类型的字段使用 TEXT
                     elif col == 'jingjie_name':
                         data_type = 'VARCHAR(255)'  # 对于字符串类型的字段使用 VARCHAR(255)
-                    elif col == 'id':
-                        continue  # 跳过 id，因为它是由 SERIAL 自动生成的
-
-                    # 根据字段名称确定数据类型
-                    if col in ['user_id', 'sect_id', 'sect_owner', 'sect_scale', 'sect_used_stone',
-                               'sect_fairyland', 'mainbuff', 'secbuff', 'elixir_room_level', 'goods_id', 'goods_num',
-                               'day_num', 'all_num', 'bind_num', 'level_up_rate', 'sect_position', 'consecutive_wins',
-                               'consecutive_losses', 'poxian_num', 'rbPts', 'cultEff', 'seclEff', 'maxR', 'maxH',
-                               'maxM', 'maxA', 'work_num', 'hp', 'mp', 'atk', 'atkpractice', 'sect_task',
-                               'sect_contribution', 'sect_elixir_get', 'user_stamina', 'blessed_spot_flag', 'main_buff',
-                               'sec_buff', 'faqi_buff', 'fabao_weapon', 'armor_buff', 'atk_buff', 'sub_buff',
-                               'blessed_spot', 'item_id', 'level', 'rank', 'state', 'number', 'exp', 'quantity',
-                               'item_name', 'item_type', 'skill_type', 'atkvalue', 'hpcost', 'mpcost', 'turncost',
-                               'jndesc', 'rate', 'def_buff', 'atk_buff', 'crit_buff', 'critatk', 'zw', 'mp_buff',
-                               'hpbuff', 'mpbuff', 'atkbuff', 'ratebuff', 'critatk', 'two_buff', 'clo_exp', 'clo_rs',
-                               'random_buff', 'ew', 'buff_type', 'buff', 'buff2', 'stone', 'integral', 'jin', 'drop',
-                               'fan', 'break', 'dan_exp', 'dan_buff', 'reap_buff', 'exp_buff', 'cultivation_speed',
-                               'herb_speed', 'type', 'price', 'selling', 'realm', 'status', 'mix_need_time', 'mix_exp',
-                               'mix_all', 'elixir_config', 'primary_ingredient', 'catalyst', 'auxiliary_ingredient']:
+                    elif col in ['user_id', 'sect_id', 'sect_owner', 'sect_scale', 'sect_used_stone',
+                                 'sect_fairyland', 'mainbuff', 'secbuff', 'elixir_room_level', 'goods_id', 'goods_num',
+                                 'day_num', 'all_num', 'bind_num', 'level_up_rate', 'sect_position', 'consecutive_wins',
+                                 'consecutive_losses', 'poxian_num', 'rbPts', 'cultEff', 'seclEff', 'maxR', 'maxH',
+                                 'maxM', 'maxA', 'work_num', 'hp', 'mp', 'atk', 'atkpractice', 'sect_task',
+                                 'sect_contribution', 'sect_elixir_get', 'user_stamina', 'blessed_spot_flag',
+                                 'main_buff',
+                                 'sec_buff', 'faqi_buff', 'fabao_weapon', 'armor_buff', 'atk_buff', 'sub_buff',
+                                 'blessed_spot', 'item_id', 'level', 'rank', 'state', 'number', 'exp', 'quantity',
+                                 'item_name', 'item_type', 'skill_type', 'atkvalue', 'hpcost', 'mpcost', 'turncost',
+                                 'jndesc', 'rate', 'def_buff', 'atk_buff', 'crit_buff', 'critatk', 'zw', 'mp_buff',
+                                 'hpbuff', 'mpbuff', 'atkbuff', 'ratebuff', 'critatk', 'two_buff', 'clo_exp', 'clo_rs',
+                                 'random_buff', 'ew', 'buff_type', 'buff', 'buff2', 'stone', 'integral', 'jin', 'drop',
+                                 'fan', 'break', 'dan_exp', 'dan_buff', 'reap_buff', 'exp_buff', 'cultivation_speed',
+                                 'herb_speed', 'type', 'price', 'selling', 'realm', 'status', 'mix_need_time',
+                                 'mix_exp',
+                                 'mix_all', 'elixir_config', 'primary_ingredient', 'catalyst', 'auxiliary_ingredient']:
                         data_type = 'NUMERIC' if col in ['level', 'rank', 'state', 'number', 'exp',
                                                          'quantity'] else 'VARCHAR(255)'
-
-                    # 如果字段是时间戳类型
+                    # 新增对于时间戳类型字段的支持
                     elif col in ['create_time', 'scheduled_time', 'last_check_info_time', 'action_time', 'update_time']:
                         data_type = 'TIMESTAMP'
+                    # 新增对于 xiuxian_group_config 表的字段支持
+                    elif col == 'group_id':
+                        data_type = 'BIGINT'
+                    elif col == 'enabled':
+                        data_type = 'BOOLEAN NOT NULL DEFAULT FALSE'
 
                     cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col} {data_type} DEFAULT NULL")
                     print(f"字段 {col} 添加成功！")
@@ -643,7 +654,7 @@ class XiuxianDateManage:
                 """
                 cur.execute(sql, (stamina_recovery_rate, max_stamina, max_stamina))
                 self.conn.commit()
-                logger.info("所有用户的体力已更新！")
+                # logger.info("所有用户的体力已更新！")
         except psycopg2.Error as e:
             logger.error(f"更新所有用户体力失败: {e}")
             self.conn.rollback()
@@ -728,7 +739,6 @@ class XiuxianDateManage:
         elif result[0] == 1:
             return f"贪心的人是不会有好运的！"
 
-        
     def get_beg(self, user_id):
         """获取仙途奇缘信息"""
         cur = self.conn.cursor()
@@ -1006,7 +1016,8 @@ class XiuxianDateManage:
         result = cur.fetchone()
         if result:
             # 确保 result[0] 是字符串类型
-            last_check_info_time_str = result[0].strftime('%Y-%m-%d %H:%M:%S.%f') if isinstance(result[0], datetime) else result[0]
+            last_check_info_time_str = result[0].strftime('%Y-%m-%d %H:%M:%S.%f') if isinstance(result[0],
+                                                                                                datetime) else result[0]
             return datetime.strptime(last_check_info_time_str, '%Y-%m-%d %H:%M:%S.%f')
         else:
             return None
@@ -1392,7 +1403,6 @@ class XiuxianDateManage:
         result = cur.fetchall()
         return result
 
-
     def stone_top(self):
         """这也是灵石排行榜"""
         sql = """SELECT user_name, stone FROM user_xiuxian 
@@ -1412,7 +1422,7 @@ class XiuxianDateManage:
         cur.execute(sql)
         result = cur.fetchall()
         return result
-    
+
     def poxian_top(self):
         """破限排行榜/轮回排行榜"""
         sql = """SELECT user_name, poxian_num FROM user_xiuxian 
@@ -1816,7 +1826,6 @@ class XiuxianDateManage:
         finally:
             cur.close()
 
-
     def update_user_main_buff(self, user_id, id):
         """更新用户主功法信息"""
         sql = "UPDATE buffinfo SET main_buff = %s WHERE user_id = %s"
@@ -1844,6 +1853,7 @@ class XiuxianDateManage:
         cur = self.conn.cursor()
         cur.execute(sql, (id, user_id,))
         self.conn.commit()
+
     def updata_user_fabao_weapon(self, user_id, id):
         """更新用户法宝信息"""
         sql = "UPDATE buffinfo SET fabao_weapon = %s WHERE user_id = %s"
@@ -2000,6 +2010,40 @@ class XiuxianDateManage:
         cur = self.conn.cursor()
         cur.execute(sql_str, (now_time, now_time, goods_num, day_num, all_num, bind_num, user_id, goods_id))
         self.conn.commit()
+
+    def enable_xiuxian(self, group_id):
+        """启用群聊的修仙功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled) VALUES (%s, TRUE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled = TRUE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def disable_xiuxian(self, group_id):
+        """禁用群聊的修仙功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled) VALUES (%s, FALSE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled = FALSE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def is_xiuxian_enabled(self, group_id):
+        """检查群聊是否开启了修仙功能"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT enabled FROM xiuxian_group_config WHERE group_id = %s", (group_id,))
+            result = cur.fetchone()
+            return result[0] if result else False
+
+    def get_enabled_groups(self):
+        """获取所有开启了修仙功能的群聊列表"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled = TRUE")
+            results = cur.fetchall()
+            return [row[0] for row in results]
 
 
 class XiuxianJsonDate:
@@ -2227,6 +2271,7 @@ class OtherSet(XiuConfig):
 
         return msg, hp_mp
 
+
 sql_message = XiuxianDateManage()  # sql类
 items = Items()
 
@@ -2234,7 +2279,7 @@ items = Items()
 def final_user_data(user_data, columns):
     """传入用户当前信息、buff信息,返回最终信息"""
     user_dict = dict(zip((col[0] for col in columns), user_data))
-    
+
     # 通过字段名称获取相应的值
     impart_data = xiuxian_impart.get_user_info_with_id(user_dict['user_id'])
     if impart_data:
@@ -2269,9 +2314,11 @@ def final_user_data(user_data, columns):
     impart_atk_per = Decimal(str(impart_atk_per))
 
     user_dict['atk'] = int((user_dict['atk'] * (user_dict['atkpractice'] * Decimal('0.04') + 1) * (1 + main_atk_buff) *
-            (1 + weapon_atk_buff) * (1 + armor_atk_buff)) * (1 + impart_atk_per)) + int(user_buff_data['atk_buff'])
+                            (1 + weapon_atk_buff) * (1 + armor_atk_buff)) * (1 + impart_atk_per)) + int(
+        user_buff_data['atk_buff'])
 
     return user_dict
+
 
 @DRIVER.on_shutdown
 async def close_db():
@@ -2459,6 +2506,7 @@ class XIUXIAN_IMPART_BUFF:
         cur.execute(sql, (impart_num, user_id))
         self.conn.commit()
         return True
+
     def add_impart_mp_per(self, impart_num, user_id):
         """add impart_mp_per"""
         cur = self.conn.cursor()
@@ -2638,14 +2686,14 @@ def leave_harm_time(user_id):
     hp_speed = 25
     user_mes = sql_message.get_user_info_with_id(user_id)
     level = user_mes['level']
-    level_rate = sql_message.get_root_rate(user_mes['root_type']) # 灵根倍率
-    realm_rate = jsondata.level_data()[level]["spend"] # 境界倍率
-    main_buff_data = UserBuffDate(user_id).get_user_main_buff_data() # 主功法数据
-    main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data else 0 # 主功法修炼倍率
-    
+    level_rate = sql_message.get_root_rate(user_mes['root_type'])  # 灵根倍率
+    realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率
+    main_buff_data = UserBuffDate(user_id).get_user_main_buff_data()  # 主功法数据
+    main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data else 0  # 主功法修炼倍率
+
     try:
-       time = int(((user_mes['exp'] / 1.5) - user_mes['hp']) / ((XiuConfig().closing_exp * level_rate * realm_rate * (
-                    1 + main_buff_rate_buff)) * hp_speed))
+        time = int(((user_mes['exp'] / 1.5) - user_mes['hp']) / ((XiuConfig().closing_exp * level_rate * realm_rate * (
+                1 + main_buff_rate_buff)) * hp_speed))
     except ZeroDivisionError:
         time = "无穷大"
     except OverflowError:
@@ -2659,8 +2707,10 @@ async def impart_check(user_id):
         return XIUXIAN_IMPART_BUFF().get_user_info_with_id(user_id)
     else:
         return XIUXIAN_IMPART_BUFF().get_user_info_with_id(user_id)
-    
+
+
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
+
 
 @DRIVER.on_shutdown
 async def close_db():
@@ -2717,7 +2767,7 @@ class UserBuffDate:
         if main_buff_id != 0:
             main_buff_data = items.get_data_by_item_id(main_buff_id)
         return main_buff_data
-    
+
     def get_user_sub_buff_data(self):
         sub_buff_data = None
         buff_info = self.buffinfo
@@ -2765,7 +2815,8 @@ def get_weapon_info_msg(weapon_id, weapon_info=None):
     crit_buff_msg = f"提升{int(weapon_info['crit_buff'] * 100)}%会心率！" if weapon_info['crit_buff'] != 0 else ''
     crit_atk_msg = f"提升{int(weapon_info['critatk'] * 100)}%会心伤害！" if weapon_info['critatk'] != 0 else ''
     # def_buff_msg = f"提升{int(weapon_info['def_buff'] * 100)}%减伤率！" if weapon_info['def_buff'] != 0 else ''
-    def_buff_msg = f"{'提升' if weapon_info['def_buff'] > 0 else '降低'}{int(abs(weapon_info['def_buff']) * 100)}%减伤率！" if weapon_info['def_buff'] != 0 else ''
+    def_buff_msg = f"{'提升' if weapon_info['def_buff'] > 0 else '降低'}{int(abs(weapon_info['def_buff']) * 100)}%减伤率！" if \
+    weapon_info['def_buff'] != 0 else ''
     zw_buff_msg = f"装备专属武器时提升伤害！！" if weapon_info['zw'] != 0 else ''
     mp_buff_msg = f"降低真元消耗{int(weapon_info['mp_buff'] * 100)}%！" if weapon_info['mp_buff'] != 0 else ''
     msg += f"名字：{weapon_info['name']}\n"
@@ -2799,10 +2850,11 @@ def get_main_info_msg(id):
     mpmsg = f"，提升{round(mainbuff['mpbuff'] * 100, 0)}%真元" if mainbuff['mpbuff'] != 0 else ''
     atkmsg = f"，提升{round(mainbuff['atkbuff'] * 100, 0)}%攻击力" if mainbuff['atkbuff'] != 0 else ''
     ratemsg = f"，提升{round(mainbuff['ratebuff'] * 100, 0)}%修炼速度" if mainbuff['ratebuff'] != 0 else ''
-    
+
     cri_tmsg = f"，提升{round(mainbuff['crit_buff'] * 100, 0)}%会心率" if mainbuff['crit_buff'] != 0 else ''
     # def_msg = f"，提升{round(mainbuff['def_buff'] * 100, 0)}%减伤率" if mainbuff['def_buff'] != 0 else ''
-    def_msg = f"，{'提升' if mainbuff['def_buff'] > 0 else '降低'}{round(abs(mainbuff['def_buff']) * 100, 0)}%减伤率" if mainbuff['def_buff'] != 0 else ''
+    def_msg = f"，{'提升' if mainbuff['def_buff'] > 0 else '降低'}{round(abs(mainbuff['def_buff']) * 100, 0)}%减伤率" if \
+    mainbuff['def_buff'] != 0 else ''
     dan_msg = f"，增加炼丹产出{round(mainbuff['dan_buff'])}枚" if mainbuff['dan_buff'] != 0 else ''
     dan_exp_msg = f"，每枚丹药额外增加{round(mainbuff['dan_exp'])}炼丹经验" if mainbuff['dan_exp'] != 0 else ''
     reap_msg = f"，提升药材收取数量{round(mainbuff['reap_buff'])}个" if mainbuff['reap_buff'] != 0 else ''
@@ -2811,15 +2863,16 @@ def get_main_info_msg(id):
     # two_msg = f"，增加{round(mainbuff['two_buff'])}双修次数" if mainbuff['two_buff'] != 0 else ''
     two_msg = f"，增加{round(mainbuff['two_buff'])}次双修次数" if mainbuff['two_buff'] != 0 else ''
     number_msg = f"，提升{round(mainbuff['number'])}%突破概率" if mainbuff['number'] != 0 else ''
-    
+
     clo_exp_msg = f"，提升{round(mainbuff['clo_exp'] * 100, 0)}%闭关经验" if mainbuff['clo_exp'] != 0 else ''
     clo_rs_msg = f"，提升{round(mainbuff['clo_rs'] * 100, 0)}%闭关生命回复" if mainbuff['clo_rs'] != 0 else ''
     random_buff_msg = f"，战斗时随机获得一个战斗属性" if mainbuff['random_buff'] != 0 else ''
-    ew_msg =  f"，使用专属武器时伤害增加50%！" if mainbuff['ew'] != 0 else ''
+    ew_msg = f"，使用专属武器时伤害增加50%！" if mainbuff['ew'] != 0 else ''
     msg = f"{mainbuff['name']}: {hpmsg}{mpmsg}{atkmsg}{ratemsg}{cri_tmsg}{def_msg}{dan_msg}{dan_exp_msg}{reap_msg}{exp_msg}{critatk_msg}{two_msg}{number_msg}{clo_exp_msg}{clo_rs_msg}{random_buff_msg}{ew_msg}！"
     return mainbuff, msg
 
-def get_sub_info_msg(id): #辅修功法8
+
+def get_sub_info_msg(id):  # 辅修功法8
     subbuff = items.get_data_by_item_id(id)
     submsg = ""
     if subbuff['buff_type'] == '1':
@@ -2841,17 +2894,17 @@ def get_sub_info_msg(id): #辅修功法8
     if subbuff['buff_type'] == '9':
         submsg = f"提升{subbuff['buff']}%气血吸取,提升{subbuff['buff2']}%真元吸取"
 
-    stone_msg  = "提升{}%boss战灵石获取".format(round(subbuff['stone'] * 100, 0)) if subbuff['stone'] != 0 else ''
+    stone_msg = "提升{}%boss战灵石获取".format(round(subbuff['stone'] * 100, 0)) if subbuff['stone'] != 0 else ''
     integral_msg = "，提升{}点boss战积分获取".format(round(subbuff['integral'])) if subbuff['integral'] != 0 else ''
     jin_msg = "禁止对手吸取" if subbuff['jin'] != 0 else ''
     drop_msg = "，提升boss掉落率" if subbuff['drop'] != 0 else ''
     fan_msg = "使对手发出的debuff失效" if subbuff['fan'] != 0 else ''
     break_msg = "获得战斗破甲" if subbuff['break'] != 0 else ''
     exp_msg = "，增加战斗获得的修为" if subbuff['exp'] != 0 else ''
-    
 
     msg = f"{subbuff['name']}：{submsg}{stone_msg}{integral_msg}{jin_msg}{drop_msg}{fan_msg}{break_msg}{exp_msg}"
     return subbuff, msg
+
 
 def get_user_buff(user_id):
     buffinfo = sql_message.get_user_buff_info(user_id)
@@ -2900,7 +2953,8 @@ def get_sec_msg(secbuffdata):
 def get_player_info(user_id, info_name):
     player_info = None
     if info_name == "mix_elixir_info":  # 灵田信息
-        mix_elixir_infoconfigkey = ["收取时间", "收取等级", "灵田数量", '药材速度', "丹药控火", "丹药耐药性", "炼丹记录", "炼丹经验"]
+        mix_elixir_infoconfigkey = ["收取时间", "收取等级", "灵田数量", '药材速度', "丹药控火", "丹药耐药性",
+                                    "炼丹记录", "炼丹经验"]
         nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
         MIXELIXIRINFOCONFIG = {
             "收取时间": nowtime,

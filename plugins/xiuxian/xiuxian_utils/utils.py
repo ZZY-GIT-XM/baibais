@@ -16,7 +16,6 @@ from ..xiuxian_config import XiuConfig
 from PIL import Image, ImageDraw, ImageFont
 from wcwidth import wcwidth
 from nonebot.adapters import MessageSegment
-from nonebot.adapters.onebot.v11 import MessageSegment
 from .data_source import jsondata
 from pathlib import Path
 from base64 import b64encode
@@ -27,7 +26,7 @@ boss_img_path = Path() / "data" / "xiuxian" / "boss_img"
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime):
             return obj.strftime("%Y-%m-%d %H:%M:%S")
         if isinstance(obj, bytes):
             return str(obj, encoding='utf-8')

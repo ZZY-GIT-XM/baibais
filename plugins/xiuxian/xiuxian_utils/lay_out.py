@@ -10,7 +10,7 @@ from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.adapters.onebot.v11.event import MessageEvent, GroupMessageEvent
 from nonebot.adapters.onebot.v11 import Bot, MessageSegment
-from ..xiuxian_config import XiuConfig, JsonConfig
+from ..xiuxian_config import XiuConfig
 from .xiuxian2_handle import XiuxianDateManage
 from .utils import get_msg_pic
 
@@ -28,18 +28,18 @@ stamina_recovery_rate = 1
 
 @auto_recover_hp.scheduled_job('interval', minutes=1)
 def auto_recover_hp_():
-    sql_message.auto_recover_hp
+    sql_message.auto_recover_hp()
 
 @limit_all_message.scheduled_job('interval', minutes=1)
 def limit_all_message_():
-    # 重置消息字典
+    """重置消息字典"""
     global limit_all_data
     limit_all_data  = {}
     logger.opt(colors=True).success(f"<green>已重置消息字典！</green>")
 
 @limit_all_stamina.scheduled_job('interval', minutes=XiuConfig().tilihuifu_min)
 def limit_all_stamina_():
-    # 恢复体力，1分钟回一点
+    """恢复体力，1分钟回一点"""
     sql_message.update_all_users_stamina(max_stamina, stamina_recovery_rate)
 
 def limit_all_run(user_id: str):
@@ -145,7 +145,6 @@ def Cooldown(
     async def dependency(bot: Bot, matcher: Matcher, event: MessageEvent):
         user_id = str(event.get_user_id())
         group_id = str(event.group_id)
-        conf_data = JsonConfig().read_data()
 
         limit_type = limit_all_run(str(event.get_user_id()))
         if limit_type is True:
@@ -176,7 +175,7 @@ def Cooldown(
         else:
             key = CooldownIsolateLevel.GLOBAL.name
         if XiuConfig().third_party_bot:
-            if group_id not in conf_data["group"]:
+            if sql_message.is_xiuxian_enabled(group_id):
                 if (
                         event.sender.role == "admin" or
                         event.sender.role == "owner" or
@@ -197,11 +196,7 @@ def Cooldown(
             if user_data :
                 if user_data['user_stamina'] < stamina_cost:
                     msg = "你没有足够的体力，请等待体力恢复后再试！"
-                    if XiuConfig().img:
-                        pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-                        await bot.send_group_msg(group_id=int(group_id), message=MessageSegment.image(pic))
-                    else:
-                        await bot.send_group_msg(group_id=int(group_id), message=msg)
+                    await bot.send_group_msg(group_id=int(group_id), message=msg)
                     await matcher.finish()
                 sql_message.update_user_stamina(user_id, stamina_cost, 2)  # 减少体力
         if running[key] <= 0:

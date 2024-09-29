@@ -1,5 +1,6 @@
+
 try:
-    import ujson as json # type: ignore
+    import ujson as json  # type: ignore
 except ImportError:
     import json
 from pathlib import Path
@@ -133,6 +134,9 @@ class XiuConfig:
         self.sql_xiuxian_jingjie = [
             "id", "jingjie_name", "power", "atk", "ac", "spend", "hp", "mp", "comment", "rate", "exp", "sp", "sp_ra"
         ]
+        self.sql_xiuxian_group_config = [
+            "group_id", "enabled"
+        ]
         self.sql_user_auctions = [
             # `sql_user_auctions` 的字段列表
         ]
@@ -181,65 +185,3 @@ class XiuConfig:
         self.img_send_type = "base64"  # 图片发送类型,默认io,官方bot建议base64
         self.third_party_bot = False  # 是否是野生机器人，是的话填True，官方bot请填False
         self.version = "xiuxian_2.2"  # 修仙插件版本，别动
-
-
-class JsonConfig:
-    def __init__(self):
-        self.config_jsonpath = DATABASE / "config.json"
-        self.create_default_config()
-
-    def read_data(self):
-        """读取配置数据"""
-        with open(self.config_jsonpath, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            if "group" not in data:
-                data["group"] = []
-                with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
-                    json.dump(data, f)
-        return data
-
-    def create_default_config(self):
-        """创建默认配置文件"""
-        if not self.config_jsonpath.exists():
-            default_data = {"group": []}
-            with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
-                json.dump(default_data, f)
-
-    def write_data(self, key, group_id=None):
-        """
-        说明：设置修仙开启或关闭
-        参数：
-        key: 群聊 1 为开启， 2为关闭,默认关闭
-        """
-        json_data = self.read_data()
-        group_list = json_data.get('group', [])
-        if key == 1:
-            if group_id not in group_list:
-                try:
-                    group_list.append(group_id)
-                    json_data['group'] = group_list
-                except Exception as e:
-                    logger.opt(colors=True).info(f"<red>错误:{e}</red>")
-                    return False
-        elif key == 2:
-            if group_id in group_list:
-                try:
-                    group_list.remove(group_id)
-                    json_data['group'] = group_list
-                except Exception as e:
-                    logger.opt(colors=True).info(f"<red>错误:{e}</ewd>")
-                    return False
-        else:
-            logger.opt(colors=True).info("<red>未知key</red>")
-            return False
-
-        # 去重
-        json_data['group'] = list(set(json_data['group']))
-
-        with open(self.config_jsonpath, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)
-
-    def get_enabled_groups(self):
-        """获取开启修仙功能的群聊列表，去除重复项"""
-        data = self.read_data()
-        return list(set(data.get("group", [])))

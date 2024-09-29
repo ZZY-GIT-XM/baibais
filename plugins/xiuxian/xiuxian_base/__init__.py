@@ -27,7 +27,7 @@ from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, XiuxianJsonDate, OtherSet,
     UserBuffDate, XIUXIAN_IMPART_BUFF, leave_harm_time
 )
-from ..xiuxian_config import XiuConfig, JsonConfig, convert_rank
+from ..xiuxian_config import XiuConfig, convert_rank
 from ..xiuxian_utils.utils import (
     check_user,
     get_msg_pic, number_to,
@@ -945,7 +945,7 @@ async def gm_command_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
     else:
         sql_message.update_ls_all(give_stone_num)
         msg = f"全服通告：赠送所有用户{number_to(give_stone_num)}灵石,请注意查收！"
-        enabled_groups = JsonConfig().get_enabled_groups()
+        enabled_groups = sql_message.get_enabled_groups()
 
         for group_id in enabled_groups:
             bot = await assign_bot_group(group_id=group_id)
@@ -1039,7 +1039,7 @@ async def cz_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             sql_message.send_back(user_id, goods_id, goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
 
         msg = f"全服通告：赠送所有用户{goods_name}个{goods_num},请注意查收！"
-        enabled_groups = JsonConfig().get_enabled_groups()
+        enabled_groups = sql_message.get_enabled_groups()
         for group_id in enabled_groups:
             bot = await assign_bot_group(group_id=group_id)
             try:
@@ -1311,28 +1311,27 @@ async def open_xiuxian_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     group_msg = str(event.message)
     group_id = str(event.group_id)
-    conf_data = JsonConfig().read_data()
 
     if "启用" in group_msg:
-        if group_id in conf_data["group"]:
+        if sql_message.is_xiuxian_enabled(group_id):
             msg = "当前群聊修仙模组已启用，请勿重复操作！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await set_xiuxian.finish()
-        JsonConfig().write_data(1, group_id)
-        msg = "当前群聊修仙基础模组已启用，快发送 我要修仙 加入修仙世界吧！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+        sql_message.enable_xiuxian(group_id)
+        msg = "当前群聊修仙基础模组已启用，快发送 [我要修仙] 加入修仙世界吧！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await set_xiuxian.finish()
 
     elif "禁用" in group_msg:
-        if group_id not in conf_data["group"]:
+        if not sql_message.is_xiuxian_enabled(group_id):
             msg = "当前群聊修仙模组已禁用，请勿重复操作！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await set_xiuxian.finish()
-        JsonConfig().write_data(2, group_id)
+        sql_message.disable_xiuxian(group_id)
         msg = "当前群聊修仙基础模组已禁用！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await set_xiuxian.finish()
     else:
         msg = "指令错误，请输入：启用修仙功能/禁用修仙功能"
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await set_xiuxian.finish()
