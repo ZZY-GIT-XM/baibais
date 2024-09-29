@@ -67,7 +67,26 @@ class XiuxianDateManage:
         """检查数据完整性"""
         try:
             with self.conn.cursor() as c:
-                tables = ["user_xiuxian", "user_cd", "sects", "back", "buffinfo"]
+                tables = [
+                    "user_xiuxian",
+                    "user_cd",
+                    "sects",
+                    "back",
+                    "buffinfo",
+                    "xiuxian_wupin_jichu",
+                    "xiuxian_fangju",
+                    "xiuxian_shentong",
+                    "xiuxian_faqi",
+                    "xiuxian_gongfa",
+                    "xiuxian_fuxiu_gongfa",
+                    "xiuxian_xiulian_wupin",
+                    "xiuxian_danyao",
+                    "xiuxian_liandandanyao",
+                    "xiuxian_liandanlu",
+                    "xiuxian_shenwu",
+                    "xiuxian_yaocai",
+                    "xiuxian_jingjie"
+                ]
                 for table_name in tables:
                     try:
                         c.execute(f"SELECT COUNT(1) FROM {table_name}")
@@ -81,6 +100,19 @@ class XiuxianDateManage:
                 self._add_missing_columns(c, "sects", XiuConfig().sql_sects)
                 self._add_missing_columns(c, "back", XiuConfig().sql_back)
                 self._add_missing_columns(c, "buffinfo", XiuConfig().sql_buff)
+                self._add_missing_columns(c, "xiuxian_wupin_jichu", XiuConfig().sql_xiuxian_wupin_jichu)
+                self._add_missing_columns(c, "xiuxian_fangju", XiuConfig().sql_xiuxian_fangju)
+                self._add_missing_columns(c, "xiuxian_shentong", XiuConfig().sql_xiuxian_shentong)
+                self._add_missing_columns(c, "xiuxian_faqi", XiuConfig().sql_xiuxian_faqi)
+                self._add_missing_columns(c, "xiuxian_gongfa", XiuConfig().sql_xiuxian_gongfa)
+                self._add_missing_columns(c, "xiuxian_fuxiu_gongfa", XiuConfig().sql_xiuxian_fuxiu_gongfa)
+                self._add_missing_columns(c, "xiuxian_xiulian_wupin", XiuConfig().sql_xiuxian_xiulian_wupin)
+                self._add_missing_columns(c, "xiuxian_danyao", XiuConfig().sql_xiuxian_danyao)
+                self._add_missing_columns(c, "xiuxian_liandandanyao", XiuConfig().sql_xiuxian_liandandanyao)
+                self._add_missing_columns(c, "xiuxian_liandanlu", XiuConfig().sql_xiuxian_liandanlu)
+                self._add_missing_columns(c, "xiuxian_shenwu", XiuConfig().sql_xiuxian_shenwu)
+                self._add_missing_columns(c, "xiuxian_yaocai", XiuConfig().sql_xiuxian_yaocai)
+                self._add_missing_columns(c, "xiuxian_jingjie", XiuConfig().sql_xiuxian_jingjie)
 
                 self.conn.commit()
         except psycopg2.Error as e:
@@ -91,50 +123,50 @@ class XiuxianDateManage:
         """根据表名创建表"""
         create_table_sql = {
             "user_xiuxian": """
-                CREATE TABLE IF NOT EXISTS "user_xiuxian" (
-                    "id" SERIAL PRIMARY KEY,
-                    "user_id" NUMERIC NOT NULL,
-                    "user_name" TEXT DEFAULT NULL,
-                    "user_sex" TEXT,
-                    "stone" NUMERIC,
-                    "root" TEXT,
-                    "root_type" TEXT,
-                    "level" TEXT,
-                    "power" NUMERIC DEFAULT 0,
-                    "create_time" TIMESTAMP,
+                CREATE TABLE IF NOT EXISTS "user_xiuxian" (  -- 用户表
+                    "id" SERIAL PRIMARY KEY, -- 数据唯一id
+                    "user_id" NUMERIC NOT NULL,  -- 用户id
+                    "user_name" TEXT DEFAULT NULL, -- 名称
+                    "user_sex" TEXT, -- 性别
+                    "stone" NUMERIC, -- 灵石数量
+                    "root" TEXT, -- 灵根名称
+                    "root_type" TEXT, -- 灵根类型
+                    "level" TEXT, -- 境界等级
+                    "power" NUMERIC DEFAULT 0,  -- 战斗力
+                    "create_time" TIMESTAMP, -- 创建时间
                     "is_sign" NUMERIC DEFAULT 0,
                     "is_beg" NUMERIC DEFAULT 0,
                     "is_ban" NUMERIC DEFAULT 0,
-                    "exp" NUMERIC DEFAULT 0,
-                    "work_num" NUMERIC DEFAULT 0,
+                    "exp" NUMERIC DEFAULT 0,  -- 修为
+                    "work_num" NUMERIC DEFAULT 0, -- 悬赏次数
                     "level_up_cd" TIMESTAMP,
                     "level_up_rate" NUMERIC DEFAULT 0,
-                    "sect_id" NUMERIC DEFAULT NULL,
-                    "sect_position" NUMERIC DEFAULT NULL,
-                    "hp" NUMERIC DEFAULT 0,
-                    "mp" NUMERIC DEFAULT 0,
-                    "atk" NUMERIC DEFAULT 0,
+                    "sect_id" NUMERIC DEFAULT NULL,  -- 宗门ID
+                    "sect_position" NUMERIC DEFAULT NULL,  -- 宗门职位
+                    "hp" NUMERIC DEFAULT 0,  -- 血量
+                    "mp" NUMERIC DEFAULT 0,  -- 真元
+                    "atk" NUMERIC DEFAULT 0,  -- 攻击力
                     "atkpractice" NUMERIC DEFAULT 0,
                     "sect_task" NUMERIC DEFAULT 0,
                     "sect_contribution" NUMERIC DEFAULT 0,
                     "sect_elixir_get" NUMERIC DEFAULT 0,
                     "blessed_spot_flag" NUMERIC DEFAULT 0,
                     "blessed_spot_name" TEXT DEFAULT NULL,
-                    "user_stamina" NUMERIC DEFAULT 0,
-                    "consecutive_wins" NUMERIC DEFAULT 0,
-                    "consecutive_losses" NUMERIC DEFAULT 0,
-                    "poxian_num" NUMERIC DEFAULT 0,
-                    "rbPts" NUMERIC DEFAULT 0,
-                    "cultEff" NUMERIC DEFAULT 0,
-                    "seclEff" NUMERIC DEFAULT 0,
-                    "maxR" NUMERIC DEFAULT 0,
-                    "maxH" NUMERIC DEFAULT 0,
-                    "maxM" NUMERIC DEFAULT 0,
-                    "maxA" NUMERIC DEFAULT 0
+                    "user_stamina" NUMERIC DEFAULT 0,  -- 体力
+                    "consecutive_wins" NUMERIC DEFAULT 0,  -- 鉴石胜利次数
+                    "consecutive_losses" NUMERIC DEFAULT 0,  -- 鉴石失败次数
+                    "poxian_num" NUMERIC DEFAULT 0,  -- 轮回次数
+                    "rbPts" NUMERIC DEFAULT 0,  -- 轮回点数
+                    "cultEff" NUMERIC DEFAULT 0,  -- 修炼加点数
+                    "seclEff" NUMERIC DEFAULT 0,  -- 闭关加点数
+                    "maxR" NUMERIC DEFAULT 0,  -- 灵根加点数
+                    "maxH" NUMERIC DEFAULT 0,  -- 血量加点数
+                    "maxM" NUMERIC DEFAULT 0,  -- 真元加点数
+                    "maxA" NUMERIC DEFAULT 0  -- 攻击加点数
                 );
             """,
             "user_cd": """
-                CREATE TABLE IF NOT EXISTS "user_cd" (
+                CREATE TABLE IF NOT EXISTS "user_cd" (  -- 用户CD表
                     "user_id" NUMERIC NOT NULL PRIMARY KEY,
                     "type" NUMERIC DEFAULT 0,
                     "create_time" TIMESTAMP DEFAULT NULL,
@@ -143,7 +175,7 @@ class XiuxianDateManage:
                 );
             """,
             "sects": """
-                CREATE TABLE IF NOT EXISTS "sects" (
+                CREATE TABLE IF NOT EXISTS "sects" (   -- 宗门表
                     "sect_id" SERIAL PRIMARY KEY,
                     "sect_name" TEXT NOT NULL,
                     "sect_owner" NUMERIC,
@@ -157,7 +189,7 @@ class XiuxianDateManage:
                 );
             """,
             "back": """
-                CREATE TABLE IF NOT EXISTS "back" (
+                CREATE TABLE IF NOT EXISTS "back" (  -- 背包
                     "user_id" NUMERIC NOT NULL,
                     "goods_id" NUMERIC NOT NULL,
                     "goods_name" TEXT,
@@ -174,7 +206,7 @@ class XiuxianDateManage:
                 );
             """,
             "buffinfo": """
-                CREATE TABLE IF NOT EXISTS "buffinfo" (
+                CREATE TABLE IF NOT EXISTS "buffinfo" ( -- buff加成
                     "id" SERIAL PRIMARY KEY,
                     "user_id" NUMERIC DEFAULT 0,
                     "main_buff" NUMERIC DEFAULT 0,
@@ -185,6 +217,190 @@ class XiuxianDateManage:
                     "atk_buff" NUMERIC DEFAULT 0,
                     "sub_buff" NUMERIC DEFAULT 0,
                     "blessed_spot" NUMERIC DEFAULT 0
+                );
+            """,
+            "xiuxian_wupin_jichu": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_wupin_jichu" (
+                    "item_id" SERIAL PRIMARY KEY, -- 物品唯一标识符
+                    "item_name" VARCHAR(255) NOT NULL, -- 物品名称
+                    "item_type" VARCHAR(50) NOT NULL, -- 物品类型（如：装备、丹药、法器等）
+                    "description" TEXT -- 物品描述
+                );
+            """,
+            "xiuxian_fangju": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_fangju" (
+                    "item_id" INT PRIMARY KEY, -- 防具ID
+                    "level" VARCHAR(50), -- 装备等级（如：下品符器）
+                    "def_buff" REAL, -- 减伤加成
+                    "atk_buff" REAL, -- 攻击加成
+                    "crit_buff" REAL, -- 会心加成
+                    "rank" INT, -- 防具获取等级相关
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_shentong": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_shentong" (
+                    "item_id" INT PRIMARY KEY, -- 神通ID
+                    "skill_type" INT, -- 技能类型
+                    "atkvalue" REAL[], -- 攻击值数组
+                    "hpcost" REAL, -- 生命消耗
+                    "mpcost" REAL, -- 真元消耗
+                    "turncost" INT, -- 使用回合数
+                    "jndesc" VARCHAR(50), -- 攻击时的文字描述
+                    "rate" INT, -- 成功率
+                    "rank" VARCHAR(50), -- 神通品质
+                    "level" INT, -- 神通等级
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_faqi": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_faqi" (
+                    "item_id" INT PRIMARY KEY, -- 法器ID
+                    "atk_buff" REAL, -- 攻击力加成
+                    "crit_buff" REAL, -- 会心加成
+                    "def_buff" REAL, -- 减伤加成
+                    "critatk" REAL, -- 会心伤害加成
+                    "zw" REAL, -- 附加属性
+                    "mp_buff" REAL, -- 真元/魔法值加成
+                    "rank" INT, -- 法器获取等级相关
+                    "level" VARCHAR(50), -- 法器等级（如：下品符器）
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_gongfa": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_gongfa" (
+                    "item_id" INT PRIMARY KEY, -- 功法ID
+                    "hpbuff" REAL, -- 生命值加成
+                    "mpbuff" REAL, -- 真元值加成
+                    "atkbuff" REAL, -- 攻击力加成
+                    "ratebuff" REAL, -- 成功率加成
+                    "crit_buff" REAL, -- 暴击率加成
+                    "def_buff" REAL, -- 防御力加成
+                    "dan_exp" REAL, -- 丹药经验加成
+                    "dan_buff" REAL, -- 丹药效果加成
+                    "reap_buff" REAL, -- 收获加成
+                    "exp_buff" REAL, -- 经验加成
+                    "critatk" REAL, -- 暴击伤害加成
+                    "two_buff" REAL, -- 双修次数加成
+                    "number" INT, -- 数量
+                    "clo_exp" REAL, -- 闭关经验加成
+                    "clo_rs" REAL, -- 闭关恢复加成
+                    "random_buff" REAL, -- 随机效果加成
+                    "ew" REAL, -- 额外效果
+                    "rank" VARCHAR(50), -- 功法品质
+                    "level" INT, -- 功法等级
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_fuxiu_gongfa": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_fuxiu_gongfa" (
+                    "item_id" INT PRIMARY KEY, -- 辅修功法ID
+                    "buff_type" VARCHAR(50), -- 加成类型
+                    "buff" REAL, -- 加成值
+                    "buff2" REAL, -- 第二个加成值
+                    "stone" REAL, -- 石头加成
+                    "integral" REAL, -- 积分加成
+                    "jin" REAL, -- 进阶加成
+                    "drop" REAL, -- 掉落加成
+                    "fan" REAL, -- 反弹加成
+                    "break" REAL, -- 破防加成
+                    "exp" REAL, -- 经验加成
+                    "rank" VARCHAR(50), -- 辅修功法品质
+                    "level" INT, -- 辅修功法等级
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_xiulian_wupin": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_xiulian_wupin" (
+                    "item_id" INT PRIMARY KEY, -- 修炼物品ID
+                    "type" VARCHAR(50), -- 类型（如：聚灵旗）
+                    "cultivation_speed" REAL, -- 修炼速度
+                    "herb_speed" REAL, -- 药材生长速度
+                    "rank" INT, -- 修炼物品排名
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_danyao": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_danyao" (
+                    "item_id" INT PRIMARY KEY, -- 丹药ID
+                    "buff_type" VARCHAR(50), -- 加成类型
+                    "buff" REAL, -- 加成值
+                    "price" REAL, -- 价格
+                    "selling" REAL, -- 销售价格
+                    "realm" VARCHAR(50), -- 适用境界
+                    "status" INT, -- 状态
+                    "quantity" INT, -- 数量
+                    "day_num" INT, -- 日使用次数
+                    "all_num" INT, -- 总使用次数
+                    "rank" INT, -- 丹药排名
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_liandandanyao": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_liandandanyao" (
+                    "item_id" INT PRIMARY KEY, -- 炼丹丹药ID
+                    "buff_type" VARCHAR(50), -- 加成类型
+                    "all_num" INT, -- 总使用次数
+                    "buff" REAL, -- 加成值
+                    "realm" VARCHAR(50), -- 适用境界
+                    "mix_need_time" INT, -- 混合所需时间
+                    "mix_exp" REAL, -- 混合经验
+                    "mix_all" INT, -- 总混合次数
+                    "elixir_config" JSONB, -- 药材配置
+                    "rank" INT, -- 丹药排名
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_liandanlu": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_liandanlu" (
+                    "item_id" INT PRIMARY KEY, -- 炼丹炉ID
+                    "type" VARCHAR(50), -- 类型（如：炼丹炉）
+                    "buff" REAL, -- 加成值
+                    "rank" INT, -- 炼丹炉排名
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_shenwu": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_shenwu" (
+                    "item_id" INT PRIMARY KEY, -- 神物ID
+                    "buff_type" VARCHAR(50), -- 加成类型
+                    "all_num" INT, -- 总使用次数
+                    "buff" REAL, -- 加成值
+                    "realm" VARCHAR(50), -- 适用境界
+                    "mix_need_time" INT, -- 混合所需时间
+                    "mix_exp" REAL, -- 混合经验
+                    "mix_all" INT, -- 总混合次数
+                    "elixir_config" JSONB, -- 药材配置
+                    "rank" INT, -- 神物排名
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_yaocai": """
+                CREATE TABLE IF NOT EXISTS "xiuxian_yaocai" (
+                    "item_id" INT PRIMARY KEY, -- 药材ID
+                    "level" VARCHAR(50), -- 等级（如：五品药材）
+                    "primary_ingredient" JSONB, -- 主药成分
+                    "catalyst" JSONB, -- 药引成分
+                    "auxiliary_ingredient" JSONB, -- 辅药成分
+                    "rank" INT, -- 药材排名
+                    FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
+                );
+            """,
+            "xiuxian_jingjie": """
+                CREATE TABLE xiuxian_jingjie (
+                    id SERIAL PRIMARY KEY, -- 主键，自动递增
+                    jingjie_name VARCHAR(255) NOT NULL UNIQUE, -- 境界名称，唯一
+                    power NUMERIC NOT NULL, -- 战斗力
+                    atk NUMERIC NOT NULL, -- 攻击力
+                    ac NUMERIC NOT NULL, -- 防御力
+                    spend NUMERIC NOT NULL, 
+                    hp NUMERIC NOT NULL, -- 生命值
+                    mp NUMERIC NOT NULL, -- 法力值/真元值
+                    comment INT DEFAULT 0, -- 备注字段，默认为0
+                    rate INT NOT NULL, 
+                    exp NUMERIC NOT NULL, -- 经验值
+                    sp NUMERIC NOT NULL, 
+                    sp_ra NUMERIC(6,1) NOT NULL 
                 );
             """
         }
@@ -208,21 +424,42 @@ class XiuxianDateManage:
             if col not in existing_columns:
                 try:
                     data_type = 'TEXT'  # 默认类型为 TEXT
-                    if col in ['id', 'user_id', 'sect_id', 'sect_owner', 'sect_scale', 'sect_used_stone',
+                    if col in ['power', 'atk', 'ac', 'spend', 'hp', 'mp', 'rate', 'exp', 'sp', 'sp_ra']:
+                        data_type = 'NUMERIC'  # 对于数值类型的字段使用 NUMERIC
+                    elif col == 'comment':
+                        data_type = 'INT'  # 对于整数类型的字段使用 INT
+                    elif col == 'jingjie_name':
+                        data_type = 'VARCHAR(255)'  # 对于字符串类型的字段使用 VARCHAR(255)
+                    elif col == 'id':
+                        continue  # 跳过 id，因为它是由 SERIAL 自动生成的
+
+                    # 根据字段名称确定数据类型
+                    if col in ['user_id', 'sect_id', 'sect_owner', 'sect_scale', 'sect_used_stone',
                                'sect_fairyland', 'mainbuff', 'secbuff', 'elixir_room_level', 'goods_id', 'goods_num',
                                'day_num', 'all_num', 'bind_num', 'level_up_rate', 'sect_position', 'consecutive_wins',
                                'consecutive_losses', 'poxian_num', 'rbPts', 'cultEff', 'seclEff', 'maxR', 'maxH',
-                               'maxM', 'maxA',
-                               'work_num', 'hp', 'mp', 'atk', 'atkpractice', 'sect_task', 'sect_contribution',
-                               'sect_elixir_get', 'user_stamina', 'blessed_spot_flag', 'main_buff', 'sec_buff',
-                               'faqi_buff', 'fabao_weapon', 'armor_buff', 'atk_buff', 'sub_buff', 'blessed_spot']:
-                        data_type = 'INTEGER'
-                    elif col in ['create_time', 'scheduled_time', 'last_check_info_time', 'action_time']:
+                               'maxM', 'maxA', 'work_num', 'hp', 'mp', 'atk', 'atkpractice', 'sect_task',
+                               'sect_contribution', 'sect_elixir_get', 'user_stamina', 'blessed_spot_flag', 'main_buff',
+                               'sec_buff', 'faqi_buff', 'fabao_weapon', 'armor_buff', 'atk_buff', 'sub_buff',
+                               'blessed_spot', 'item_id', 'level', 'rank', 'state', 'number', 'exp', 'quantity',
+                               'item_name', 'item_type', 'skill_type', 'atkvalue', 'hpcost', 'mpcost', 'turncost',
+                               'jndesc', 'rate', 'def_buff', 'atk_buff', 'crit_buff', 'critatk', 'zw', 'mp_buff',
+                               'hpbuff', 'mpbuff', 'atkbuff', 'ratebuff', 'critatk', 'two_buff', 'clo_exp', 'clo_rs',
+                               'random_buff', 'ew', 'buff_type', 'buff', 'buff2', 'stone', 'integral', 'jin', 'drop',
+                               'fan', 'break', 'dan_exp', 'dan_buff', 'reap_buff', 'exp_buff', 'cultivation_speed',
+                               'herb_speed', 'type', 'price', 'selling', 'realm', 'status', 'mix_need_time', 'mix_exp',
+                               'mix_all', 'elixir_config', 'primary_ingredient', 'catalyst', 'auxiliary_ingredient']:
+                        data_type = 'NUMERIC' if col in ['level', 'rank', 'state', 'number', 'exp',
+                                                         'quantity'] else 'VARCHAR(255)'
+
+                    # 如果字段是时间戳类型
+                    elif col in ['create_time', 'scheduled_time', 'last_check_info_time', 'action_time', 'update_time']:
                         data_type = 'TIMESTAMP'
+
                     cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col} {data_type} DEFAULT NULL")
-                    logger.info(f"字段 {col} 添加成功！")
-                except psycopg2.Error as e:
-                    logger.error(f"添加字段 {col} 失败: {e}")
+                    print(f"字段 {col} 添加成功！")
+                except Exception as e:
+                    print(f"添加字段 {col} 失败: {e}")
                     raise
 
     @classmethod
@@ -1531,25 +1768,28 @@ class XiuxianDateManage:
     def initialize_user_buff_info(self, user_id):
         """初始化用户buff信息"""
         # 检查用户 ID 是否已存在
-        cur = self.conn.cursor()
-        check_sql = "SELECT EXISTS (SELECT 1 FROM buffinfo WHERE user_id = %s)"
-        cur.execute(check_sql, (user_id,))
-        exists = cur.fetchone()[0]
-        if exists:
-            # 更新现有记录
-            update_sql = """
-                   UPDATE buffinfo
-                   SET main_buff = 0, sec_buff = 0, faqi_buff = 0, fabao_weapon = 0
-                   WHERE user_id = %s
-               """
-            cur.execute(update_sql, (user_id,))
-        else:
-            # 插入新记录
-            insert_sql = """
-                   INSERT INTO buffinfo (user_id, main_buff, sec_buff, faqi_buff, fabao_weapon)
-                   VALUES (%s, 0, 0, 0, 0)
-               """
-            cur.execute(insert_sql, (user_id,))
+        with self.conn.cursor() as cur:
+            check_sql = "SELECT EXISTS (SELECT 1 FROM buffinfo WHERE user_id = %s)"
+            cur.execute(check_sql, (user_id,))
+            exists = cur.fetchone()[0]
+
+            if exists:
+                # 更新现有记录
+                update_sql = """
+                    UPDATE buffinfo
+                    SET main_buff = 0, sec_buff = 0, faqi_buff = 0, fabao_weapon = 0
+                    WHERE user_id = %s
+                """
+                cur.execute(update_sql, (user_id,))
+            else:
+                # 插入新记录
+                insert_sql = """
+                    INSERT INTO buffinfo (user_id, main_buff, sec_buff, faqi_buff, fabao_weapon)
+                    VALUES (%s, 0, 0, 0, 0)
+                """
+                cur.execute(insert_sql, (user_id,))
+
+        # 提交事务
         self.conn.commit()
 
     def get_user_buff_info(self, user_id):
@@ -2140,17 +2380,32 @@ class XIUXIAN_IMPART_BUFF:
 
     def _create_user(self, user_id: str) -> None:
         """在数据库中创建用户并初始化"""
-        if self.create_user(user_id):
-            pass
-        else:
-            c = self.conn.cursor()
-            sql = """
-                    INSERT INTO xiuxian_impart 
-                    (user_id, impart_hp_per, impart_atk_per, impart_mp_per, impart_exp_up, boss_atk, impart_know_per, impart_burst_per, impart_mix_per, impart_reap_per, impart_two_exp, stone_num, exp_day, wish) 
-                    VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-                """
-            c.execute(sql, (user_id,))
+        # 检查用户是否已经存在
+        c = self.conn.cursor()
+        check_sql = sql.SQL("""
+            SELECT EXISTS (
+                SELECT 1 
+                FROM xiuxian_impart 
+                WHERE user_id = %s
+            )
+        """)
+
+        c.execute(check_sql, (user_id,))
+        exists = c.fetchone()[0]
+
+        if not exists:
+            # 如果用户不存在，则插入新记录
+            insert_sql = sql.SQL("""
+                INSERT INTO xiuxian_impart 
+                (user_id, impart_hp_per, impart_atk_per, impart_mp_per, impart_exp_up, boss_atk, impart_know_per, impart_burst_per, impart_mix_per, impart_reap_per, impart_two_exp, stone_num, exp_day, wish) 
+                VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            """)
+
+            c.execute(insert_sql, (user_id,))
             self.conn.commit()
+        else:
+            # 用户已存在，可以选择更新或者打印消息提示
+            print(f"用户 {user_id} 已存在于数据库中，无需创建。")
 
     def get_user_info_with_id(self, user_id):
         """根据USER_ID获取用户impart_buff信息"""

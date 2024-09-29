@@ -77,6 +77,62 @@ class XiuConfig:
             "user_id", "goods_id", "goods_name", "goods_type", "goods_num", "create_time", "update_time",
             "remake", "day_num", "all_num", "action_time", "state", "bind_num"
         ]
+        self.sql_xiuxian_wupin_jichu = [
+            "item_id", "item_name", "item_type", "description"
+        ]
+
+        self.sql_xiuxian_fangju = [
+            "item_id", "level", "def_buff", "atk_buff", "crit_buff", "rank"
+        ]
+
+        self.sql_xiuxian_shentong = [
+            "item_id", "skill_type", "atkvalue", "hpcost", "mpcost", "turncost", "jndesc", "rate", "rank", "level"
+        ]
+
+        self.sql_xiuxian_faqi = [
+            "item_id", "atk_buff", "crit_buff", "def_buff", "critatk", "zw", "mp_buff", "rank", "level"
+        ]
+
+        self.sql_xiuxian_gongfa = [
+            "item_id", "hpbuff", "mpbuff", "atkbuff", "ratebuff", "crit_buff", "def_buff", "dan_exp", "dan_buff",
+            "reap_buff", "exp_buff", "critatk", "two_buff", "number", "clo_exp", "clo_rs", "random_buff", "ew", "rank",
+            "level"
+        ]
+
+        self.sql_xiuxian_fuxiu_gongfa = [
+            "item_id", "buff_type", "buff", "buff2", "stone", "integral", "jin", "drop", "fan", "break", "exp", "rank",
+            "level"
+        ]
+
+        self.sql_xiuxian_xiulian_wupin = [
+            "item_id", "type", "cultivation_speed", "herb_speed", "rank"
+        ]
+
+        self.sql_xiuxian_danyao = [
+            "item_id", "buff_type", "buff", "price", "selling", "realm", "status", "quantity", "day_num", "all_num",
+            "rank"
+        ]
+
+        self.sql_xiuxian_liandandanyao = [
+            "item_id", "buff_type", "all_num", "buff", "realm", "mix_need_time", "mix_exp", "mix_all", "elixir_config",
+            "rank"
+        ]
+
+        self.sql_xiuxian_liandanlu = [
+            "item_id", "type", "buff", "rank"
+        ]
+
+        self.sql_xiuxian_shenwu = [
+            "item_id", "buff_type", "all_num", "buff", "realm", "mix_need_time", "mix_exp", "mix_all", "elixir_config",
+            "rank"
+        ]
+
+        self.sql_xiuxian_yaocai = [
+            "item_id", "level", "primary_ingredient", "catalyst", "auxiliary_ingredient", "rank"
+        ]
+        self.sql_xiuxian_jingjie = [
+            "id", "jingjie_name", "power", "atk", "ac", "spend", "hp", "mp", "comment", "rate", "exp", "sp", "sp_ra"
+        ]
         self.sql_user_auctions = [
             # `sql_user_auctions` 的字段列表
         ]
@@ -101,12 +157,12 @@ class XiuConfig:
         self.level_punishment_floor = 1  # 突破失败扣除修为，惩罚下限（百分比）
         self.level_punishment_limit = 5  # 突破失败扣除修为，惩罚上限(百分比)
         self.level_up_probability = 0.2  # 突破失败增加当前境界突破概率的比例
-        self.sign_in_lingshi_lower_limit = 200000  # 每日签到灵石下限
-        self.sign_in_lingshi_upper_limit = 500000  # 每日签到灵石上限
+        self.sign_in_lingshi_lower_limit = 20000000  # 每日签到灵石下限
+        self.sign_in_lingshi_upper_limit = 50000000  # 每日签到灵石上限
         self.beg_max_level = "铭纹境圆满"  # 仙途奇缘能领灵石最高境界
         self.beg_max_days = 3  # 仙途奇缘能领灵石最多天数
-        self.beg_lingshi_lower_limit = 500000  # 仙途奇缘灵石下限
-        self.beg_lingshi_upper_limit = 1000000  # 仙途奇缘灵石上限
+        self.beg_lingshi_lower_limit = 50000000  # 仙途奇缘灵石下限
+        self.beg_lingshi_upper_limit = 100000000  # 仙途奇缘灵石上限
         self.tou = 100000  # 偷灵石惩罚
         self.peiyang_cd = 0  # 鉴定灵石cd/秒
         self.peiyang_min = "神火境初期"  # 鉴定灵石最低境界需求神火境初期

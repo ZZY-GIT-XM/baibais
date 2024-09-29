@@ -152,3 +152,4 @@ dmypy.json
 /.idea/baibais.iml
 /plugins/xiuxian/xiuxian_utils/names.txt
 /.idea/dbnavigator.xml
+/data/xiuxian/sql/wupin_sql.sql

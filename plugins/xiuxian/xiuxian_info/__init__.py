@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from nonebot import on_command
@@ -89,9 +90,14 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         '女': '🧚‍♀️',  # 女性仙人
         '其他': '🧍‍♂️'  # 其他性别
     }
+    # 指定的时间点
+    specific_time = datetime(2024, 9, 29, 20, 0)
+    create_time_str = user_info['create_time'].strftime("%Y-%m-%d %H:%M:%S.%f")
+    create_time_datetime = datetime.strptime(create_time_str, "%Y-%m-%d %H:%M:%S.%f")
+
     emoji = gender_emoji.get(user_info['user_sex'], '🧍‍♂️')  # 默认使用其他性别
 
-    if user_info['poxian_num'] >= 100 or user_info['user_id'] in id_set:  # 破限次数大于等于100或ID在id_set中的用户
+    if user_info['poxian_num'] >= 100 or user_info['user_id'] in id_set or create_time_datetime < specific_time:  # 破限次数大于等于100或ID在id_set中的用户
         msg = f""" 
 🌟 道号: {calculated_info['道号']}
 {emoji} 性别: {calculated_info['性别']}
