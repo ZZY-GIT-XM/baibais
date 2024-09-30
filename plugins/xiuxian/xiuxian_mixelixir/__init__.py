@@ -23,7 +23,8 @@ from ..xiuxian_utils.utils import (
     get_msg_pic, CommandObjectID
 )
 from nonebot.params import CommandArg
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
 from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict
 from ..xiuxian_config import convert_rank, XiuConfig
 from datetime import datetime, timedelta
@@ -38,7 +39,7 @@ PAGE_SIZE = 6  # 每页显示的物品数量
 DANFANG_PATH = Path(__file__).parent / "danfang_info.json"# 丹方存储路径
 CACHE_TIMEOUT = timedelta(minutes=5) # 丹方缓存超时时间为5分钟
 
-# mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
+mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
 mix_make = on_command("配方", priority=5, permission=GROUP, block=True)
 elixir_help = on_fullmatch("炼丹帮助", priority=7, permission=GROUP, block=True)
 mix_elixir_help = on_fullmatch("炼丹配方帮助", priority=7, permission=GROUP, block=True)

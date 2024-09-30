@@ -1777,27 +1777,18 @@ class XiuxianDateManage:
 
     def initialize_user_buff_info(self, user_id):
         """初始化用户buff信息"""
-        # 检查用户 ID 是否已存在
-        with self.conn.cursor() as cur:
-            check_sql = "SELECT EXISTS (SELECT 1 FROM buffinfo WHERE user_id = %s)"
-            cur.execute(check_sql, (user_id,))
-            exists = cur.fetchone()[0]
+        upsert_sql = """
+            INSERT INTO buffinfo (user_id, main_buff, sec_buff, faqi_buff, fabao_weapon)
+            VALUES (%s, 0, 0, 0, 0)
+            ON CONFLICT (user_id) DO UPDATE SET
+            main_buff = EXCLUDED.main_buff,
+            sec_buff = EXCLUDED.sec_buff,
+            faqi_buff = EXCLUDED.faqi_buff,
+            fabao_weapon = EXCLUDED.fabao_weapon
+        """
 
-            if exists:
-                # 更新现有记录
-                update_sql = """
-                    UPDATE buffinfo
-                    SET main_buff = 0, sec_buff = 0, faqi_buff = 0, fabao_weapon = 0
-                    WHERE user_id = %s
-                """
-                cur.execute(update_sql, (user_id,))
-            else:
-                # 插入新记录
-                insert_sql = """
-                    INSERT INTO buffinfo (user_id, main_buff, sec_buff, faqi_buff, fabao_weapon)
-                    VALUES (%s, 0, 0, 0, 0)
-                """
-                cur.execute(insert_sql, (user_id,))
+        with self.conn.cursor() as cur:
+            cur.execute(upsert_sql, (user_id,))
 
         # 提交事务
         self.conn.commit()

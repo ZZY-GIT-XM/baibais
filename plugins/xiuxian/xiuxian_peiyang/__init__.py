@@ -186,7 +186,7 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         'normal': 50,
         'mystery': 10,
         'crack': 10,
-        'blessing_stone': 500,
+        'blessing_stone': 50,
         'shatter': 10,
         'purify': 10,
         'blessing': 10,

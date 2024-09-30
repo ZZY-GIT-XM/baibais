@@ -21,7 +21,7 @@ def read_random_entry_from_file(sex=None):
     except FileNotFoundError:
         raise FileNotFoundError(f"文件 {full_path} 不存在。")
 
-# 使用示例
+# 测试使用:
 if __name__ == '__main__':
     try:
         random_name, random_sex = read_random_entry_from_file()
