@@ -7,36 +7,24 @@ from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
     GroupMessageEvent,
-    MessageSegment,
+    MessageSegment
 )
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, OtherSet
 from .work_handle import workhandle
 from datetime import datetime
 from ..xiuxian_utils.xiuxian_opertion import do_is_work
 from ..xiuxian_utils.utils import check_user, check_user_type, get_msg_pic
-from nonebot.log import logger
 from .reward_data_source import PLAYERSDATA
-# from ..xiuxian_utils.item_json import Items
 from ..xiuxian_config import XiuConfig
 from ..xiuxian_utils.item_database_handler import Items
 
-
 # 定时任务
-resetrefreshnum = require("nonebot_plugin_apscheduler").scheduler
 work = {}  # 悬赏令信息记录
 refreshnum: Dict[str, int] = {}  # 用户悬赏令刷新次数记录
 sql_message = XiuxianDateManage()  # sql类
 items = Items()
-lscost = 10000000000 # 刷新灵石消耗
+lscost = 10000000000  # 刷新灵石消耗
 count = 3  # 免费次数
-
-
-# 重置悬赏令刷新次数
-@resetrefreshnum.scheduled_job("cron", hour=0, minute=0)
-async def resetrefreshnum_():
-    sql_message.reset_work_num()
-    logger.opt(colors=True).info(f"<green>用户悬赏令刷新次数重置成功</green>")
-
 
 last_work = on_command("最后的悬赏令", priority=15, block=True)
 do_work = on_regex(
@@ -47,7 +35,7 @@ do_work = on_regex(
 )
 
 
-@last_work.handle(parameterless=[Cooldown(stamina_cost = 1, at_sender=False)])
+@last_work.handle(parameterless=[Cooldown(stamina_cost=1, at_sender=False)])
 async def last_work_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
@@ -59,9 +47,10 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
     user_rank = Items().convert_rank(user_level)[0]
     is_type, msg = check_user_type(user_id, 2)  # 需要在悬赏令中的用户
     if (is_type and user_rank <= 11) or (
-        is_type and user_info['exp'] >= sql_message.get_level_power("金仙境圆满")) or (
-        is_type and int(user_info['exp']) >= int(OtherSet().set_closing_type(user_level)) * XiuConfig().closing_exp_upper_limit    
-        ):
+            is_type and user_info['exp'] >= sql_message.get_level_power("金仙境圆满")) or (
+            is_type and int(user_info['exp']) >= int(
+        OtherSet().set_closing_type(user_level)) * XiuConfig().closing_exp_upper_limit
+    ):
         user_cd_message = sql_message.get_user_cd(user_id)
         work_time = datetime.strptime(
             user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f"
@@ -127,7 +116,7 @@ async def last_work_(bot: Bot, event: GroupMessageEvent):
         await last_work.finish()
 
 
-@do_work.handle(parameterless=[Cooldown(stamina_cost = 1, at_sender=False)])
+@do_work.handle(parameterless=[Cooldown(stamina_cost=1, at_sender=False)])
 async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     user_level = "轮回境初期"
@@ -138,7 +127,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     user_level_sx = user_info['level']
     user_id = user_info['user_id']
     user_rank = Items().convert_rank(user_info['level'])[0]
-    sql_message.update_last_check_info_time(user_id) # 更新查看修仙信息时间
+    sql_message.update_last_check_info_time(user_id)  # 更新查看修仙信息时间
     user_cd_message = sql_message.get_user_cd(user_id)
     if not os.path.exists(PLAYERSDATA / str(user_id) / "workinfo.json") and user_cd_message['type'] == 2:
         sql_message.do_work(user_id, 0)
@@ -146,7 +135,8 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await do_work.finish()
     mode = args[0]  # 刷新、终止、结算、接取
-    if user_rank <= Items().convert_rank('轮回境初期')[0] or user_info['exp'] >= sql_message.get_level_power(user_level):
+    if user_rank <= Items().convert_rank('轮回境初期')[0] or user_info['exp'] >= sql_message.get_level_power(
+            user_level):
         msg = "道友的境界已过创业的初期，悬赏令已经不能满足道友了！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await do_work.finish()
@@ -209,7 +199,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
         await do_work.finish()
 
     if mode == "刷新":  # 刷新逻辑
-        stone_use = 0 #悬赏令刷新提示是否扣灵石
+        stone_use = 0  # 悬赏令刷新提示是否扣灵石
         if user_cd_message['type'] == 2:
             create_time = user_cd_message['create_time']
             # 检查 create_time 是否为 datetime 类型
@@ -244,7 +234,7 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                 await do_work.finish()
             else:
-                sql_message.update_ls(user_id, int(lscost / Items().convert_rank(user_level_sx)[0]) , 2)
+                sql_message.update_ls(user_id, int(lscost / Items().convert_rank(user_level_sx)[0]), 2)
                 stone_use = 1
 
         work_msg = workhandle().do_work(0, level=user_level, exp=user_info['exp'], user_id=user_id)
@@ -306,10 +296,11 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
                 await do_work.finish()
             else:
                 msg, give_exp, s_o_f, item_id, big_suc = workhandle().do_work(2,
-                                                                            work_list=user_cd_message['scheduled_time'],
-                                                                            level=user_level,
-                                                                            exp=user_info['exp'],
-                                                                            user_id=user_info['user_id'])
+                                                                              work_list=user_cd_message[
+                                                                                  'scheduled_time'],
+                                                                              level=user_level,
+                                                                              exp=user_info['exp'],
+                                                                              user_id=user_info['user_id'])
                 item_flag = False
                 item_info = None
                 item_msg = None

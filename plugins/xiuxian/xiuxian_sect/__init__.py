@@ -49,9 +49,6 @@ buffrankkey = {
     "天阶上品": 10,
 }
 
-materialsupdate = require("nonebot_plugin_apscheduler").scheduler
-resetusertask = require("nonebot_plugin_apscheduler").scheduler
-auto_sect_owner_change = require("nonebot_plugin_apscheduler").scheduler
 
 upatkpractice = on_command("升级攻击修炼", priority=5, permission=GROUP, block=True)
 my_sect = on_command("我的宗门", aliases={"宗门信息"}, priority=5, permission=GROUP, block=True)
@@ -76,69 +73,6 @@ sect_elixir_room_make = on_command("宗门丹房建设", aliases={"建设宗门�
 sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药领取"}, priority=5, permission=GROUP, block=True)
 sect_rename = on_command("宗门改名", priority=5, permission=GROUP, block=True)
 
-
-# 定时任务每1小时按照宗门的贡献度增加资材
-@materialsupdate.scheduled_job("cron", hour=config["发放宗门资材"]["时间"])
-async def materialsupdate_():
-    all_sects = sql_message.get_all_sects_id_scale()
-    for s in all_sects:
-        sql_message.update_sect_materials(sect_id=s[0], sect_materials=s[1] * config["发放宗门资材"]["倍率"], key=1)
-
-    logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
-
-
-# 每日0点重置用户宗门任务次数、宗门丹药领取次数
-@resetusertask.scheduled_job("cron", hour=0, minute=0)
-async def resetusertask_():
-    sql_message.sect_task_reset()
-    sql_message.sect_elixir_get_num_reset()
-    all_sects = sql_message.get_all_sects_id_scale()
-    for s in all_sects:
-        sect_info = sql_message.get_sect_info(s[0])
-        if int(sect_info['elixir_room_level']) != 0:
-            elixir_room_cost = \
-            config['宗门丹房参数']['elixir_room_level'][str(sect_info['elixir_room_level'])]['level_up_cost'][
-                '建设度']
-            if sect_info['sect_materials'] < elixir_room_cost:
-                logger.opt(colors=True).info(f"<red>宗门：{sect_info['sect_name']}的资材无法维持丹房</red>")
-                continue
-            else:
-                sql_message.update_sect_materials(sect_id=sect_info['sect_id'], sect_materials=elixir_room_cost, key=2)
-    logger.opt(colors=True).info(f"<green>已重置所有宗门任务次数、宗门丹药领取次数，已扣除丹房维护费</green>")
-
-
-# 定时任务每1小时自动检测不常玩的宗主
-@auto_sect_owner_change.scheduled_job("interval", hours=1)
-async def auto_sect_owner_change_():
-    logger.opt(colors=True).info(f"<yellow>开始检测不常玩的宗主</yellow>")
-
-    all_sect_owners_id = sql_message.get_sect_owners()
-    all_active = all(sql_message.get_last_check_info_time(owner_id) is None or
-                     datetime.now() - sql_message.get_last_check_info_time(owner_id) < timedelta(
-        days=XiuConfig().auto_change_sect_owner_cd)
-                     for owner_id in all_sect_owners_id)
-    if all_active:
-        logger.opt(colors=True).info(f"<green>各宗宗主在修行之途上勤勉不辍，宗门安危无忧，可喜可贺！</green>")
-
-    for owner_id in all_sect_owners_id:
-        last_check_time = sql_message.get_last_check_info_time(owner_id)
-        if last_check_time is None or datetime.now() - last_check_time < timedelta(
-                days=XiuConfig().auto_change_sect_owner_cd):
-            continue
-
-        user_info = sql_message.get_user_info_with_id(owner_id)
-        sect_id = user_info['sect_id']
-        logger.opt(colors=True).info(
-            f"<red>{user_info['user_name']}离线时间超过{XiuConfig().auto_change_sect_owner_cd}天，开始自动换宗主</red>")
-        new_owner_id = sql_message.get_highest_contrib_user_except_current(sect_id, owner_id)
-        new_owner_info = sql_message.get_user_info_with_id(new_owner_id[0])
-
-        sql_message.update_usr_sect(owner_id, sect_id, 1)
-        sql_message.update_usr_sect(new_owner_id[0], sect_id, 0)
-        sql_message.update_sect_owner(new_owner_id[0], sect_id)
-        sect_info = sql_message.get_sect_info_by_id(sect_id)
-        logger.opt(colors=True).info(
-            f"<green>由{new_owner_info['user_name']}继承{sect_info['sect_name']}宗主之位</green>")
 
 
 @sect_elixir_room_make.handle(parameterless=[Cooldown(stamina_cost=2, at_sender=False)])
