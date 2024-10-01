@@ -22,21 +22,10 @@ from .. import NICKNAME
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
 sql_message = XiuxianDateManage()  # sql类
 
-impart_re = require("nonebot_plugin_apscheduler").scheduler
-
 impart_pk_project = on_fullmatch("投影虚神界", priority=6, permission=GROUP, block=True)
 impart_pk_now = on_command("虚神界对决", priority=15, permission=GROUP, block=True)
 impart_pk_list = on_fullmatch("虚神界列表", priority=7, permission=GROUP, block=True)
 impart_pk_exp = on_command("虚神界修炼", priority=8, permission=GROUP, block=True)
-
-
-# 每日0点重置用虚神界次数
-@impart_re.scheduled_job("cron", hour=0, minute=0)
-async def impart_re_():
-    impart_pk.re_data()
-    xu_world.re_data()
-    logger.opt(colors=True).info(f"<green>已重置虚神界次数</green>")
-
 
 @impart_pk_project.handle(parameterless=[Cooldown(stamina_cost = 1, at_sender=False)])
 async def impart_pk_project_(bot: Bot, event: GroupMessageEvent):
