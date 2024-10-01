@@ -11,7 +11,8 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.log import logger
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
 from ..xiuxian_config import XiuConfig
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
 from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.utils import (
     check_user,Txt2Img,

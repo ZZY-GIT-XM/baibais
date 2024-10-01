@@ -1,7 +1,9 @@
 from ..xiuxian_utils.xiuxian2_handle import *
 from .workmake import *
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
+
 
 sql_message = XiuxianDateManage()  # sql类
 

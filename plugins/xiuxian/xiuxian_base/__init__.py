@@ -27,14 +27,15 @@ from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, XiuxianJsonDate, OtherSet,
     UserBuffDate, XIUXIAN_IMPART_BUFF, leave_harm_time
 )
-from ..xiuxian_config import XiuConfig, convert_rank
+from ..xiuxian_config import XiuConfig
+from ..xiuxian_utils.item_database_handler import Items
 from ..xiuxian_utils.utils import (
     check_user,
     get_msg_pic, number_to,
     CommandObjectID,
     Txt2Img, send_msg_handler
 )
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
 from ..xiuxian_utils.qimingr import read_random_entry_from_file
 
 
@@ -1127,7 +1128,7 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
                 await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                 await rob_stone.finish()
 
-            if convert_rank(user_2['level'])[0] - convert_rank(user_info['level'])[0] >= 12:
+            if Items().convert_rank(user_2['level'])[0] - Items().convert_rank(user_info['level'])[0] >= 12:
                 msg = f"道友抢劫小辈，可耻！"
                 sql_message.update_user_stamina(user_id, 15, 1)
                 await bot.send_group_msg(group_id=int(send_group_id), message=msg)

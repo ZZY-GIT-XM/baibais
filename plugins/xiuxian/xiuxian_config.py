@@ -5,49 +5,10 @@ except ImportError:
     import json
 from pathlib import Path
 from nonebot.log import logger
+from .xiuxian_utils.item_database_handler import Items
+
 
 DATABASE = Path() / "data" / "xiuxian"
-
-
-def convert_rank(rank_name):
-    """
-    获取境界等级，替代原来的USERRANK
-    convert_rank('江湖好手')[0] 返回江湖好手的境界等级
-    convert_rank('江湖好手')[1] 返回境界列表
-    """
-    ranks = [
-        '江湖好手',  # 57
-        '搬血境初期', '搬血境中期', '搬血境圆满',
-        '洞天境初期', '洞天境中期', '洞天境圆满',  # 51
-        '化灵境初期', '化灵境中期', '化灵境圆满',
-        '铭纹境初期', '铭纹境中期', '铭纹境圆满',
-        '列阵境初期', '列阵境中期', '列阵境圆满',
-        '尊者境初期', '尊者境中期', '尊者境圆满',  # 39
-        '神火境初期', '神火境中期', '神火境圆满',
-        '真一境初期', '真一境中期', '真一境圆满',
-        '圣祭境初期', '圣祭境中期', '圣祭境圆满',
-        '天神境初期', '天神境中期', '天神境圆满',  # 27
-        '虚道境初期', '虚道境中期', '虚道境圆满',
-        '斩我境初期', '斩我境中期', '斩我境圆满',
-        '混沌境初期', '混沌境中期', '混沌境圆满',
-        '创世境初期', '创世境中期', '创世境圆满',  # 15
-        '金仙境初期', '金仙境中期', '金仙境圆满',
-        '轮回境初期', '轮回境中期', '轮回境圆满',
-        '虚神境初期', '虚神境中期', '虚神境圆满',
-        '仙帝境初期', '仙帝境中期', '仙帝境圆满',
-        '祭道境初期', '祭道境中期', '祭道境圆满'  # 0
-    ]
-
-    # 如果rank_name存在于ranks列表中
-    if rank_name in ranks:
-        # 计算rank_name的排名编号：从0开始的索引值取反，即总长度减去索引再减一
-        rank_number = len(ranks) - ranks.index(rank_name) - 1
-        # 返回排名编号及ranks列表
-        return rank_number, ranks
-    else:
-        # 如果未找到rank_name，返回None及ranks列表
-        return None, ranks
-
 
 class XiuConfig:
     def __init__(self):
@@ -141,7 +102,7 @@ class XiuConfig:
             # `sql_user_auctions` 的字段列表
         ]
         # 上面是数据库校验,别动
-        self.level = convert_rank('江湖好手')[1]  # 境界列表，别动
+        self.level = Items().convert_rank('江湖好手')[1]  # 境界列表，别动
         self.img = False  # 是否使用图片发送消息
         self.level_up_cd = 0  # 突破CD(分钟)
         self.closing_exp = 60  # 闭关每分钟获取的修为

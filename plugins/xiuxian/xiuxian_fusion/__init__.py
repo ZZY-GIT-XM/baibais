@@ -14,7 +14,9 @@ from ..xiuxian_utils.utils import (
     check_user, get_msg_pic
 )
 sql_message = XiuxianDateManage()  # sql类
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
+
 items = Items()
 
 tz = on_command('合成天罪', priority=15, permission=GROUP,block=True)

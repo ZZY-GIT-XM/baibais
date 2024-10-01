@@ -1,20 +1,19 @@
 import psycopg2
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple, Optional
 from pathlib import Path
 
 # 配置日志记录
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class Items:
     def __init__(self) -> None:
         # 初始化数据库连接
         self._connect_to_db()
-
         # 存储从数据库加载的所有物品数据
         self.items = {}
+        self.load_data()
 
     def _connect_to_db(self):
         """
@@ -29,14 +28,13 @@ class Items:
                 port=5432
             )
             self.conn.autocommit = True  # 确保每次操作都自动提交
-            logger.info("修仙数据库已连接！")
+            # logger.info("修仙数据库已连接！")
         except Exception as e:
             logger.error(f"连接数据库失败: {e}")
 
     def fetch_data_from_db(self, table_name: str, columns: List[str]) -> List[Dict[str, Any]]:
         """
         从数据库中获取指定表格的数据
-
         参数:
         - table_name: 数据库中的表名
         - columns: 要查询的列名列表
@@ -45,19 +43,31 @@ class Items:
         """
         # 构建SQL查询语句
         query = f"SELECT {', '.join(columns)} FROM {table_name}"
-
         # 使用上下文管理器执行SQL并获取结果
         with self.conn.cursor() as cur:
             cur.execute(query)
             rows = cur.fetchall()
-
             # 获取列名作为字典的键
             columns = [desc[0] for desc in cur.description]
-
             # 将每一行转换为字典格式
             result = [{col: row[i] for i, col in enumerate(columns)} for row in rows]
-
         return result
+
+    def fetch_item_base_info(self, item_id: int) -> Dict[str, Any]:
+        """
+        获取物品的基础信息
+        参数:
+        - item_id: 物品的ID
+        返回:
+        - 包含物品基础信息的字典
+        """
+        query = "SELECT item_name, item_type, description FROM xiuxian_wupin_jichu WHERE item_id = %s"
+        with self.conn.cursor() as cur:
+            cur.execute(query, (item_id,))
+            result = cur.fetchone()
+            if result:
+                return {'name': result[0], 'type': result[1], 'description': result[2]}
+        return {}
 
     def set_item_data(self, data: List[Dict[str, Any]], item_type: str):
         """
@@ -70,6 +80,8 @@ class Items:
         # 遍历数据列表，为每件物品添加类型标签，并存入self.items字典
         for item in data:
             item_id = str(item['item_id'])
+            base_info = self.fetch_item_base_info(item_id)
+            item.update(base_info)
             self.items[item_id] = item
             self.items[item_id].update({'item_type': item_type})
 
@@ -242,7 +254,7 @@ class Items:
         self.set_item_data(sw_data, '神物')
         return sw_data
 
-    def get_data_by_item_id(self, item_id: int) -> None:
+    def get_data_by_item_id(self, item_id: int) -> Optional[Dict[str, Any]]:
         """
         根据物品ID获取数据
         参数:
@@ -286,12 +298,97 @@ class Items:
                     valid_ids.append(int(k))
         return valid_ids
 
+    def convert_rank(self, rank_input: str) -> Tuple[Optional[int], List[str]]:
+        """
+        获取境界等级，替代原来的USERRANK
+        convert_rank('江湖好手')[0] 返回江湖好手的境界ID
+        convert_rank('江湖好手')[1] 返回境界列表
+        convert_rank('1')[0] 返回ID为1的境界名称
+        convert_rank('1')[1] 返回境界列表
+        """
+        if isinstance(rank_input, str) and rank_input.isdigit():
+            # 如果输入的是字符串形式的数字，则尝试按ID查找境界名称
+            rank_id = int(rank_input)
+            query = "SELECT jingjie_name FROM xiuxian_jingjie WHERE id = %s"
+            with self.conn.cursor() as cursor:
+                cursor.execute(query, (rank_id,))
+                result = cursor.fetchone()
+                if result:
+                    rank_name = result[0]
+                    rank_number = 58 - rank_id  # 调整返回的ID
+                else:
+                    rank_name = None
+                    rank_number = None
+        else:
+            # 如果输入的是境界名称，则尝试按名称查找ID
+            rank_name = rank_input
+            query = "SELECT id FROM xiuxian_jingjie WHERE jingjie_name = %s"
+            with self.conn.cursor() as cursor:
+                cursor.execute(query, (rank_name,))
+                result = cursor.fetchone()
+                if result:
+                    rank_number = 58 - result[0]  # 调整返回的ID
+                else:
+                    rank_number = None
 
-# 测试使用：
+        # 获取所有境界名称的列表
+        query = "SELECT jingjie_name FROM xiuxian_jingjie ORDER BY id ASC"
+        with self.conn.cursor() as cursor:
+            cursor.execute(query)
+            all_ranks = [row[0] for row in cursor.fetchall()]
+
+        return rank_number, all_ranks
+
+
+# if __name__ == "__main__":
+#     # 创建 Items 实例
+#     items = Items()
+#     # 加载所有数据
+#     items.load_data()
+#     # 输出 self.items 的内容以查看是否正确加载了数据
+#     print("self.items 内容:", items.items)
+
+
 if __name__ == "__main__":
+    # 创建 Items 实例
     items = Items()
     # 加载所有数据
     items.load_data()
-    # 获取符合条件的随机物品ID列表
-    yaocai_ids = items.get_random_id_list_by_rank_and_item_type(50, ['药材'])
-    print(yaocai_ids)
+    # 输出 self.items 的内容以查看是否正确加载了数据
+    # print("self.items 内容:", items.items)
+    # 测试已知存在的物品ID
+    test_item_id = 9201  # 假设数据库中有物品ID为1的数据
+    item_info = items.get_data_by_item_id(test_item_id)
+    # 打印结果
+    if item_info:
+        print(f"物品ID {test_item_id} 的信息: {item_info}")
+    else:
+        print(f"物品ID {test_item_id} 的信息不存在。")
+
+# # 测试使用：
+# if __name__ == "__main__":
+#     items = Items()
+#     # 加载所有数据
+#     items.load_data()
+#     # 获取用户对应的境界ID
+#     rank_number = 39
+#     # 获取符合条件的随机物品ID列表
+#     yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(rank_number, ['药材'])
+#     print(f"符合条件的物品ID列表:{yaocai_id_list}\n")
+#
+# # 测试使用：
+# if __name__ == "__main__":
+#     items = Items()
+#     # 获取境界ID
+#     rank_number = items.convert_rank('圣祭境圆满')[0]
+#     # 获取境界列表
+#     rank_list = items.convert_rank('圣祭境圆满')[1]
+#     print(f"圣祭境圆满的等级: {rank_number}")
+#     print(f"境界列表: {rank_list}")
+#
+# # 测试使用：
+# if __name__ == "__main__":
+#     items = Items()
+#     # 获取境界ID
+#     rank_number = items.get_data_by_item_id(1)
+#     print(f"物品: {rank_number}")

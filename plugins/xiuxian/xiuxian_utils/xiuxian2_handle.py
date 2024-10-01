@@ -13,10 +13,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from nonebot.log import logger
 from .data_source import jsondata
-from ..xiuxian_config import XiuConfig, convert_rank
 from .. import DRIVER
-from .item_json import Items
 from .xn_xiuxian_impart_config import config_impart
+from ..xiuxian_config import XiuConfig
+# from .item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
+
 
 WORKDATA = Path() / "data" / "xiuxian" / "work"
 PLAYERSDATA = Path() / "data" / "xiuxian" / "players"
@@ -1386,7 +1388,7 @@ class XiuxianDateManage:
 
     def realm_top(self):
         """境界排行榜前50"""
-        rank_mapping = {rank: idx for idx, rank in enumerate(convert_rank('江湖好手')[1])}
+        rank_mapping = {rank: idx for idx, rank in enumerate(Items().convert_rank('江湖好手')[1])}
 
         sql = """SELECT user_name, level, exp FROM user_xiuxian 
                  WHERE user_name IS NOT NULL
@@ -2843,7 +2845,6 @@ def get_main_info_msg(id):
     ratemsg = f"，提升{round(mainbuff['ratebuff'] * 100, 0)}%修炼速度" if mainbuff['ratebuff'] != 0 else ''
 
     cri_tmsg = f"，提升{round(mainbuff['crit_buff'] * 100, 0)}%会心率" if mainbuff['crit_buff'] != 0 else ''
-    # def_msg = f"，提升{round(mainbuff['def_buff'] * 100, 0)}%减伤率" if mainbuff['def_buff'] != 0 else ''
     def_msg = f"，{'提升' if mainbuff['def_buff'] > 0 else '降低'}{round(abs(mainbuff['def_buff']) * 100, 0)}%减伤率" if \
     mainbuff['def_buff'] != 0 else ''
     dan_msg = f"，增加炼丹产出{round(mainbuff['dan_buff'])}枚" if mainbuff['dan_buff'] != 0 else ''
@@ -2851,7 +2852,6 @@ def get_main_info_msg(id):
     reap_msg = f"，提升药材收取数量{round(mainbuff['reap_buff'])}个" if mainbuff['reap_buff'] != 0 else ''
     exp_msg = f"，突破失败{round(mainbuff['exp_buff'] * 100, 0)}%经验保护" if mainbuff['exp_buff'] != 0 else ''
     critatk_msg = f"，提升{round(mainbuff['critatk'] * 100, 0)}%会心伤害" if mainbuff['critatk'] != 0 else ''
-    # two_msg = f"，增加{round(mainbuff['two_buff'])}双修次数" if mainbuff['two_buff'] != 0 else ''
     two_msg = f"，增加{round(mainbuff['two_buff'])}次双修次数" if mainbuff['two_buff'] != 0 else ''
     number_msg = f"，提升{round(mainbuff['number'])}%突破概率" if mainbuff['number'] != 0 else ''
 

@@ -2,7 +2,7 @@ try:
     import ujson as json
 except ImportError:
     import json
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
 from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, UserBuffDate, 
     get_weapon_info_msg, get_armor_info_msg,
@@ -13,7 +13,7 @@ from datetime import datetime
 import os
 import uuid
 from pathlib import Path
-from ..xiuxian_config import convert_rank
+from ..xiuxian_utils.item_database_handler import Items, logger
 
 items = Items()
 sql_message = XiuxianDateManage()
@@ -354,11 +354,22 @@ def get_equipment_msg(l_msg, user_id, goods_id, goods_num):
     获取背包内的装备信息
     """
     item_info = items.get_data_by_item_id(goods_id)
+    # 确保 item_info 不为 None
+    if item_info is None:
+        # 如果 item_info 是 None，记录日志或采取其他措施
+        logger.warning(f"get_equipment_msg物品ID {goods_id} 的信息为空")
+        # 返回一个默认消息或直接返回 l_msg
+        l_msg.append(f"get_equipment_msg物品ID {goods_id} 的信息为空")
+        return l_msg
     msg = ""
-    if item_info['item_type'] == '防具':
+    item_type = item_info.get('item_type')  # 使用 .get() 避免 KeyError
+    if item_type == '防具':
         msg = get_armor_info_msg(goods_id, item_info)
-    elif item_info['item_type'] == '法器':
+    elif item_type == '法器':
         msg = get_weapon_info_msg(goods_id, item_info)
+    else:
+        # 如果 item_type 不是 '防具' 或 '法器'，处理其他情况
+        msg = f"物品类型：{item_type}"
     msg += f"\n拥有数量:{goods_num}"
     is_use = check_equipment_use_msg(user_id, goods_id)
     if is_use:
@@ -374,17 +385,38 @@ def get_skill_msg(l_msg, goods_id, goods_num):
     获取背包内的技能信息
     """
     item_info = items.get_data_by_item_id(goods_id)
+    # 增加调试输出
+    # print(f"get_skill_msg item_info: {item_info}")
+    # print(f"get_skill_msg goods_id: {goods_id}")
+    # 确保 item_info 不为 None
+    if item_info is None:
+        # 如果 item_info 是 None，记录日志或采取其他措施
+        logger.warning(f"get_skill_msg物品ID {goods_id} 的信息为空")
+        # 返回一个默认消息或直接返回 l_msg
+        l_msg.append(f"get_skill_msg物品ID {goods_id} 的信息为空")
+        return l_msg
     msg = ""
-    if item_info['item_type'] == '神通':
-        msg = f"{item_info['level']}神通-{item_info['name']}:"
+    # 使用 .get() 方法来避免 KeyError
+    item_type = item_info.get('type')
+    rank = item_info.get('rank', '')
+    name = item_info.get('name', '')
+    if item_type == '神通':
+        msg = f"{rank}神通-{name}:"
         msg += get_sec_msg(item_info)
-    elif item_info['item_type'] == '功法':
-        msg = f"{item_info['level']}功法-"
+        msg += f"\n拥有数量:{goods_num}"
+
+    elif item_type == '功法':
+        msg = f"{rank}功法-"
         msg += get_main_info_msg(goods_id)[1]
-    elif item_info['item_type'] == '辅修功法':#辅修功法12
-        msg = f"{item_info['level']}辅修功法-"
+        msg += f"\n拥有数量:{goods_num}"
+
+    elif item_type == '辅修功法':
+        msg = f"{rank}辅修功法-"
         msg += get_sub_info_msg(goods_id)[1]
-    msg += f"\n拥有数量:{goods_num}"
+        msg += f"\n拥有数量:{goods_num}"
+    else:
+        msg = f"物品类型：{item_type}"
+        msg += f"\n拥有数量:{goods_num}"
     l_msg.append(msg)
     return l_msg
 
@@ -502,7 +534,7 @@ def get_yaocai_info_msg(goods_id, item_info):
 
 def check_use_elixir(user_id, goods_id, num):
     user_info = sql_message.get_user_info_with_id(user_id)
-    user_rank = convert_rank(user_info['level'])[0]
+    user_rank = Items().convert_rank(user_info['level'])[0]
     goods_info = items.get_data_by_item_id(goods_id)
     goods_rank = goods_info['rank']
     goods_name = goods_info['name']

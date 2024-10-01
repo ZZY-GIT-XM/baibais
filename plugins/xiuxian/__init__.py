@@ -26,11 +26,11 @@ except Exception as e:
     logger.opt(colors=True).info(f"<red>请去.env.dev文件中设置超级用户QQ号以及nickname!</red>")
     NICKNAME = 'bot'
 
-try:
-    download_xiuxian_data()
-except Exception as e:
-    logger.opt(colors=True).info(f"<red>下载配置文件失败，修仙插件无法加载，{e}!</red>")
-    raise ImportError
+# try:
+#     download_xiuxian_data()
+# except Exception as e:
+#     logger.opt(colors=True).info(f"<red>下载配置文件失败，修仙插件无法加载，{e}!</red>")
+#     raise ImportError
 
 put_bot = XiuConfig().put_bot
 shield_group = XiuConfig().shield_group

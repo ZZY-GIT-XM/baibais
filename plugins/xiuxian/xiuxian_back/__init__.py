@@ -23,7 +23,8 @@ from .back_util import (
     get_use_jlq_msg, get_no_use_equipment_sql, get_user_skill_back_msg
 )
 from .backconfig import get_auction_config, savef_auction, remove_auction_item
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
 from ..xiuxian_utils.utils import (
     check_user, get_msg_pic, 
     send_msg_handler, CommandObjectID,
@@ -33,7 +34,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, get_weapon_info_msg, get_armor_info_msg,
     get_sec_msg, get_main_info_msg, get_sub_info_msg, UserBuffDate
 )
-from ..xiuxian_config import XiuConfig, convert_rank
 
 items = Items()
 config = get_auction_config()
@@ -851,10 +851,10 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         page = 1  # 如果没有提供页码或格式不正确，默认为第一页
 
     # 定义分页大小
-    PAGE_SIZE = 5
+    PAGE_SIZE = 100
     skill_msg = get_user_skill_back_msg(user_id)
     # 将药材背包数据转化为列表，便于分页
-    data_list = [item for item in msg]
+    data_list = [item for item in msg] + skill_msg
 
     # 计算总页数
     total_items = len(data_list)
@@ -1050,7 +1050,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             num = 1
         goods_info = items.get_data_by_item_id(goods_id)
         user_info = sql_message.get_user_info_with_id(user_id)
-        user_rank = convert_rank(user_info['level'])[0]
+        user_rank = Items().convert_rank(user_info['level'])[0]
         goods_rank = goods_info['rank']
         goods_name = goods_info['name']
         if goods_rank < user_rank:  # 使用限制
@@ -1082,7 +1082,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
             num = 1
         goods_info = items.get_data_by_item_id(goods_id)
         user_info = sql_message.get_user_info_with_id(user_id)
-        user_rank = convert_rank(user_info['level'])[0]
+        user_rank = Items().convert_rank(user_info['level'])[0]
         goods_name = goods_info['name']
         goods_id1 = goods_info['buff_1']
         goods_id2 = goods_info['buff_2']

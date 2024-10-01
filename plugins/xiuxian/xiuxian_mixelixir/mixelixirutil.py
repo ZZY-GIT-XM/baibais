@@ -1,4 +1,6 @@
-from ..xiuxian_utils.item_json import Items
+# from ..xiuxian_utils.item_json import Items
+from ..xiuxian_utils.item_database_handler import Items
+
 from random import shuffle
 from collections import Counter
 

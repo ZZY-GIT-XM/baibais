@@ -2,7 +2,7 @@ import random
 from decimal import Decimal
 
 from .xiuxian2_handle import XiuxianDateManage ,OtherSet, UserBuffDate, XIUXIAN_IMPART_BUFF
-from ..xiuxian_config import convert_rank
+from ..xiuxian_utils.item_database_handler import Items
 from .utils import number_to
 
 sql_message = XiuxianDateManage()  # sql类
@@ -753,7 +753,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 boss_jb = 0
                 boss_xl = 1  #boss禁蓝
     
-    if convert_rank('混沌境初期')[0] < convert_rank((boss["jj"] + '中期'))[0] < convert_rank('江湖好手')[0]: #混沌以下
+    if Items().convert_rank('混沌境初期')[0] < Items().convert_rank((boss["jj"] + '中期'))[0] < Items().convert_rank('江湖好手')[0]: #混沌以下
             boss["减伤"] = 1 # boss减伤率
             boss_zs = 0
             boss_hx = 0
@@ -763,7 +763,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
             boss_jh = 0
             boss_jb = 0
             boss_xl = 0
-    if  convert_rank('创世境初期')[0] < convert_rank((boss["jj"] + '中期'))[0] < convert_rank('斩我境圆满')[0]: #混沌境
+    if  Items().convert_rank('创世境初期')[0] < Items().convert_rank((boss["jj"] + '中期'))[0] < Items().convert_rank('斩我境圆满')[0]: #混沌境
             boss["减伤"] = random.randint(50,55) / 100 # boss减伤率
             boss_st1 = random.randint(0,100) #boss神通1
             if 0 <= boss_st1 <= 25:
@@ -809,7 +809,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 boss_jb = 0
                 boss_xl = random.randint(5,100) / 100  #boss禁血
                 
-    if convert_rank('金仙境初期')[0] < convert_rank((boss["jj"] + '中期'))[0] < convert_rank('混沌境圆满')[0]: #创世境
+    if Items().convert_rank('金仙境初期')[0] < Items().convert_rank((boss["jj"] + '中期'))[0] < Items().convert_rank('混沌境圆满')[0]: #创世境
             boss["减伤"] = random.randint(40,45) / 100 # boss减伤率
             boss_st1 = random.randint(0,100) #boss神通1
             if 0 <= boss_st1 <= 25:
@@ -855,7 +855,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 boss_jb = 0
                 boss_xl = random.randint(10,100) / 100  #boss禁血
             
-    if convert_rank('轮回境初期')[0] < convert_rank((boss["jj"] + '中期'))[0] < convert_rank('创世境圆满')[0]: #金仙境
+    if Items().convert_rank('轮回境初期')[0] < Items().convert_rank((boss["jj"] + '中期'))[0] < Items().convert_rank('创世境圆满')[0]: #金仙境
             boss["减伤"] = random.randint(30,35) / 100 # boss减伤率
             boss_st1 = random.randint(0,100) #boss神通1
             if 0 <= boss_st1 <= 25:
@@ -901,7 +901,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 boss_jb = 0
                 boss_xl = random.randint(30,100) / 100  #boss禁血
             
-    if convert_rank('虚神境初期')[0] < convert_rank((boss["jj"] + '中期'))[0] < convert_rank('金仙境圆满')[0]: #轮回境 
+    if Items().convert_rank('虚神境初期')[0] < Items().convert_rank((boss["jj"] + '中期'))[0] < Items().convert_rank('金仙境圆满')[0]: #轮回境
             boss["减伤"] = random.randint(20,25) / 100  # boss减伤率
             boss_st1 = random.randint(0,100) #boss神通1
             if 0 <= boss_st1 <= 25:
@@ -947,7 +947,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 boss_jb = 0
                 boss_xl = random.randint(40,100) / 100  #boss禁血
             
-    if convert_rank('仙帝境初期')[0] < convert_rank((boss["jj"]+ '中期'))[0] < convert_rank('轮回境圆满')[0]: #虚神境
+    if Items().convert_rank('仙帝境初期')[0] < Items().convert_rank((boss["jj"]+ '中期'))[0] < Items().convert_rank('轮回境圆满')[0]: #虚神境
             boss["减伤"] = random.randint(10,15) / 100  # boss减伤率
             boss_st1 = random.randint(0,100) #boss神通1
             if 0 <= boss_st1 <= 25:
@@ -993,7 +993,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 boss_jb = 0
                 boss_xl = random.randint(50,100) / 100  #boss禁血
       
-    if convert_rank('祭道境初期')[0] < convert_rank((boss["jj"]+ '中期'))[0] < convert_rank('虚神境圆满')[0]: #仙帝境
+    if Items().convert_rank('祭道境初期')[0] < Items().convert_rank((boss["jj"]+ '中期'))[0] < Items().convert_rank('虚神境圆满')[0]: #仙帝境
             boss["减伤"] = 0.1  # boss减伤率
             boss_st1 = random.randint(0,100) #boss神通1
             if 0 <= boss_st1 <= 25:

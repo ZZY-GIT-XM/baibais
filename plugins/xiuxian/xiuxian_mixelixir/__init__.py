@@ -23,10 +23,9 @@ from ..xiuxian_utils.utils import (
     get_msg_pic, CommandObjectID
 )
 from nonebot.params import CommandArg
-# from ..xiuxian_utils.item_json import Items
 from ..xiuxian_utils.item_database_handler import Items
 from .mixelixirutil import get_mix_elixir_msg, tiaohe, check_mix, make_dict
-from ..xiuxian_config import convert_rank, XiuConfig
+from ..xiuxian_config import XiuConfig
 from datetime import datetime, timedelta
 from .mix_elixir_config import MIXELIXIRCONFIG
 from ..xiuxian_back.back_util import get_user_elixir_back_msg, get_user_yaocai_back_msg
@@ -175,7 +174,7 @@ async def yaocai_get_(bot: Bot, event: GroupMessageEvent):
         nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # str
         timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')).total_seconds() / 3600, 2)
         if timedeff >= round(GETCONFIG['time_cost'] * (1 - (GETCONFIG['加速基数'] * mix_elixir_info['药材速度'])), 2):
-            yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(convert_rank(user_info['level'])[0], ['药材'])
+            yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(items.convert_rank(user_info['level'])[0], ['药材'])
             # 加入传承
             impart_data = xiuxian_impart.get_user_info_with_id(user_id)
             impart_reap_per = impart_data['impart_reap_per'] if impart_data is not None else 0
@@ -503,8 +502,8 @@ async def mix_elixir_(bot: Bot, event: GroupMessageEvent, mode: str = EventPlain
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await mix_make.finish()
         # 检测通过
-        zhuyao_info = Items().get_data_by_item_id(zhuyao_goods_id)
-        yaoyin_info = Items().get_data_by_item_id(yaoyin_goods_id)
+        zhuyao_info = items.get_data_by_item_id(zhuyao_goods_id)
+        yaoyin_info = items.get_data_by_item_id(yaoyin_goods_id)
         if await tiaohe(zhuyao_info, zhuyao_num, yaoyin_info, yaoyin_num):  # 调和失败
             msg = f"冷热调和失败！小心炸炉哦~"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
@@ -513,12 +512,12 @@ async def mix_elixir_(bot: Bot, event: GroupMessageEvent, mode: str = EventPlain
             elixir_config = {
                 str(zhuyao_info['主药']['type']): zhuyao_info['主药']['power'] * zhuyao_num
             }
-            fuyao_info = Items().get_data_by_item_id(fuyao_goods_id)
+            fuyao_info = items.get_data_by_item_id(fuyao_goods_id)
             elixir_config[str(fuyao_info['辅药']['type'])] = fuyao_info['辅药']['power'] * fuyao_num
             is_mix, id = await check_mix(elixir_config)
             if is_mix:
                 mix_elixir_info = get_player_info(user_id, 'mix_elixir_info')
-                goods_info = Items().get_data_by_item_id(id)
+                goods_info = items.get_data_by_item_id(id)
                 # 加入传承
                 impart_data = xiuxian_impart.get_user_info_with_id(user_id)
                 impart_mix_per = impart_data['impart_mix_per'] if impart_data is not None else 0
@@ -697,7 +696,7 @@ async def check_yaocai_name_in_back(user_id, yaocai_name, yaocai_num):
     user_back = sql_message.get_back_msg(user_id)
     for back in user_back:
         if back['goods_type'] == '药材':
-            if Items().get_data_by_item_id(back['goods_id'])['name'] == yaocai_name:
+            if items.get_data_by_item_id(back['goods_id'])['name'] == yaocai_name:
                 if int(back['goods_num']) >= int(yaocai_num):
                     flag = True
                     goods_id = back['goods_id']
@@ -717,7 +716,7 @@ async def check_ldl_name_in_back(user_id, ldl_name):
         if back['goods_type'] == '炼丹炉':
             if back['goods_name'] == ldl_name:
                 flag = True
-                goods_info = Items().get_data_by_item_id(back['goods_id'])
+                goods_info = items.get_data_by_item_id(back['goods_id'])
                 break
             else:
                 continue
