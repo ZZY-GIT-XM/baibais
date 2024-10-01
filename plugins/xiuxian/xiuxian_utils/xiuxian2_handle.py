@@ -228,6 +228,7 @@ class XiuxianDateManage:
                     "item_id" SERIAL PRIMARY KEY, -- 物品唯一标识符
                     "item_name" VARCHAR(255) NOT NULL, -- 物品名称
                     "item_type" VARCHAR(50) NOT NULL, -- 物品类型（如：装备、丹药、法器等）
+                    "type" VARCHAR(50) NOT NULL, -- 物品类型（如：装备、丹药、法器等）
                     "description" TEXT -- 物品描述
                 );
             """,
@@ -254,6 +255,8 @@ class XiuxianDateManage:
                     "rate" INT, -- 成功率
                     "rank" VARCHAR(50), -- 神通品质
                     "level" INT, -- 神通等级
+                    "bufftype" INT, -- buff类型
+                    "buffvalue" REAL, -- buff值
                     FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
                 );
             """,
@@ -456,7 +459,7 @@ class XiuxianDateManage:
                                  'random_buff', 'ew', 'buff_type', 'buff', 'buff2', 'stone', 'integral', 'jin', 'drop',
                                  'fan', 'break', 'dan_exp', 'dan_buff', 'reap_buff', 'exp_buff', 'cultivation_speed',
                                  'herb_speed', 'type', 'price', 'selling', 'realm', 'status', 'mix_need_time',
-                                 'mix_exp',
+                                 'mix_exp','bufftype',
                                  'mix_all', 'elixir_config', 'primary_ingredient', 'catalyst', 'auxiliary_ingredient']:
                         data_type = 'NUMERIC' if col in ['level', 'rank', 'state', 'number', 'exp',
                                                          'quantity'] else 'VARCHAR(255)'
@@ -466,6 +469,8 @@ class XiuxianDateManage:
                     # 新增对于 xiuxian_group_config 表的字段支持
                     elif col == 'group_id':
                         data_type = 'BIGINT'
+                    elif col == 'buffvalue':
+                        data_type = 'REAL'
                     elif col == 'enabled':
                         data_type = 'BOOLEAN NOT NULL DEFAULT FALSE'
 
@@ -2863,27 +2868,30 @@ def get_main_info_msg(id):
     return mainbuff, msg
 
 
-def get_sub_info_msg(id):  # 辅修功法8
+def get_sub_info_msg(id):
     subbuff = items.get_data_by_item_id(id)
     submsg = ""
-    if subbuff['buff_type'] == '1':
-        submsg = "提升" + subbuff['buff'] + "%攻击力"
-    if subbuff['buff_type'] == '2':
-        submsg = "提升" + subbuff['buff'] + "%暴击率"
-    if subbuff['buff_type'] == '3':
-        submsg = "提升" + subbuff['buff'] + "%暴击伤害"
-    if subbuff['buff_type'] == '4':
-        submsg = "提升" + subbuff['buff'] + "%每回合气血回复"
-    if subbuff['buff_type'] == '5':
-        submsg = "提升" + subbuff['buff'] + "%每回合真元回复"
-    if subbuff['buff_type'] == '6':
-        submsg = "提升" + subbuff['buff'] + "%气血吸取"
-    if subbuff['buff_type'] == '7':
-        submsg = "提升" + subbuff['buff'] + "%真元吸取"
-    if subbuff['buff_type'] == '8':
-        submsg = "给对手造成" + subbuff['buff'] + "%中毒"
-    if subbuff['buff_type'] == '9':
-        submsg = f"提升{subbuff['buff']}%气血吸取,提升{subbuff['buff2']}%真元吸取"
+
+    if subbuff.get('buff_type') == '1':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%攻击力"
+    elif subbuff.get('buff_type') == '2':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%暴击率"
+    elif subbuff.get('buff_type') == '3':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%暴击伤害"
+    elif subbuff.get('buff_type') == '4':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%每回合气血回复"
+    elif subbuff.get('buff_type') == '5':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%每回合真元回复"
+    elif subbuff.get('buff_type') == '6':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%气血吸取"
+    elif subbuff.get('buff_type') == '7':
+        submsg = "提升" + str(subbuff.get('buff', 0)) + "%真元吸取"
+    elif subbuff.get('buff_type') == '8':
+        submsg = "给对手造成" + str(subbuff.get('buff', 0)) + "%中毒"
+    elif subbuff.get('buff_type') == '9':
+        submsg = f"提升{subbuff.get('buff', 0)}%气血吸取,提升{subbuff.get('buff2', 0)}%真元吸取"
+
+    return submsg
 
     stone_msg = "提升{}%boss战灵石获取".format(round(subbuff['stone'] * 100, 0)) if subbuff['stone'] != 0 else ''
     integral_msg = "，提升{}点boss战积分获取".format(round(subbuff['integral'])) if subbuff['integral'] != 0 else ''

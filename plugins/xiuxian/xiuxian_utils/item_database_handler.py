@@ -15,6 +15,8 @@ class Items:
         self.items = {}
         self.load_data()
 
+        # print(f'{self.items}')
+
     def _connect_to_db(self):
         """
         建立到数据库的连接
@@ -61,12 +63,12 @@ class Items:
         返回:
         - 包含物品基础信息的字典
         """
-        query = "SELECT item_name, item_type, description FROM xiuxian_wupin_jichu WHERE item_id = %s"
+        query = "SELECT item_name, item_type, type, description FROM xiuxian_wupin_jichu WHERE item_id = %s"
         with self.conn.cursor() as cur:
             cur.execute(query, (item_id,))
             result = cur.fetchone()
             if result:
-                return {'name': result[0], 'type': result[1], 'description': result[2]}
+                return {'name': result[0], 'item_type': result[1], 'type': result[2],'description': result[3]}
         return {}
 
     def set_item_data(self, data: List[Dict[str, Any]], item_type: str):
@@ -143,7 +145,7 @@ class Items:
              'reap_buff', 'exp_buff', 'critatk', 'two_buff', 'number', 'clo_exp', 'clo_rs', 'random_buff', 'ew', 'rank',
              'level']
         )
-        self.set_item_data(main_buff_data, '主要功法')
+        self.set_item_data(main_buff_data, '功法')
         return main_buff_data
 
     def get_sub_buff_data(self) -> List[Dict[str, Any]]:
@@ -157,7 +159,7 @@ class Items:
             ['item_id', 'buff_type', 'buff', 'buff2', 'stone', 'integral', 'jin', 'drop', 'fan', 'break', 'exp', 'rank',
              'level']
         )
-        self.set_item_data(sub_buff_data, '辅助功法')
+        self.set_item_data(sub_buff_data, '辅修功法')
         return sub_buff_data
 
     def get_sec_buff_data(self) -> List[Dict[str, Any]]:
@@ -168,7 +170,7 @@ class Items:
         """
         sec_buff_data = self.fetch_data_from_db(
             'xiuxian_shentong',
-            ['item_id', 'skill_type', 'atkvalue', 'hpcost', 'mpcost', 'turncost', 'jndesc', 'rate', 'rank', 'level']
+            ['item_id', 'skill_type', 'atkvalue', 'hpcost', 'mpcost', 'turncost', 'jndesc', 'rate', 'rank', 'level', 'buffvalue', 'bufftype']
         )
         self.set_item_data(sec_buff_data, '神通')
         return sec_buff_data

@@ -153,3 +153,4 @@ dmypy.json
 /plugins/xiuxian/xiuxian_utils/names.txt
 /.idea/dbnavigator.xml
 /data/xiuxian/sql/wupin_sql.sql
+/data/xiuxian/sql/xiuxian_wupin_jichu.sql

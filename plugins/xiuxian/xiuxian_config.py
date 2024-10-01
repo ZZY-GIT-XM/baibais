@@ -40,7 +40,7 @@ class XiuConfig:
             "remake", "day_num", "all_num", "action_time", "state", "bind_num"
         ]
         self.sql_xiuxian_wupin_jichu = [
-            "item_id", "item_name", "item_type", "description"
+            "item_id", "item_name", "item_type", "description","type"
         ]
 
         self.sql_xiuxian_fangju = [
@@ -48,7 +48,8 @@ class XiuConfig:
         ]
 
         self.sql_xiuxian_shentong = [
-            "item_id", "skill_type", "atkvalue", "hpcost", "mpcost", "turncost", "jndesc", "rate", "rank", "level"
+            "item_id", "skill_type", "atkvalue", "hpcost", "mpcost", "turncost", "jndesc", "rate", "rank",
+            "level","buffvalue", "bufftype"
         ]
 
         self.sql_xiuxian_faqi = [

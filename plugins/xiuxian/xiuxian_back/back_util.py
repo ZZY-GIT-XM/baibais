@@ -385,9 +385,6 @@ def get_skill_msg(l_msg, goods_id, goods_num):
     获取背包内的技能信息
     """
     item_info = items.get_data_by_item_id(goods_id)
-    # 增加调试输出
-    # print(f"get_skill_msg item_info: {item_info}")
-    # print(f"get_skill_msg goods_id: {goods_id}")
     # 确保 item_info 不为 None
     if item_info is None:
         # 如果 item_info 是 None，记录日志或采取其他措施
@@ -397,26 +394,23 @@ def get_skill_msg(l_msg, goods_id, goods_num):
         return l_msg
     msg = ""
     # 使用 .get() 方法来避免 KeyError
-    item_type = item_info.get('type')
+    item_type = item_info.get('item_type')
     rank = item_info.get('rank', '')
     name = item_info.get('name', '')
     if item_type == '神通':
         msg = f"{rank}神通-{name}:"
         msg += get_sec_msg(item_info)
-        msg += f"\n拥有数量:{goods_num}"
 
     elif item_type == '功法':
         msg = f"{rank}功法-"
         msg += get_main_info_msg(goods_id)[1]
-        msg += f"\n拥有数量:{goods_num}"
 
     elif item_type == '辅修功法':
         msg = f"{rank}辅修功法-"
         msg += get_sub_info_msg(goods_id)[1]
-        msg += f"\n拥有数量:{goods_num}"
     else:
         msg = f"物品类型：{item_type}"
-        msg += f"\n拥有数量:{goods_num}"
+    msg += f"拥有数量:{goods_num}\n"
     l_msg.append(msg)
     return l_msg
 
