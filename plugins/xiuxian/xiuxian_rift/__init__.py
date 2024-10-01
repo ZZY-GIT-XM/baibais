@@ -91,9 +91,6 @@ async def set_rift_():
     savef_rift(config)
 
 
-
-
-
 @view_rift.handle()
 async def view_rift_(bot: Bot, event: GroupMessageEvent):
     """秘境查看"""
