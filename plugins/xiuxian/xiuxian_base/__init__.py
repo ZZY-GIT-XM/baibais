@@ -42,7 +42,6 @@ from ..xiuxian_utils.qimingr import read_random_entry_from_file
 items = Items()
 
 # 定时任务
-scheduler = require("nonebot_plugin_apscheduler").scheduler
 cache_help = {}
 cache_level_help = {}
 sql_message = XiuxianDateManage()  # sql类
@@ -66,17 +65,9 @@ gmm_command = on_command("轮回力量", permission=SUPERUSER, priority=10, bloc
 cz = on_command('创造力量', permission=SUPERUSER, priority=15, block=True)
 rob_stone = on_command("抢劫", aliases={"抢灵石", "拿来吧你"}, priority=5, permission=GROUP, block=True)
 restate = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
-set_xiuxian = on_command("启用修仙功能", aliases={'禁用修仙功能'},
-                         permission=GROUP and (SUPERUSER or GROUP_ADMIN or GROUP_OWNER), priority=5, block=True)
+
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
-
-
-# 重置每日签到
-@scheduler.scheduled_job("cron", hour=0, minute=0)
-async def xiuxian_sing_():
-    sql_message.sign_remake()
-    logger.opt(colors=True).info(f"<green>每日修仙签到重置成功！</green>")
 
 @run_xiuxian.handle(parameterless=[Cooldown(at_sender=False)])
 async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
@@ -1117,33 +1108,4 @@ async def restate_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
         await restate.finish()
 
 
-@set_xiuxian.handle()
-async def open_xiuxian_(bot: Bot, event: GroupMessageEvent):
-    """群修仙开关配置 启用/禁用修仙功能"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    group_msg = str(event.message)
-    group_id = str(event.group_id)
 
-    if "启用" in group_msg:
-        if sql_message.is_xiuxian_enabled(group_id):
-            msg = "当前群聊修仙模组已启用，请勿重复操作！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_xiuxian.finish()
-        sql_message.enable_xiuxian(group_id)
-        msg = "当前群聊修仙基础模组已启用，快发送 [我要修仙] 加入修仙世界吧！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await set_xiuxian.finish()
-
-    elif "禁用" in group_msg:
-        if not sql_message.is_xiuxian_enabled(group_id):
-            msg = "当前群聊修仙模组已禁用，请勿重复操作！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_xiuxian.finish()
-        sql_message.disable_xiuxian(group_id)
-        msg = "当前群聊修仙基础模组已禁用！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await set_xiuxian.finish()
-    else:
-        msg = "指令错误，请输入：启用修仙功能/禁用修仙功能"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await set_xiuxian.finish()
