@@ -51,7 +51,6 @@ xiuxian_impart = XIUXIAN_IMPART_BUFF()
 run_xiuxian = on_fullmatch("我要修仙", priority=8, permission=GROUP, block=True)
 restart = on_fullmatch("重入仙途", permission=GROUP, priority=7, block=True)
 sign_in = on_fullmatch("修仙签到", priority=13, permission=GROUP, block=True)
-help_in = on_fullmatch("修仙帮助", priority=12, permission=GROUP, block=True)
 rank = on_command("排行榜", aliases={"排行榜列表", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜", "轮回排行榜"},
                   priority=7, permission=GROUP, block=True)
 remaname = on_command("改名", priority=5, permission=GROUP, block=True)
@@ -71,77 +70,6 @@ set_xiuxian = on_command("启用修仙功能", aliases={'禁用修仙功能'},
                          permission=GROUP and (SUPERUSER or GROUP_ADMIN or GROUP_OWNER), priority=5, block=True)
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
-# lunhui = on_fullmatch('轮回重修帮助', priority=15, permission=GROUP, block=True)
-level_help_jingjie = on_command('境界列表', priority=15, permission=GROUP, block=True)
-level_help_linggen = on_command('灵根列表', priority=15, permission=GROUP, block=True)
-level_help_pinjie = on_command('品阶列表', priority=15, permission=GROUP, block=True)
-
-__xiuxian_notes__ = f"""
-修仙帮助详情：
-- 指令/说明：
-  - 我要修仙: 步入修仙世界。
-  - 我的修仙信息: 获取修仙数据。
-  - 修仙签到: 获取灵石。
-  - 重入仙途: 重置灵根数据，每次消耗 {XiuConfig().remake} 灵石。
-  - 改名: 随机修改你的道号。
-  - 突破: 修为足够后，可突破境界（有一定几率失败）。
-  - 闭关、出关、灵石出关、灵石修炼、双修: 增加修为。
-  - 送灵石 [数量] [道号]、偷灵石 [数量] [道号]、抢灵石 [数量] [道号]: 灵石相关操作。
-  - 排行榜: 修仙排行榜、灵石排行榜、战力排行榜、轮回排行榜、宗门排行榜。
-  - 悬赏令帮助: 获取悬赏令帮助信息。
-  - 我的状态: 查看当前各项状态。
-  - 我的功法: 查看当前技能。
-  - 宗门系统: 发送“宗门帮助”获取。
-  - 灵庄系统: 发送“灵庄帮助”获取。
-  - 世界 BOSS: 发送“世界 boss 帮助”获取。
-  - 功法/灵田: 发送“功法帮助/灵田帮助”查看。
-  - 背包/拍卖: 发送“背包帮助”获取。
-  - 秘境系统: 发送“秘境帮助”获取。
-  - 炼丹帮助: 炼丹功能。
-  - 传承系统: 发送“传承帮助/虚神界帮助”获取。
-  - 启用/禁用修仙功能: 当前群开启或关闭修仙功能。
-  - 仙途奇缘: 发送“仙途奇缘帮助”获取。
-  - 轮回重修: 发送“轮回重修帮助”获取。
-  - 境界列表、灵根列表、品阶列表: 获取对应列表信息。
-  - 仙器合成: 发送“合成 xx”获取，目前开放合成的仙器为天罪。
-""".strip()
-
-
-__level_help_jingjie__ = """
---境界列表--
-祭道境——仙帝境——虚神境——轮回境
-金仙境——创世境——混沌境——斩我境
-虚道境——天神境——圣祭境——真一境
-神火境——尊者境——列阵境——铭纹境
-化灵境——洞天境——搬血境——江湖人
-""".strip()
-
-__level_help_linggen__ = """
---灵根列表--
-轮回——异界——机械——混沌
-融——超——龙——天——异——真——伪
-""".strip()
-
-__level_help_pinjie__ = """
---功法品阶--
-无上
-仙阶极品
-仙阶上品——仙阶下品
-天阶上品——天阶下品
-地阶上品——地阶下品
-玄阶上品——玄阶下品
-黄阶上品——黄阶下品
-人阶上品——人阶下品
-
---法器品阶--
-无上
-极品仙器
-上品仙器——下品仙器
-上品通天——下品通天
-上品纯阳——下品纯阳
-上品法器——下品法器
-上品符器——下品符器
-""".strip()
 
 
 # 重置每日签到
@@ -149,75 +77,6 @@ __level_help_pinjie__ = """
 async def xiuxian_sing_():
     sql_message.sign_remake()
     logger.opt(colors=True).info(f"<green>每日修仙签到重置成功！</green>")
-
-# # 姓氏列表
-# surnames = [
-#     "赵", "钱", "孙", "李", "周", "吴", "郑", "王", "冯", "陈", "褚", "卫", "蒋", "沈", "韩", "杨", "朱", "秦",
-#     "尤", "许", "何", "吕", "施", "张", "孔", "曹", "严", "华", "金", "魏", "陶", "姜", "戚", "谢", "邹", "喻",
-#     "柏", "水", "窦", "章", "云", "苏", "潘", "葛", "奚", "范", "彭", "郎", "鲁", "韦", "昌", "马", "苗", "凤",
-#     "花", "方", "俞", "任", "袁", "柳", "酆", "鲍", "史", "唐", "费", "廉", "柯", "毕", "郝", "邬", "安", "常",
-#     "乐", "于", "时", "傅", "皮", "卞", "齐", "康", "伍", "余", "元", "卜", "顾", "孟", "平", "黄", "和", "穆",
-#     "萧", "尹", "姚", "邵", "湛", "汪", "祁", "毛", "禹", "狄", "米", "贝", "明", "臧", "计", "伏", "成", "戴",
-#     "谈", "宋", "茅", "庞", "熊", "纪", "舒", "屈", "项", "祝", "董", "沈", "连", "牟", "凌", "耿", "康", "井",
-#     "段", "富", "巫", "乌", "焦", "巴", "谷", "车", "侯", "宓", "蓬", "全", "郗", "班", "仰", "秋", "仲", "伊",
-#     "宫", "宁", "仇", "栾", "暴", "甘", "钭", "厉", "戎", "祖", "武", "符", "刘", "景", "詹", "束", "龙", "叶",
-#     "幸", "司", "琉璃", "上官", "欧阳", "东方", "西门", "南宫", "北冥", "公孙", "独孤", "慕容", "司马", "令狐",
-#     "诸葛", "端木", "尉迟", "公羊", "司空", "轩辕", "皇甫", "宇文", "长孙", "拓跋", "呼延", "太叔", "子车",
-#     "灵", "幻", "真", "圣", "神", "仙", "魔", "妖", "鬼",
-#     "云", "风", "雷", "电", "火", "水", "木", "金", "土", "山", "海", "天", "地", "星", "月", "日", "雪", "冰", "霜",
-#     "松", "竹", "梅", "兰", "花", "草", "柳", "桃", "荷", "菊", "枫", "杉", "柏", "桂", "樱", "槐", "杏", "梨",
-#     "龙", "凤", "鹤", "鹰", "虎", "豹", "狼", "鹿", "鹤", "熊", "猿", "狐"
-# ]
-#
-# # 名字字符列表
-# names_characters = [
-#     # 数字
-#     "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
-#     # 十二地支
-#     "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥",
-#     # 十天干
-#     "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸",
-#     # 自然
-#     "天", "地", "人", "和", "风", "云", "雷", "电", "雨", "雪", "山", "水", "火", "木", "金", "土",
-#     # 季节
-#     "春", "夏", "秋", "冬",
-#     # 时间
-#     "晨", "暮", "夜", "昼",
-#     # 动物
-#     "龙", "虎", "豹", "狼", "鹿", "鹤", "鹰", "鸟", "鱼", "蛇", "鼠", "牛", "马", "羊", "猴", "鸡", "狗", "猪",
-#     # 更多动物
-#     "兔", "猫", "象", "狮", "熊", "燕", "蝶", "蛙", "蜂", "蚁", "龟", "鹅", "鸭", "鸽", "狐", "狸",
-#     # 颜色
-#     "红", "绿", "蓝", "黄", "黑", "白", "紫", "橙", "棕", "灰", "青", "褐",
-#     # 植物
-#     "花", "草", "树", "叶", "果", "根", "茎", "枝", "松", "竹", "梅", "兰",
-#     # 情感
-#     "喜", "怒", "哀", "乐", "爱", "恨", "悲", "欢", "笑", "哭",
-#     # 文化
-#     "诗", "书", "画", "琴", "棋", "茶", "酒", "歌", "舞", "乐",
-#     # 道德品质
-#     "仁", "义", "礼", "智", "信", "忠", "孝", "悌", "勇", "诚", "谦", "敬", "慈", "善", "勇", "智",
-#     # 抽象概念
-#     "灵", "玄", "幻", "真", "圣", "神", "仙", "魔", "妖", "鬼", "侠", "客", "师", "徒", "道", "法", "剑", "刀", "弓", "箭",
-#     # 日常物品
-#     "墨", "灯", "镜", "晨曦", "晚霞", "明岚", "静澜", "沐清", "素心", "梦璃", "琪瑶", "淳风", "靖宇", "景云", "涵烟", "灿星", "淼淼",
-#     "苍穹", "潇雨", "落英", "烟波", "青岚", "梓萱", "楚歌", "琪瑞", "桃夭", "柳絮", "菊香", "松涛", "梅香", "竹韵", "荷露", "逸尘", "仙羽",
-#     "玄机", "灵均", "清扬", "慧空", "静逸", "明岚", "沐风", "安歌", "飞鸿", "智渊", "明澈", "悠然", "心怡", "静思", "晓月", "明轩"
-# ]
-#
-# def generate_random_name(length_range=(3, 5)):
-#     """随机生成名称"""
-#     min_length, max_length = length_range
-#     total_length = random.randint(min_length, max_length)
-#     # 选择一个姓氏
-#     surname = random.choice(surnames)
-#     # 计算名字长度
-#     name_length = max(1, total_length - len(surname))
-#     # 选择名字
-#     name = ''.join(random.choices(names_characters, k=name_length))
-#     # 返回姓和名的组合
-#     return surname + name
-
 
 @run_xiuxian.handle(parameterless=[Cooldown(at_sender=False)])
 async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
@@ -262,54 +121,6 @@ async def sign_in_(bot: Bot, event: GroupMessageEvent):
         await sign_in.finish()
     except ActionFailed:
         await sign_in.finish("修仙界网络堵塞，发送失败!", reply_message=True)
-
-
-@help_in.handle(parameterless=[Cooldown(at_sender=False)])
-async def help_in_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    """修仙帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    if session_id in cache_help:
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help[session_id]))
-        await help_in.finish()
-    else:
-        # markdown 模版代入
-        # md = {"markdown": {"custom_template_id": "102125567_1723942446"},"keyboard": {"id": "102125567_1723650390"}}
-        md = {"keyboard": {"id": "102125567_1726457258"}}
-        json1 = json.dumps(md)
-        bytes = json1.encode('utf-8')
-        data = base64.b64encode(bytes).decode('utf-8')
-        msg = __xiuxian_notes__
-        markdown_message = f"[CQ:markdown,data=base64://{data}]" + msg
-        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message)
-        await help_in.finish()
-
-
-@level_help_jingjie.handle(parameterless=[Cooldown(at_sender=False)])
-async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    """境界列表"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __level_help_jingjie__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await level_help_jingjie.finish()
-
-
-@level_help_linggen.handle(parameterless=[Cooldown(at_sender=False)])
-async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    """灵根列表"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __level_help_linggen__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await level_help_linggen.finish()
-
-
-@level_help_pinjie.handle(parameterless=[Cooldown(at_sender=False)])
-async def level_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    """品阶列表"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __level_help_pinjie__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await level_help_pinjie.finish()
-
 
 @restart.handle(parameterless=[Cooldown(at_sender=False)])
 async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):

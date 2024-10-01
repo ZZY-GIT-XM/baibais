@@ -294,8 +294,8 @@ class XiuxianDateManage:
                     "clo_rs" REAL, -- 闭关恢复加成
                     "random_buff" REAL, -- 随机效果加成
                     "ew" REAL, -- 额外效果
-                    "rank" VARCHAR(50), -- 功法品质
-                    "level" INT, -- 功法等级
+                    "rank" INT, -- 功法品质
+                    "level" VARCHAR(50), -- 功法等级
                     FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
                 );
             """,
@@ -312,8 +312,8 @@ class XiuxianDateManage:
                     "fan" REAL, -- 反弹加成
                     "break" REAL, -- 破防加成
                     "exp" REAL, -- 经验加成
-                    "rank" VARCHAR(50), -- 辅修功法品质
-                    "level" INT, -- 辅修功法等级
+                    "rank" INT, -- 辅修功法品质
+                    "level" VARCHAR(50), -- 辅修功法等级
                     FOREIGN KEY("item_id") REFERENCES "xiuxian_wupin_jichu"("item_id") ON DELETE CASCADE
                 );
             """,

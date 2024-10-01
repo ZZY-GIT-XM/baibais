@@ -19,74 +19,16 @@ from ..xiuxian_utils.utils import (
     CommandObjectID
 )
 
-__warring_help__ = """
-轮回重修帮助：
-- 详情：
-  - 散尽修为，轮回重修，将万世的道果凝聚为极致天赋。
-  - 修为、功法、神通将被清空！
-  - 进入千世轮回：获得轮回灵根，增加破限次数，破限10次可进入万世轮回，可定制极品仙器（在做）。
-  - 进入万世轮回：获得真轮回灵根，可定制无上仙器（在做）。
-  - 重入修仙：字面意思，仅搬血境可用。
-- 使用方法：
-  - 输入「进入千世轮回/进入万世轮回」开始轮回重修。
-  - 输入「重入修仙」将重新开始。
-  - 输入「轮回加点 查询」查看当前状态和剩余破限次数。
-- 注意事项：
-  - 轮回重修后，修为、功法、神通将被清空。
-  - 千世轮回每次获得最终增幅10%(真元/血量/灵根/闭关收益/修炼收益)
-  - 万世轮回每次获得最终增幅20%(真元/血量/灵根/闭关收益/修炼收益)
-  - 重入修仙仅在搬血境可用。
-""".strip()
 
-__rebirth_help__ = """
-轮回加点帮助：
-- 使用方法：
-  - 输入「轮回加点 属性名称 数字」分配轮回点数到特定属性。
-    - 示例：「轮回加点 修炼 10」将10点轮回点数分配给修炼效率。
-  - 属性名称对应如下：
-    - 修炼：增加修炼效率（每点增加修炼效率1%）
-    - 闭关：增加闭关效率（每点增加闭关效率1%）
-    - 灵根：增加灵根效率（每点增加灵根效率1%）
-    - 血量：增加血量上限（每点增加血量100000）
-    - 真元：增加真元上限（每点增加真元100000）
-    - 攻击：增加攻击上限（每点增加攻击10000）
-  - 输入「轮回加点 重置」重置所有已分配的轮回点数。
-  - 输入「轮回加点 查询」查看当前已分配的属性点数和剩余未分配的轮回点数。
-- 注意事项：
-  - 分配的点数不能超过当前拥有的轮回点数。
-  - 重置会将所有已分配的点数返回到轮回点数池中。
-  - 查询功能可以帮助你了解当前属性点数分配情况及剩余轮回点数。
-  - 千世轮回每次可得20轮回点,万世轮回每次可得50轮回点。
-""".strip()
 
 
 cache_help_fk = {}
 sql_message = XiuxianDateManage()  # sql类
 
-warring_help = on_fullmatch("轮回重修帮助", priority=12, permission=GROUP, block=True)
 lunhui = on_command('进入千世轮回', priority=15, permission=GROUP,block=True)
 twolun = on_command('进入万世轮回', priority=15, permission=GROUP,block=True)
 resetting = on_command('重入修仙', priority=15, permission=GROUP,block=True)
-rebirth_help = on_command('轮回加点帮助', priority=15, permission=GROUP, block=True)
 lunhui_jiadian = on_regex(r'^轮回加点\s*(.*?)\s*(\d*)$', flags=re.IGNORECASE, priority=15, permission=GROUP, block=True)
-
-
-@warring_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def warring_help_(bot: Bot, event: GroupMessageEvent):
-    """轮回重修帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __warring_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await warring_help.finish()
-
-
-@rebirth_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def rebirth_help_(bot: Bot, event: GroupMessageEvent):
-    """轮回加点帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __rebirth_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await rebirth_help.finish()
 
 
 @lunhui.handle(parameterless=[Cooldown(at_sender=False)])

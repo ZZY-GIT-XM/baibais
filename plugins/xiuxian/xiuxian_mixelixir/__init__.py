@@ -40,39 +40,12 @@ CACHE_TIMEOUT = timedelta(minutes=5) # 丹方缓存超时时间为5分钟
 
 mix_elixir = on_fullmatch("炼丹", priority=17, permission=GROUP, block=True)
 mix_make = on_command("配方", priority=5, permission=GROUP, block=True)
-elixir_help = on_fullmatch("炼丹帮助", priority=7, permission=GROUP, block=True)
-mix_elixir_help = on_fullmatch("炼丹配方帮助", priority=7, permission=GROUP, block=True)
 elixir_back = on_command("丹药背包", priority=10, permission=GROUP, block=True)
 yaocai_back = on_command("药材背包", priority=10, permission=GROUP, block=True)
 yaocai_get = on_command("灵田收取", aliases={"灵田结算"}, priority=8, permission=GROUP, block=True)
 my_mix_elixir_info = on_fullmatch("我的炼丹信息", priority=6, permission=GROUP, block=True)
 mix_elixir_sqdj_up = on_fullmatch("升级收取等级", priority=6, permission=GROUP, block=True)
 mix_elixir_dykh_up = on_fullmatch("升级丹药控火", priority=6, permission=GROUP, block=True)
-
-__elixir_help__ = f"""
-炼丹帮助信息:
--指令：
-  - 炼丹：会检测背包内的药材，自动生成配方【一次最多匹配25种药材】
-  - 配方：发送配方领取丹药【配方主药.....】
-  - 炼丹帮助：获取本帮助信息
-  - 丹药背包：获取背包内丹药以及炼丹炉信息
-  - 药材背包：获取背包内药材信息
-  - 炼丹配方帮助：获取炼丹配方帮助
-  - 灵田收取、灵田结算：收取洞天福地里灵田的药材
-  - 我的炼丹信息：查询自己的炼丹信息
-  - 升级收取等级：每一个等级会增加灵田收取的数量
-  - 升级丹药控火：每一个等级会增加炼丹的产出数量
-""".strip()
-
-__mix_elixir_help__ = f"""
-炼丹配方信息:
-- 炼丹需要主药、药引、辅药
-- 主药和药引控制炼丹时的冷热调和，冷热失和则炼不出丹药
-- 草药的类型控制产出丹药的类型
-- 来自群友猫猫头工具网址：https://huggingface.co/spaces/chewing/liandan
-""".strip()
-
-
 
 @mix_elixir_sqdj_up.handle(parameterless=[Cooldown(at_sender=False)])
 async def mix_elixir_sqdj_up_(bot: Bot, event: GroupMessageEvent):
@@ -249,27 +222,6 @@ async def my_mix_elixir_info_(bot: Bot, event: GroupMessageEvent):
     full_msg = "\n".join(l_msg)
     await bot.send_group_msg(group_id=int(send_group_id), message=full_msg)
     await my_mix_elixir_info.finish()
-
-
-@elixir_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def elixir_help_(bot: Bot, event: GroupMessageEvent):
-    """炼丹帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __elixir_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await elixir_help.finish()
-
-
-@mix_elixir_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def mix_elixir_help_(bot: Bot, event: GroupMessageEvent):
-    """炼丹配方帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __mix_elixir_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await mix_elixir_help.finish()
-
-
-
 
 
 class DateTimeEncoder(json.JSONEncoder):

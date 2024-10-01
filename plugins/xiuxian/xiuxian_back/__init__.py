@@ -52,7 +52,6 @@ sql_message = XiuxianDateManage()  # sql类
 set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
 reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
 
-
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
 shop = on_command("坊市查看", aliases={"查看坊市"}, priority=8, permission=GROUP, block=True)
@@ -68,31 +67,11 @@ auction_withdraw = on_command("撤回拍卖品", aliases={"拍卖品撤回"}, pr
 set_auction = on_command("群拍卖会", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER), block=True)
 creat_auction = on_fullmatch("举行拍卖会", priority=5, permission=GROUP and SUPERUSER, block=True)
 offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
-back_help = on_command("背包帮助", aliases={"坊市帮助"}, priority=8, permission=GROUP, block=True)
 xiuxian_sone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
 shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, block=True)
 chakan_wupin = on_command("查看修仙界物品", priority=25, permission=GROUP, block=True)
 
-__back_help__ = f"""
-背包帮助详情：
-- 指令/说明：
-  - 我的背包、我的物品：查看自身背包前196个物品的信息
-  - 使用 + 物品名字：使用物品，可批量使用
-  - 换装 + 装备名字：卸载目标装备
-  - 坊市购买 + 物品编号：购买坊市内的物品，可批量购买
-  - 坊市查看、查看坊市：查询坊市在售物品
-  - 查看拍卖品、拍卖品查看：查询将在拍卖品拍卖的玩家物品
-  - 坊市上架 物品 金额：上架背包内的物品，最低金额50w，可批量上架
-  - 提交拍卖品 物品 金额：上架背包内的物品，最低金额随意，可批量上架（需要超管重启机器人）
-  - 系统坊市上架 物品 金额：上架任意存在的物品，超管权限
-  - 坊市下架 + 物品编号：下架坊市内的物品，管理员和群主可以下架任意编号的物品！
-  - 群交流会开启、关闭：开启/关闭拍卖行功能，管理员指令，注意：会在机器人所在的全部已开启此功能的群内通报拍卖消息
-  - 拍卖 + 金额：对本次拍卖会的物品进行拍卖
-  - 炼金 + 物品名字：将物品炼化为灵石，支持批量炼金和绑定丹药炼金
-  - 背包帮助：获取背包帮助指令
-- 非指令：
-  - 定时生成拍卖会，每天 {auction_time_config['hours']} 点每整点生成一场拍卖会
-""".strip()
+
 
 
 
@@ -280,13 +259,7 @@ async def set_auction_by_scheduler_():
     return
 
 
-@back_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def back_help_(bot: Bot, event: GroupMessageEvent):
-    """背包帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __back_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await back_help.finish()
+
 
 
 @xiuxian_sone.handle(parameterless=[Cooldown(at_sender=False)])
@@ -1541,10 +1514,6 @@ async def set_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await set_auction.finish()
 
-    else:
-        msg = __back_help__
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await set_auction.finish()
 
 
 @chakan_wupin.handle(parameterless=[Cooldown(at_sender=False)])

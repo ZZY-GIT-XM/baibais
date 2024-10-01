@@ -40,29 +40,12 @@ set_rift = require("nonebot_plugin_apscheduler").scheduler
 set_group_rift = on_command("群秘境", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
                             block=True)
 explore_rift = on_fullmatch("探索秘境", priority=5, permission=GROUP, block=True)
-rift_help = on_fullmatch("秘境帮助", priority=6, permission=GROUP, block=True)
 create_rift = on_fullmatch("生成秘境", priority=5, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
                            block=True)
 complete_rift = on_command("秘境结算", aliases={"结算秘境"}, priority=7, permission=GROUP, block=True)
 break_rift = on_command("秘境探索终止", aliases={"终止探索秘境"}, priority=7, permission=GROUP, block=True)
 view_rift = on_command("秘境查看", aliases={"查看秘境"}, priority=7, permission=GROUP, block=True)
 
-__rift_help__ = f"""
-秘境帮助信息(默认开启中):
--指令：
-  - 群秘境开启: 开启本群的秘境生成功能，管理员权限
-  - 群秘境关闭: 关闭本群的秘境生成功能，管理员权限
-  - 生成秘境: 生成一个随机秘境，超管权限
-  - 探索秘境: 探索秘境获取随机奖励
-  - 秘境结算: 结算秘境奖励
-  - 终止探索秘境: 终止秘境事件
-  - 秘境帮助: 获取秘境帮助信息
--非指令：
-  - 每天早上8点自动生成一个随机等级的秘境
--说明：
-  - 群秘境开启：开启本群的秘境生成功能，允许生成新的秘境。
-  - 群秘境关闭：关闭本群的秘境生成功能，不允许生成新的秘境。
-""".strip()
 
 
 
@@ -108,13 +91,7 @@ async def set_rift_():
     savef_rift(config)
 
 
-@rift_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def rift_help_(bot: Bot, event: GroupMessageEvent):
-    """秘境帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __rift_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await rift_help.finish()
+
 
 
 @view_rift.handle()
@@ -419,7 +396,7 @@ async def set_group_rift_(bot: Bot, event: GroupMessageEvent, args: Message = Co
             await set_group_rift.finish()
 
     else:
-        msg = __rift_help__
+        msg = f"请输入群秘境开启或关闭!"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await set_group_rift.finish()
 

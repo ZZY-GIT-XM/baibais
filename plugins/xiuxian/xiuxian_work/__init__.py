@@ -45,22 +45,6 @@ do_work = on_regex(
     permission=GROUP,
     block=True
 )
-__work_help__ = f"""
-悬赏令帮助信息:
-- 指令：
-  - 悬赏令: 获取对应实力的悬赏令
-  - 悬赏令刷新: 刷新当前悬赏令，每日免费 {count} 次
-  - 悬赏令终止: 终止当前悬赏令任务
-  - 悬赏令结算: 结算悬赏奖励
-  - 悬赏令接取 + 编号：接取对应的悬赏令
-  - 最后的悬赏令: 用于接了悬赏令却境界突破导致卡住的道友使用
-- 实力支持：
-  - 江湖人 - 搬血境 - 洞天境 - 化灵境
-  - 铭纹境 - 列阵境 - 尊者境 - 神火境 
-  - 真一境 - 圣祭境 - 天神境 - 虚道境
-  - 斩我境 - 混沌境 - 创世境 - 金仙境
-""".strip()
-
 
 
 @last_work.handle(parameterless=[Cooldown(stamina_cost = 1, at_sender=False)])
@@ -402,11 +386,6 @@ async def do_work_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             msg = "没有查到你的悬赏令信息呢，请刷新！"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await do_work.finish()
-
-    elif mode == "帮助":
-        msg = __work_help__
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await do_work.finish()
 
 
 def get_work_msg(work_):

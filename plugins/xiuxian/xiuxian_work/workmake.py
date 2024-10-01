@@ -66,8 +66,13 @@ def get_random_item_type():
 
 
 def countrate(exp, needexp):
+    # 确保 exp 和 needexp 都是 float 类型
+    exp = float(exp)
+    needexp = float(needexp)
+
     rate = int(exp / needexp * 100)
     isOut = 1
+
     if rate >= 100:
         tp = 1
         flag = True
@@ -83,4 +88,5 @@ def countrate(exp, needexp):
         isOut = float(1 - tp * 0.05)
         if isOut < 0.5:
             isOut = 0.5
+
     return rate, round(isOut, 2)

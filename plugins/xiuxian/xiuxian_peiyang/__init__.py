@@ -33,21 +33,7 @@ bytes = json1.encode('utf-8')
 data = base64.b64encode(bytes).decode('utf-8')
 markdown_message = f"[CQ:markdown,data=base64://{data}]"
 
-__peiyang_help__ = f"""
-鉴定灵石帮助:
-【鉴石秘技】
-　　在修仙的世界里，灵石不仅是修行者们最宝贵的财富之一，更是通往更高境界的关键。然而，灵石之中往往蕴含着未知的秘密——有的灵石看似平凡无奇，却可能蕴藏着巨大的潜力；有的灵石外表华丽，实则一文不值。只有真正的鉴石大师才能洞察其中的奥秘。
-　　当你使用「鉴石」指令时，将会尝试揭示灵石中的潜在能量。如果你的运气足够好，或许能发现那些隐藏在普通灵石中的惊人价值，甚至获得更多的灵石作为奖励。但若是运气不佳，也可能导致灵石失去原有的价值，甚至造成一定的损失。
-　　指令(最低境界要求【{XiuConfig().peiyang_min}】):
-　　　　鉴石 [灵石数量]
-【注意事项】
-- 鉴石是一项充满不确定性的活动，务必谨慎行事。
-- 仅限达到一定境界的修行者方可尝试，以免因修为不足而遭受反噬。
-- 鉴石过程中，可能会触发各种意外事件，增加鉴石的趣味性和挑战性。
-""".strip()
-
 # 培养
-peiyang_help = on_command("鉴石帮助", permission=GROUP, priority=7, block=True)
 peiyang = on_regex(
     r"(鉴石)\s?(\d+)",
     flags=I,
@@ -105,13 +91,7 @@ async def check_reply(event_id):
             return
         await asyncio.sleep(0.1)
 
-@peiyang_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def peiyang_help_(bot: Bot, event: GroupMessageEvent):
-    """鉴定灵石帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __peiyang_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
-    await peiyang_help.finish()
+
 
 
 @peiyang.handle(parameterless=[Cooldown(cd_time=XiuConfig().peiyang_cd, at_sender=False)])

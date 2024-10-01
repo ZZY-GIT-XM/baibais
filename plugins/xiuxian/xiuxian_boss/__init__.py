@@ -88,7 +88,6 @@ set_group_boss = on_command("世界boss", aliases={"世界Boss", "世界BOSS"}, 
                             permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER), block=True)
 battle = on_command("讨伐boss", aliases={"讨伐世界boss", "讨伐Boss", "讨伐BOSS", "讨伐世界Boss", "讨伐世界BOSS"}, priority=6,
                     permission=GROUP, block=True)
-boss_help = on_command("世界boss帮助", aliases={"世界Boss帮助", "世界BOSS帮助"}, priority=5, block=True)
 boss_delete = on_command("天罚boss", aliases={"天罚世界boss", "天罚Boss", "天罚BOSS", "天罚世界Boss", "天罚世界BOSS"}, priority=7,
                          rule=check_rule_bot_boss(), block=True)
 boss_delete_all = on_command("天罚所有boss", aliases={"天罚所有世界boss", "天罚所有Boss", "天罚所有BOSS", "天罚所有世界Boss","天罚所有世界BOSS",
@@ -98,20 +97,7 @@ boss_integral_info = on_command("世界积分查看",aliases={"查看世界积�
 boss_integral_use = on_command("世界积分兑换", priority=6, permission=GROUP, block=True)
 
 boss_time = config["Boss生成时间参数"]
-__boss_help__ = f"""
-世界Boss帮助信息:
-指令：
-- 生成世界boss：生成一只随机大境界的世界Boss，超管权限
-- 生成指定世界boss：生成指定大境界与名称的世界Boss，超管权限
-- 查询世界boss：查询本群全部世界Boss，可加Boss编号查询对应Boss信息
-- 世界boss开启/关闭：开启后才可以生成世界Boss，管理员权限
-- 讨伐boss/讨伐世界boss：讨伐世界Boss，必须加Boss编号
-- 世界boss帮助/世界boss：获取世界Boss帮助信息
-- 天罚boss/天罚世界boss：删除世界Boss，必须加Boss编号，管理员权限
-- 天罚所有世界boss：删除所有世界Boss，管理员权限
-- 世界积分查看：查看自己的世界积分，和世界积分兑换商品
-- 世界积分兑换 + 编号：兑换对应的商品，可以批量购买
-""".strip()
+
 
 
 
@@ -195,19 +181,6 @@ async def save_boss_():
     logger.opt(colors=True).info(f"<green>boss数据已保存</green>")
 
 
-@boss_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def boss_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    if session_id in cache_help:
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(cache_help[session_id]))
-        await boss_help.finish()
-    else:
-        if str(send_group_id) in groups:
-            msg = __boss_help__ + f"\n非指令:1、拥有定时任务:每{groups[str(send_group_id)]['hours']}小时{groups[str(send_group_id)]['minutes']}分钟生成一只随机大境界的世界Boss"
-        else:
-            msg = __boss_help__
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await boss_help.finish()
 
 
 @boss_delete.handle(parameterless=[Cooldown(at_sender=False)])
@@ -706,19 +679,10 @@ async def set_group_boss_(bot: Bot, event: GroupMessageEvent, args: Message = Co
             msg = f"本群未开启世界Boss!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await set_group_boss.finish()
-
-    elif mode == '':
-        if str(send_group_id) in groups:
-            msg = __boss_help__ + f"非指令:1、拥有定时任务:每{groups[str(send_group_id)]['hours']}小时{groups[str(send_group_id)]['minutes']}分钟生成一只随机大境界的世界Boss"
-        else:
-            msg = __boss_help__
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await set_group_boss.finish()
     else:
         msg = f"请输入正确的指令:世界boss开启或关闭!"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await set_group_boss.finish()
-
 
 @boss_integral_info.handle(parameterless=[Cooldown(at_sender=False)])
 async def boss_integral_info_(bot: Bot, event: GroupMessageEvent):

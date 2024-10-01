@@ -34,24 +34,6 @@ bank = on_regex(
     block=True
 )
 
-__bank_help__ = """
-灵庄帮助信息:
-- 指令：
-  - 灵庄: 查看灵庄帮助信息。
-  - 灵庄存灵石 [金额]: 存入指定金额的灵石，并获取利息。
-  - 灵庄取灵石 [金额]: 取出指定金额的灵石，会先结算利息，再取出灵石。
-  - 灵庄升级会员: 升级灵庄会员等级，提升利息倍率。
-  - 灵庄信息: 查询当前的灵庄信息。
-  - 灵庄结算: 结算当前的利息。
-- 注意事项：
-  - 存入和取出灵石时，请确保输入正确的金额。
-  - 升级会员可以提高利息倍率。
-  - 结算利息时，系统会自动计算并添加到您的账户余额。
-""".strip()
-
-
-
-
 # 处理银行命令
 @bank.handle(parameterless=[Cooldown(at_sender=False)])
 async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
@@ -71,14 +53,6 @@ async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Rege
 
     # 解析命令模式和数值
     mode, num = args
-    if mode is None:
-        # 如果没有指定模式，则显示帮助信息
-        if XiuConfig().img:
-            pic = await get_msg_pic(__bank_help__)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=__bank_help__)
-        await bank.finish()
 
     # 获取用户的银行信息
     user_id = user_info['user_id']

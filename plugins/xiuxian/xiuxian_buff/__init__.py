@@ -47,26 +47,12 @@ stone_exp = on_command("灵石修仙", aliases={"灵石修炼"}, priority=5, per
 two_exp = on_command("双修", priority=5, permission=GROUP, block=True)
 mind_state = on_fullmatch("我的状态", priority=7, permission=GROUP, block=True)
 qc = on_command("切磋", priority=6, permission=GROUP, block=True)
-buff_help = on_command("功法帮助", aliases={"灵田帮助"}, priority=5, permission=GROUP, block=True)
 blessed_spot_creat = on_fullmatch("洞天福地购买", priority=10, permission=GROUP, block=True)
 blessed_spot_info = on_fullmatch("洞天福地查看", priority=11, permission=GROUP, block=True)
 blessed_spot_rename = on_command("洞天福地改名", priority=7, permission=GROUP, block=True)
 ling_tian_up = on_fullmatch("灵田开垦", priority=5, permission=GROUP, block=True)
 del_exp_decimal = on_fullmatch("抑制黑暗动乱", priority=9, permission=GROUP, block=True)
 my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, block=True)
-
-__buff_help__ = f"""
-功法帮助信息:
-指令：
-- 我的功法：查看自身功法以及背包内的所有功法信息
-- 切磋 [道号]：切磋对应道友，不会消耗气血
-- 洞天福地购买：购买洞天福地
-- 洞天福地查看：查看自己的洞天福地
-- 洞天福地改名 + 名字：修改自己洞天福地的名字
-- 灵田开垦：提升灵田的等级，提高灵田结算的药材数量
-- 抑制黑暗动乱：清除修为浮点数
-- 我的双修次数：查看剩余双修次数
-""".strip()
 
 
 
@@ -93,15 +79,6 @@ def generate_random_blessed_spot_name():
 "幽冥影月潭", "万古冰魄谷", "星河轮回道", "碧落神霄殿", "幽冥夜魔岭", "万古剑意山", "星河幻梦泽",
 "碧落仙境源", "幽冥鬼雾林", "九天雷火域", "苍穹灵霄阁", "碧落瑶光池"]
     return random.choice(names)
-
-
-@buff_help.handle(parameterless=[Cooldown(at_sender=False)])
-async def buff_help_(bot: Bot, event: GroupMessageEvent, session_id: int = CommandObjectID()):
-    """功法帮助"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = __buff_help__
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await buff_help.finish()
 
 
 @blessed_spot_creat.handle(parameterless=[Cooldown(at_sender=False)])
