@@ -37,7 +37,6 @@ xiuxian_impart = XIUXIAN_IMPART_BUFF()
 BLESSEDSPOTCOST = 3500000
 two_exp_limit = 5  # 默认双修次数上限，修仙之人一天5次也不奇怪（
 
-two_exp_cd_up = require("nonebot_plugin_apscheduler").scheduler
 
 buffInfo = on_fullmatch("我的功法", priority=25, permission=GROUP, block=True)
 out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permission=GROUP, block=True)
@@ -53,14 +52,6 @@ blessed_spot_rename = on_command("洞天福地改名", priority=7, permission=GR
 ling_tian_up = on_fullmatch("灵田开垦", priority=5, permission=GROUP, block=True)
 del_exp_decimal = on_fullmatch("抑制黑暗动乱", priority=9, permission=GROUP, block=True)
 my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, block=True)
-
-
-
-# 每日0点重置用户宗门任务次数、宗门丹药领取次数
-@two_exp_cd_up.scheduled_job("cron", hour=0, minute=0)
-async def two_exp_cd_up_():
-    two_exp_cd.re_data()
-    logger.opt(colors=True).info(f"<green>双修次数已更新！</green>")
 
 
 def generate_random_blessed_spot_name():
