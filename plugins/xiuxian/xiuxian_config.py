@@ -97,7 +97,7 @@ class XiuConfig:
             "id", "jingjie_name", "power", "atk", "ac", "spend", "hp", "mp", "comment", "rate", "exp", "sp", "sp_ra"
         ]
         self.sql_xiuxian_group_config = [
-            "group_id", "enabled"
+            "group_id", "enabled_xiuxian", "enabled_paimai", "enabled_boss", "enabled_mijing"
         ]
         self.sql_user_auctions = [
             # `sql_user_auctions` 的字段列表
