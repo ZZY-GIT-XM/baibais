@@ -26,7 +26,7 @@ from .backconfig import get_auction_config, savef_auction, remove_auction_item
 # from ..xiuxian_utils.item_json import Items
 from ..xiuxian_utils.item_database_handler import Items
 from ..xiuxian_utils.utils import (
-    check_user, get_msg_pic, 
+    check_user, get_msg_pic,
     send_msg_handler, CommandObjectID,
     Txt2Img, number_to
 )
@@ -46,11 +46,10 @@ auction_offer_flag = False  # 拍卖标志
 AUCTIONOFFERSLEEPTIME = 30  # 每次拍卖增加拍卖剩余的时间（秒）
 auction_offer_time_count = 0  # 计算剩余时间
 auction_offer_all_count = 0  # 控制线程等待时间
-auction_time_config = config['拍卖会定时参数'] # 定时配置
+auction_time_config = config['拍卖会定时参数']  # 定时配置
 sql_message = XiuxianDateManage()  # sql类
 # 定时任务
 set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
-reset_day_num_scheduler = require("nonebot_plugin_apscheduler").scheduler
 
 goods_re_root = on_command("炼金", priority=6, permission=GROUP, block=True)
 use = on_command("使用", priority=15, permission=GROUP, block=True)
@@ -64,32 +63,26 @@ no_use_zb = on_command("换装", priority=5, permission=GROUP, block=True)
 buy = on_command("坊市购买", priority=5, block=True)
 auction_added = on_command("提交拍卖品", aliases={"拍卖品提交"}, priority=10, permission=GROUP, block=True)
 auction_withdraw = on_command("撤回拍卖品", aliases={"拍卖品撤回"}, priority=10, permission=GROUP, block=True)
-set_auction = on_command("群拍卖会", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER), block=True)
 creat_auction = on_fullmatch("举行拍卖会", priority=5, permission=GROUP and SUPERUSER, block=True)
 offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
-xiuxian_sone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
 shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, block=True)
 chakan_wupin = on_command("查看修仙界物品", priority=25, permission=GROUP, block=True)
 
 
-
-
-
-# 重置丹药每日使用次数
-@reset_day_num_scheduler.scheduled_job("cron", hour=0, minute=0, )
-async def reset_day_num_scheduler_():
-    sql_message.day_num_reset()
-    logger.opt(colors=True).info(f"<green>每日丹药使用次数重置成功！</green>")
-
-
-# 定时任务生成拍卖会
-@set_auction_by_scheduler.scheduled_job("cron", hour=auction_time_config['hours'], minute=auction_time_config['minutes'])
+@set_auction_by_scheduler.scheduled_job("cron", hour=20, minute=50)
 async def set_auction_by_scheduler_():
+    """定时任务生成拍卖会"""
     global auction, auction_offer_flag, auction_offer_all_count, auction_offer_time_count
-    if groups:
-        if auction:
-            logger.opt(colors=True).info(f"<green>本群已存在一场拍卖会，已清除！</green>")
-            auction = {}
+
+    enabled_groups = sql_message.get_enabled_auction_groups()
+
+    if not enabled_groups:
+        logger.opt(colors=True).info("<yellow>当前没有群聊启用拍卖会功能。</yellow>")
+        return
+
+    if auction:
+        logger.opt(colors=True).info(f"<green>本群已存在一场拍卖会，已清除！</green>")
+        auction = {}
 
     auction_items = []
     try:
@@ -107,15 +100,15 @@ async def set_auction_by_scheduler_():
             item_info = items.get_data_by_item_id(auction_id)
             item_quantity = 1
             if item_info['type'] in ['神物', '丹药']:
-                item_quantity = random.randint(1, 3) # 如果是丹药的话随机挑1-3个
+                item_quantity = random.randint(1, 3)  # 如果是丹药的话随机挑1-3个
             auction_items.append((auction_id, item_quantity, get_auction_price_by_id(auction_id)['start_price'], False))
     except LookupError:
         logger.opt(colors=True).info("<red>获取不到拍卖物品的信息，请检查配置文件！</red>")
         return
-    
+
     # 打乱拍卖品顺序
     random.shuffle(auction_items)
-    
+
     logger.opt(colors=True).info("<red>野生的大世界定时拍卖会出现了！！！，请管理员在这个时候不要重启机器人</red>")
     msg = f"大世界定时拍卖会出现了！！！\n"
     msg = f"请各位道友稍作准备，拍卖即将开始...\n"
@@ -129,13 +122,13 @@ async def set_auction_by_scheduler_():
         else:
             msg += f"{idx + 1}号：{item_name}x{item_quantity}（由拍卖场提供）\n"
 
-    for gid in groups:
+    for gid in enabled_groups:
         bot = await assign_bot_group(group_id=gid)
         try:
             await bot.send_group_msg(group_id=int(gid), message=msg)
         except ActionFailed:  # 发送群消息失败
             continue
-    
+
     auction_results = []  # 存储拍卖结果
     for i, (auction_id, item_quantity, start_price, is_user_auction) in enumerate(auction_items):
         auction_info = items.get_data_by_item_id(auction_id)
@@ -165,14 +158,14 @@ async def set_auction_by_scheduler_():
             next_item_name = items.get_data_by_item_id(auction_items[i + 1][0])['name']
             msg += f"\n下一件拍卖品为：{next_item_name}，请心仪的道友提前开始准备吧！"
 
-        for gid in groups:
+        for gid in enabled_groups:
             bot = await assign_bot_group(group_id=gid)
             try:
                 await bot.send_group_msg(group_id=int(gid), message=msg)
             except ActionFailed:  # 发送群消息失败
                 continue
 
-        remaining_time = AUCTIONSLEEPTIME # 第一轮定时
+        remaining_time = AUCTIONSLEEPTIME  # 第一轮定时
         while remaining_time > 0:
             await asyncio.sleep(10)
             remaining_time -= 10
@@ -182,41 +175,44 @@ async def set_auction_by_scheduler_():
                 auction_offer_flag = False
                 break
 
-            logger.opt(colors=True).info(f"<green>有人拍卖，本次等待时间：{auction_offer_all_count * AUCTIONOFFERSLEEPTIME}秒</green>")
+            logger.opt(colors=True).info(
+                f"<green>有人拍卖，本次等待时间：{auction_offer_all_count * AUCTIONOFFERSLEEPTIME}秒</green>")
             first_time = auction_offer_all_count * AUCTIONOFFERSLEEPTIME
             auction_offer_all_count = 0
             auction_offer_flag = False
             await asyncio.sleep(first_time)
-            logger.opt(colors=True).info(f"<green>总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒，当前拍卖标志：{auction_offer_flag}，本轮等待时间：{first_time}</green>")
+            logger.opt(colors=True).info(
+                f"<green>总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒，当前拍卖标志：{auction_offer_flag}，本轮等待时间：{first_time}</green>")
 
-        logger.opt(colors=True).info(f"<green>等待时间结束，总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒</green>")
+        logger.opt(colors=True).info(
+            f"<green>等待时间结束，总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒</green>")
         if auction['user_id'] == 0:
             msg = f"很可惜，{auction['name']}流拍了\n"
             if i + 1 == len(auction_items):
                 msg += "本场拍卖会到此结束，开始整理拍卖会结果，感谢各位道友参与！"
-                
-            for gid in groups:
+
+            for gid in enabled_groups:
                 bot = await assign_bot_group(group_id=gid)
                 try:
                     await bot.send_group_msg(group_id=int(gid), message=msg)
                 except ActionFailed:  # 发送群消息失败
                     continue
-            auction_results.append((auction_id, None, auction['group_id'], auction_info['type'], auction['now_price'], auction['quantity']))
+            auction_results.append((auction_id, None, auction['group_id'], auction_info['type'], auction['now_price'],
+                                    auction['quantity']))
             auction = {}
             continue
-        
+
         user_info = sql_message.get_user_info_with_id(auction['user_id'])
         msg = f"(拍卖锤落下)！！！\n"
         msg += f"恭喜来自群{auction['group_id']}的{user_info['user_name']}道友成功拍下：{auction['type']}-{auction['name']}x{auction['quantity']}，将在拍卖会结算后送到您手中。\n"
         if i + 1 == len(auction_items):
             msg += "本场拍卖会到此结束，开始整理拍卖会结果，感谢各位道友参与！"
 
-        auction_results.append((auction_id, user_info['user_id'], auction['group_id'], 
+        auction_results.append((auction_id, user_info['user_id'], auction['group_id'],
                                 auction_info['type'], auction['now_price'], auction['quantity']))
         auction = {}
         auction_offer_time_count = 0
-        for gid in groups:
-
+        for gid in enabled_groups:
             bot = await assign_bot_group(group_id=gid)
             try:
                 await bot.send_group_msg(group_id=int(gid), message=msg)
@@ -249,7 +245,7 @@ async def set_auction_by_scheduler_():
         else:
             end_msg += f"{idx + 1}号拍卖品：{item_name}x{quantity} - 流拍了\n"
 
-    for gid in groups:
+    for gid in enabled_groups:
         bot = await assign_bot_group(group_id=gid)
         try:
             await bot.send_group_msg(group_id=int(gid), message=end_msg)
@@ -260,19 +256,6 @@ async def set_auction_by_scheduler_():
 
 
 
-
-
-@xiuxian_sone.handle(parameterless=[Cooldown(at_sender=False)])
-async def xiuxian_sone_(bot: Bot, event: GroupMessageEvent):
-    """我的灵石信息"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await xiuxian_sone.finish()
-    msg = f"{user_info['user_name']} 当前灵石：{user_info['stone']}({number_to(user_info['stone'])})"
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await xiuxian_sone.finish()
 
 buy_lock = asyncio.Lock()
 
@@ -427,8 +410,8 @@ async def shop_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
     await shop.finish()
 
 
-
-@shop_added_by_admin.handle(parameterless=[Cooldown(1.4, at_sender=False, isolate_level=CooldownIsolateLevel.GROUP, parallel=1)])
+@shop_added_by_admin.handle(
+    parameterless=[Cooldown(1.4, at_sender=False, isolate_level=CooldownIsolateLevel.GROUP, parallel=1)])
 async def shop_added_by_admin_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """系统上架坊市"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
@@ -859,7 +842,6 @@ async def main_back_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     await main_back.finish()
 
 
-
 @no_use_zb.handle(parameterless=[Cooldown(at_sender=False)])
 async def no_use_zb_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """卸载物品（只支持装备）
@@ -984,10 +966,10 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
                 sql_message.update_back_j(user_id, goods_id)
                 sql_message.updata_user_main_buff(user_id, goods_id)
                 msg = f"恭喜道友学会功法：{skill_info['name']}！"
-        elif skill_type == "辅修功法": #辅修功法1
+        elif skill_type == "辅修功法":  # 辅修功法1
             if int(user_buff_info['sub_buff']) == int(goods_id):
                 msg = f"道友已学会该辅修功法：{skill_info['name']}，请勿重复学习！"
-            else:#学习sql
+            else:  # 学习sql
                 sql_message.update_back_j(user_id, goods_id)
                 sql_message.updata_user_sub_buff(user_id, goods_id)
                 msg = f"恭喜道友学会辅修功法：{skill_info['name']}！"
@@ -1010,7 +992,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         msg = check_use_elixir(user_id, goods_id, num)
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await use.finish()
-    elif goods_type =="神物":
+    elif goods_type == "神物":
         num = 1
         try:
             if len(args) > 1 and 1 <= int(args[1]) <= int(goods_num):
@@ -1027,22 +1009,22 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         goods_rank = goods_info['rank']
         goods_name = goods_info['name']
         if goods_rank < user_rank:  # 使用限制
-                msg = f"神物：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
+            msg = f"神物：{goods_name}的使用境界为{goods_info['境界']}以上，道友不满足使用条件！"
         else:
-                exp = goods_info['buff'] * num
-                user_hp = int(user_info['hp'] + (exp / 2))
-                user_mp = int(user_info['mp'] + exp)
-                user_atk = int(user_info['atk'] + (exp / 10))
-                sql_message.update_exp(user_id, exp)
-                sql_message.update_power2(user_id)  # 更新战力
-                sql_message.update_user_attribute(user_id, user_hp, user_mp, user_atk)  # 这种事情要放在update_exp方法里
-                sql_message.update_back_j(user_id, goods_id, num=num, use_key=1)
-                msg = f"道友成功使用神物：{goods_name} {num}个 ,修为增加{exp}点！"
+            exp = goods_info['buff'] * num
+            user_hp = int(user_info['hp'] + (exp / 2))
+            user_mp = int(user_info['mp'] + exp)
+            user_atk = int(user_info['atk'] + (exp / 10))
+            sql_message.update_exp(user_id, exp)
+            sql_message.update_power2(user_id)  # 更新战力
+            sql_message.update_user_attribute(user_id, user_hp, user_mp, user_atk)  # 这种事情要放在update_exp方法里
+            sql_message.update_back_j(user_id, goods_id, num=num, use_key=1)
+            msg = f"道友成功使用神物：{goods_name} {num}个 ,修为增加{exp}点！"
 
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await use.finish()
 
-    elif goods_type =="礼包":
+    elif goods_type == "礼包":
         num = 1
         try:
             if len(args) > 1 and 1 <= int(args[1]) <= int(goods_num):
@@ -1067,7 +1049,7 @@ async def use_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg())
         goods_type2 = goods_info['type_2']
         goods_type3 = goods_info['type_3']
 
-        sql_message.send_back(user_id, goods_id1, goods_name1, goods_type1, 1 * num, 1)# 增加用户道具
+        sql_message.send_back(user_id, goods_id1, goods_name1, goods_type1, 1 * num, 1)  # 增加用户道具
         sql_message.send_back(user_id, goods_id2, goods_name2, goods_type2, 2 * num, 1)
         sql_message.send_back(user_id, goods_id3, goods_name3, goods_type3, 2 * num, 1)
         sql_message.update_back_j(user_id, goods_id, num, 0)
@@ -1093,7 +1075,7 @@ async def auction_view_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await auction_view.finish()
-    
+
     if group_id not in groups:
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
@@ -1108,7 +1090,7 @@ async def auction_view_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         await auction_view.finish()
 
     auction_list_msg = "拍卖会物品列表:\n"
-    
+
     for idx, auction in enumerate(user_auctions):
         for goods_name, details in auction.items():
             user_info = sql_message.get_user_info_with_id(details['user_id'])
@@ -1129,7 +1111,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
     if not isUser:
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
-        
+
     if group_id not in groups:
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
@@ -1156,7 +1138,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             item_info = items.get_data_by_item_id(auction_id)
             item_quantity = 1
             if item_info['type'] in ['神物', '丹药']:
-                item_quantity = random.randint(1, 3) # 如果是丹药的话随机挑1-3个
+                item_quantity = random.randint(1, 3)  # 如果是丹药的话随机挑1-3个
             auction_items.append((auction_id, item_quantity, get_auction_price_by_id(auction_id)['start_price'], False))
     except LookupError:
         msg = "获取不到拍卖物品的信息，请检查配置文件！"
@@ -1176,14 +1158,14 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             msg += f"{idx + 1}号：{item_name}x{item_quantity}（由{owner_name}道友提供）\n"
         else:
             msg += f"{idx + 1}号：{item_name}x{item_quantity}（由拍卖场提供）\n"
-    
+
     for gid in groups:
         bot = await assign_bot_group(group_id=gid)
         try:
             await bot.send_group_msg(group_id=int(gid), message=msg)
         except ActionFailed:  # 发送群消息失败
             continue
-    
+
     auction_results = []  # 存储拍卖结果
     for i, (auction_id, item_quantity, start_price, is_user_auction) in enumerate(auction_items):
         auction_info = items.get_data_by_item_id(auction_id)
@@ -1198,7 +1180,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             'start_time': datetime.now(),
             'group_id': group_id
         }
-        
+
         if i + 1 == len(auction_items):
             msg = f"最后一件拍卖品为：\n{get_auction_msg(auction_id)}\n"
         else:
@@ -1219,8 +1201,8 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
                 await bot.send_group_msg(group_id=int(gid), message=msg)
             except ActionFailed:  # 发送群消息失败
                 continue
-        
-        remaining_time = AUCTIONSLEEPTIME # 第一轮定时
+
+        remaining_time = AUCTIONSLEEPTIME  # 第一轮定时
         while remaining_time > 0:
             await asyncio.sleep(10)
             remaining_time -= 10
@@ -1230,14 +1212,17 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
                 auction_offer_flag = False
                 break
 
-            logger.opt(colors=True).info(f"<green>有人拍卖，本次等待时间：{auction_offer_all_count * AUCTIONOFFERSLEEPTIME}秒</green>")
+            logger.opt(colors=True).info(
+                f"<green>有人拍卖，本次等待时间：{auction_offer_all_count * AUCTIONOFFERSLEEPTIME}秒</green>")
             first_time = auction_offer_all_count * AUCTIONOFFERSLEEPTIME
             auction_offer_all_count = 0
             auction_offer_flag = False
             await asyncio.sleep(first_time)
-            logger.opt(colors=True).info(f"<green>总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒，当前拍卖标志：{auction_offer_flag}，本轮等待时间：{first_time}</green>")
+            logger.opt(colors=True).info(
+                f"<green>总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒，当前拍卖标志：{auction_offer_flag}，本轮等待时间：{first_time}</green>")
 
-        logger.opt(colors=True).info(f"<green>等待时间结束，总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒</green>")
+        logger.opt(colors=True).info(
+            f"<green>等待时间结束，总计等待时间{auction_offer_time_count * AUCTIONOFFERSLEEPTIME}秒</green>")
         if auction['user_id'] == 0:
             msg = f"很可惜，{auction['name']}流拍了\n"
             if i + 1 == len(auction_items):
@@ -1249,17 +1234,18 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
                     await bot.send_group_msg(group_id=int(gid), message=msg)
                 except ActionFailed:  # 发送群消息失败
                     continue
-            auction_results.append((auction_id, None, auction['group_id'], auction_info['type'], auction['now_price'], auction['quantity']))
+            auction_results.append((auction_id, None, auction['group_id'], auction_info['type'], auction['now_price'],
+                                    auction['quantity']))
             auction = {}
             continue
-        
+
         user_info = sql_message.get_user_info_with_id(auction['user_id'])
         msg = "(拍卖锤落下)！！！\n"
         msg += f"恭喜来自群{auction['group_id']}的{user_info['user_name']}道友成功拍下：{auction['type']}-{auction['name']}x{auction['quantity']}，将在拍卖会结算后送到您手中。\n"
         if i + 1 == len(auction_items):
             msg += "本场拍卖会到此结束，开始整理拍卖会结果，感谢各位道友参与！"
 
-        auction_results.append((auction_id, user_info['user_id'], auction['group_id'], 
+        auction_results.append((auction_id, user_info['user_id'], auction['group_id'],
                                 auction_info['type'], auction['now_price'], auction['quantity']))
         auction = {}
         auction_offer_time_count = 0
@@ -1269,7 +1255,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
                 await bot.send_group_msg(group_id=int(gid), message=msg)
             except ActionFailed:  # 发送群消息失败
                 continue
-        
+
     # 拍卖会结算
     end_msg = "本场拍卖会结束！感谢各位道友的参与。\n拍卖结果整理如下：\n"
     print(auction_results)
@@ -1285,7 +1271,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             user_auction_info = get_user_auction_price_by_id(auction_id)
             if user_auction_info:
                 seller_id = user_auction_info['user_id']
-                auction_earnings = int(final_price * quantity * 0.7) # 收个手续费
+                auction_earnings = int(final_price * quantity * 0.7)  # 收个手续费
                 sql_message.update_ls(seller_id, auction_earnings, 1)
 
             remove_auction_item(auction_id)
@@ -1358,8 +1344,8 @@ async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     dif_time = (now_time - auction['start_time']).total_seconds()
     remaining_time = int(AUCTIONSLEEPTIME - dif_time + AUCTIONOFFERSLEEPTIME * auction_offer_time_count)
     msg = (
-        f"来自群{group_id}的{user_info['user_name']}道友拍卖：{price}枚灵石！" +
-        f"竞拍时间增加：{AUCTIONOFFERSLEEPTIME}秒，竞拍剩余时间：{remaining_time}秒"
+            f"来自群{group_id}的{user_info['user_name']}道友拍卖：{price}枚灵石！" +
+            f"竞拍时间增加：{AUCTIONOFFERSLEEPTIME}秒，竞拍剩余时间：{remaining_time}秒"
     )
     error_msg = None
     for group_id in groups:
@@ -1480,40 +1466,6 @@ async def auction_added_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     msg += f"\n下次拍卖将优先拍卖道友的拍卖品！！！"
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await auction_added.finish()
-
-
-@set_auction.handle(parameterless=[Cooldown(at_sender=False)])
-async def set_auction_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """群拍卖会开关"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    mode = args.extract_plain_text().strip()
-    group_id = str(event.group_id)
-    is_in_group = is_in_groups(event)  # True在，False不在
-
-    if mode == '开启':
-        if is_in_group:
-            msg = "本群已开启群拍卖会，请勿重复开启!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_auction.finish()
-        else:
-            config['open'].append(group_id)
-            savef_auction(config)
-            msg = "已开启群拍卖会"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_auction.finish()
-
-    elif mode == '关闭':
-        if is_in_group:
-            config['open'].remove(group_id)
-            savef_auction(config)
-            msg = "已关闭本群拍卖会!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_auction.finish()
-        else:
-            msg = "本群未开启群拍卖会!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_auction.finish()
-
 
 
 @chakan_wupin.handle(parameterless=[Cooldown(at_sender=False)])
@@ -1662,12 +1614,14 @@ def get_user_auction_id_list():
             user_auction_id_list.append(v['id'])
     return user_auction_id_list
 
+
 def get_auction_id_list():
     auctions = config['auctions']
     auction_id_list = []
     for k, v in auctions.items():
         auction_id_list.append(v['id'])
     return auction_id_list
+
 
 def get_user_auction_price_by_id(id):
     user_auctions = config['user_auctions']
@@ -1680,6 +1634,7 @@ def get_user_auction_price_by_id(id):
         if user_auction_info:
             break
     return user_auction_info
+
 
 def get_auction_price_by_id(id):
     auctions = config['auctions']
@@ -1712,10 +1667,10 @@ def get_auction_msg(auction_id):
         if item_info['item_type'] == '功法':
             msg = f"{item_info['level']}-{item_info['name']}\n"
             msg += f"效果：{get_main_info_msg(auction_id)[1]}"
-        if item_info['item_type'] == '辅修功法': #辅修功法10
+        if item_info['item_type'] == '辅修功法':  # 辅修功法10
             msg = f"{item_info['level']}-{item_info['name']}\n"
             msg += f"效果：{get_sub_info_msg(auction_id)[1]}"
-            
+
     if _type == "神物":
         msg = f"{item_info['name']}\n"
         msg += f"效果：{item_info['desc']}"
