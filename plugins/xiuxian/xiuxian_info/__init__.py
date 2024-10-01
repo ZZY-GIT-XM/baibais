@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from nonebot import on_command
+from nonebot import on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GROUP,
@@ -20,6 +20,23 @@ sql_message = XiuxianDateManage()  # sql类
 
 xiuxian_message = on_command("我的修仙信息", aliases={"我的存档"}, priority=23, permission=GROUP, block=True)
 xiuxian_message_img = on_command("图片版我的修仙信息", aliases={"图片版我的存档"}, priority=23, permission=GROUP, block=True)
+xiuxian_sone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
+
+
+@xiuxian_sone.handle(parameterless=[Cooldown(at_sender=False)])
+async def xiuxian_sone_(bot: Bot, event: GroupMessageEvent):
+    """我的灵石信息"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await xiuxian_sone.finish()
+    calculator = XiuxianCalculator(user_info)
+    calculated_info = calculator.calculate()
+
+    msg = f"当前灵石：{calculated_info['灵石']} | {user_info['stone']} "
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await xiuxian_sone.finish()
 
 
 @xiuxian_message_img.handle(parameterless=[Cooldown(at_sender=False)])
