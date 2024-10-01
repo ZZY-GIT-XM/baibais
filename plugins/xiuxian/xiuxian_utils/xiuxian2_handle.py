@@ -413,7 +413,7 @@ class XiuxianDateManage:
             "xiuxian_group_config": """
                 CREATE TABLE xiuxian_group_config (
                     group_id BIGINT PRIMARY KEY,  -- 群聊id
-                    enabled BOOLEAN NOT NULL DEFAULT FALSE  -- 用于判断群聊是否有开启修仙功能
+                    enabled_xiuxian BOOLEAN NOT NULL DEFAULT FALSE  -- 用于判断群聊是否有开启修仙功能
                 );
             """
         }
@@ -471,7 +471,7 @@ class XiuxianDateManage:
                         data_type = 'BIGINT'
                     elif col == 'buffvalue':
                         data_type = 'REAL'
-                    elif col == 'enabled':
+                    elif col == 'enabled_xiuxian':
                         data_type = 'BOOLEAN NOT NULL DEFAULT FALSE'
 
                     cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col} {data_type} DEFAULT NULL")
@@ -2013,8 +2013,8 @@ class XiuxianDateManage:
         """启用群聊的修仙功能"""
         with self.conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO xiuxian_group_config (group_id, enabled) VALUES (%s, TRUE) "
-                "ON CONFLICT (group_id) DO UPDATE SET enabled = TRUE",
+                "INSERT INTO xiuxian_group_config (group_id, enabled_xiuxian) VALUES (%s, TRUE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_xiuxian = TRUE",
                 (group_id,)
             )
             self.conn.commit()
@@ -2023,8 +2023,8 @@ class XiuxianDateManage:
         """禁用群聊的修仙功能"""
         with self.conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO xiuxian_group_config (group_id, enabled) VALUES (%s, FALSE) "
-                "ON CONFLICT (group_id) DO UPDATE SET enabled = FALSE",
+                "INSERT INTO xiuxian_group_config (group_id, enabled_xiuxian) VALUES (%s, FALSE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_xiuxian = FALSE",
                 (group_id,)
             )
             self.conn.commit()
@@ -2032,14 +2032,48 @@ class XiuxianDateManage:
     def is_xiuxian_enabled(self, group_id):
         """检查群聊是否开启了修仙功能"""
         with self.conn.cursor() as cur:
-            cur.execute("SELECT enabled FROM xiuxian_group_config WHERE group_id = %s", (group_id,))
+            cur.execute("SELECT enabled_xiuxian FROM xiuxian_group_config WHERE group_id = %s", (group_id,))
             result = cur.fetchone()
             return result[0] if result else False
 
     def get_enabled_groups(self):
         """获取所有开启了修仙功能的群聊列表"""
         with self.conn.cursor() as cur:
-            cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled = TRUE")
+            cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled_xiuxian = TRUE")
+            results = cur.fetchall()
+            return [row[0] for row in results]
+
+    def enable_auction(self, group_id):
+        """启用群聊的拍卖会功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled_paimai) VALUES (%s, TRUE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_paimai = TRUE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def disable_auction(self, group_id):
+        """禁用群聊的拍卖会功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled_paimai) VALUES (%s, FALSE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_paimai = FALSE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def is_auction_enabled(self, group_id):
+        """检查群聊是否开启了拍卖会功能"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT enabled_paimai FROM xiuxian_group_config WHERE group_id = %s", (group_id,))
+            result = cur.fetchone()
+            return result[0] if result else False
+
+    def get_enabled_auction_groups(self):
+        """获取所有开启了拍卖会功能的群聊列表"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled_paimai = TRUE")
             results = cur.fetchall()
             return [row[0] for row in results]
 
