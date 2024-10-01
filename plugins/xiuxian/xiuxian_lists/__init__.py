@@ -14,7 +14,7 @@ from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown
 from ..xiuxian_work import count
 
-help_xiuxian = on_fullmatch("修仙帮助", priority=12, permission=GROUP, block=True)
+help_xiuxian = on_command("修仙帮助", priority=12, permission=GROUP, block=True)
 help_jingjie = on_fullmatch('境界列表', priority=15, permission=GROUP, block=True)
 help_linggen = on_fullmatch('灵根列表', priority=15, permission=GROUP, block=True)
 help_pinjie = on_fullmatch('品阶列表', priority=15, permission=GROUP, block=True)
