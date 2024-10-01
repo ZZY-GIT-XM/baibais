@@ -22,15 +22,9 @@ from ..xiuxian_utils.utils import (
 
 items = Items()
 cache_level_help = {}
-scheduler = require("nonebot_plugin_apscheduler").scheduler
 cache_beg_help = {}
 sql_message = XiuxianDateManage()  # sql类
 
-# 重置奇缘
-@scheduler.scheduled_job("cron", hour=0, minute=0)
-async def xiuxian_beg_():
-    sql_message.beg_remake()
-    logger.opt(colors=True).info(f"<green>仙途奇缘重置成功！</green>")
 
 beg_stone = on_command("仙途奇缘", permission=GROUP, priority=7, block=True)
 
