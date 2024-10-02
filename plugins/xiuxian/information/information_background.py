@@ -4,12 +4,10 @@ except ImportError:
     import json
 import asyncio    
 from nonebot.log import logger
-from io import BytesIO    
 from PIL import Image, ImageDraw, ImageFont
 from aiohttp import ClientSession
 from pathlib import Path
-from .download import get_avatar_by_user_id_and_save
-from .send_image_tool import convert_img
+from plugins.xiuxian.information.send_img_tool import convert_img
 
 TEXT_PATH = Path() / "data" / "xiuxian" / "info_img"
 
@@ -31,7 +29,7 @@ font_24 = font_origin(24)
 async def draw_user_info_img(user_id, DETAIL_MAP):
     based_w = 1100
     based_h = 2450
-    # 获取背景图
+    # 随机获取背景图
     # try:
     #     img = Image.open(BytesIO(await async_request(await get_anime_pic()))).convert("RGBA")
     #     # 居中裁剪背景

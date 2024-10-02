@@ -47,6 +47,7 @@ listen_for_reply = on_message(priority=1, block=False)
 # 全局字典存储等待的事件和回调函数
 waiting_callbacks = {}
 
+
 @listen_for_reply.handle()
 async def handle_reply(bot: Bot, event: MessageEvent):
     global waiting_callbacks
@@ -85,13 +86,12 @@ async def get_response(bot: Bot, event: MessageEvent, default_response='否') ->
     # 返回玩家的回复
     return waiting_callbacks.pop(event_id, default_response)
 
+
 async def check_reply(event_id):
     while True:
         if event_id in waiting_callbacks and waiting_callbacks[event_id] is not None:
             return
         await asyncio.sleep(0.1)
-
-
 
 
 @peiyang.handle(parameterless=[Cooldown(cd_time=XiuConfig().peiyang_cd, at_sender=False)])
@@ -119,12 +119,12 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
     if int(investment_amount) <= 0:
         msg = "鉴定灵石的数量不能为零或负数，鉴石失败！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message + msg)
         await peiyang.finish()
 
     if int(user_message['stone']) < int(investment_amount):
         msg = "道友的灵石不足，请重新输入！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message + msg)
         await peiyang.finish()
 
     consecutive_wins, consecutive_losses = sql_message.get_consecutive_wins_and_losses(user_id)
@@ -203,13 +203,13 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
     elif special_event == 'blessing_stone':
         sql_message.update_ls(user_id, 500000, 1)
         event_msg = f"在鉴定过程中，您发现了一块天赐神石！恭喜【{user_info['user_name']}】道友！您获得了天赐神石，直接获得500000块灵石！\n现有灵石：{int(user_message['stone']) + 500000}块"
-        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+event_msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message + event_msg)
         await peiyang.finish()
 
     elif special_event == 'shatter':
         sql_message.update_ls(user_id, int(investment_amount), 2)
         event_msg = f"在鉴定过程中，灵石突然完全破碎！道友此次鉴石，灵石完全破碎，损失所有投资的灵石。\n现有灵石：{int(user_message['stone']) - int(investment_amount)}块"
-        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+event_msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message + event_msg)
         await peiyang.finish()
 
     elif special_event == 'purify':
@@ -239,7 +239,7 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
             if other_user_id == user_id:
                 msg = "您随机选中了自己！本次胜利则获得双倍，失败则损失双倍。"
-                await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+msg)
+                await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message + msg)
                 await peiyang.finish()
             else:
                 event_msg = f"您随机到了与{other_user_info_name}道友共享收益或损失。"
@@ -295,7 +295,8 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
             msg = f"恭喜【{user_info['user_name']}】道友！您独具慧眼！\n灵石之中竟然蕴含着惊人的力量，为您带来了意想不到的巨大收获。\n收获{new_stone_count}块灵石！\n现有灵石：{int(user_message['stone']) + new_stone_count}块"
         consecutive_wins += 1
         consecutive_losses = 0
-    elif (base_single_rate + double_rate + quintuple_rate) < value <= (base_single_rate + double_rate + quintuple_rate + decuple_rate):  # 十倍收获
+    elif (base_single_rate + double_rate + quintuple_rate) < value <= (
+            base_single_rate + double_rate + quintuple_rate + decuple_rate):  # 十倍收获
         new_stone_count = int(investment_amount) * 10
         if special_event == 'resonance' and response == '是':
             if other_user_id == user_id:
@@ -330,7 +331,7 @@ async def peiyang_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = R
 
     # 合并事件消息和收获消息
     final_msg = f"{event_msg}\n{msg}" if event_msg else msg
-    await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message+final_msg)
+    await bot.send_group_msg(group_id=int(send_group_id), message=markdown_message + final_msg)
 
     # 更新用户的连胜和连败次数
     sql_message.update_consecutive_wins_and_losses(user_id, consecutive_wins, consecutive_losses)

@@ -48,7 +48,7 @@ sql_message = XiuxianDateManage()  # sql类
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
 run_xiuxian = on_fullmatch("我要修仙", priority=8, permission=GROUP, block=True)
-restart = on_fullmatch("重入仙途", permission=GROUP, priority=7, block=True)
+restart = on_fullmatch("洗髓伐骨", permission=GROUP, priority=7, block=True)
 sign_in = on_fullmatch("修仙签到", priority=13, permission=GROUP, block=True)
 rank = on_command("排行榜", aliases={"排行榜列表", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜", "轮回排行榜"},
                   priority=7, permission=GROUP, block=True)
@@ -59,10 +59,6 @@ level_up_drjd = on_command("渡厄金丹突破", aliases={"金丹突破"}, prior
 level_up_zj = on_command("直接突破", aliases={"破"}, priority=7, permission=GROUP, block=True)
 give_stone = on_command("送灵石", priority=5, permission=GROUP, block=True)
 steal_stone = on_command("偷灵石", aliases={"飞龙探云手"}, priority=4, permission=GROUP, block=True)
-gm_command = on_command("神秘力量", permission=SUPERUSER, priority=10, block=True)
-gm_jiejing = on_command("天外力量", permission=SUPERUSER, priority=10, block=True)
-gmm_command = on_command("轮回力量", permission=SUPERUSER, priority=10, block=True)
-cz = on_command('创造力量', permission=SUPERUSER, priority=15, block=True)
 rob_stone = on_command("抢劫", aliases={"抢灵石", "拿来吧你"}, priority=5, permission=GROUP, block=True)
 restate = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
 
@@ -115,7 +111,7 @@ async def sign_in_(bot: Bot, event: GroupMessageEvent):
 
 @restart.handle(parameterless=[Cooldown(at_sender=False)])
 async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
-    """重入仙途 刷新灵根信息"""
+    """洗髓伐骨 刷新灵根信息"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     # 限制灵根集合
     unique_linggens = {"轮回道果", "真·轮回道果"}
@@ -723,165 +719,6 @@ async def steal_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         msg = f"未获取到对方信息，请输入正确的道号！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await steal_stone.finish()
-
-
-@gm_command.handle(parameterless=[Cooldown(at_sender=False)])
-async def gm_command_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """神秘力量 GM加灵石"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg_text = args.extract_plain_text().strip()
-    stone_num_match = re.findall(r"\d+", msg_text)  # 提取数字
-    nick_name = re.findall(r"\D+", msg_text)  # 道号
-    give_stone_num = int(stone_num_match[0]) if stone_num_match else 0  # 默认灵石数为0，如果有提取到数字，则使用提取到的第一个数字
-
-    if nick_name:
-        give_user = sql_message.get_user_info_with_name(nick_name[0].strip())
-        if give_user:
-            sql_message.update_ls(give_user['user_id'], give_stone_num, 1)  # 增加用户灵石
-            msg = f"共赠送{number_to(give_stone_num)}枚灵石给{give_user['user_name']}道友！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await gm_command.finish()
-        else:
-            msg = f"对方未踏入修仙界，不可赠送！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await gm_command.finish()
-    else:
-        sql_message.update_ls_all(give_stone_num)
-        msg = f"全服通告：赠送所有用户{number_to(give_stone_num)}灵石,请注意查收！"
-        enabled_groups = sql_message.get_enabled_groups()
-
-        for group_id in enabled_groups:
-            bot = await assign_bot_group(group_id=group_id)
-            try:
-                await bot.send_group_msg(group_id=int(group_id), message=msg)
-            except ActionFailed:  # 发送群消息失败
-                continue
-        await gm_command.finish()
-
-
-@gm_jiejing.handle(parameterless=[Cooldown(at_sender=False)])
-async def gm_jiejing_command(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """神秘力量 GM加结晶"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg_text = args.extract_plain_text().strip()
-    # 分离数字和非数字部分
-    match = re.match(r"(\D+)?(\d+)?", msg_text)
-    if match:
-        nick_name, crystal_num_str = match.groups()
-        give_crystal_num = int(crystal_num_str) if crystal_num_str else 0  # 默认结晶数为0，如果有提取到数字，则使用提取到的第一个数字
-
-        if nick_name:
-            give_user = sql_message.get_user_info_with_name(nick_name.strip())
-            if give_user:
-                xiuxian_impart.update_stone_num(give_crystal_num, give_user['user_id'], 1)  # 增加用户结晶
-                msg = f"共赠送{number_to(give_crystal_num)}个结晶给{give_user['user_name']}道友！"
-                await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-                await gm_jiejing.finish()
-            else:
-                msg = f"对方未踏入修仙界，不可赠送！"
-                await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-                await gm_jiejing.finish()
-        else:
-            msg = f"请提供要赠送结晶的道号和数量！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await gm_jiejing.finish()
-    else:
-        msg = f"请提供要赠送结晶的道号和数量！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await gm_jiejing.finish()
-
-
-@cz.handle(parameterless=[Cooldown(at_sender=False)])
-async def cz_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """创造力量 不输入道号 默认送给所有人 例如：创造力量 物品 数量 道号"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = args.extract_plain_text().strip().split()
-
-    if not args:
-        msg = f"请输入正确指令！例如：创造力量 物品 数量"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await cz.finish()
-
-    if len(msg) < 2:
-        msg = f"请输入正确的物品名称和数量！例如：创造力量 物品 数量"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await cz.finish()
-
-    goods_name = msg[0]
-    goods_id = -1
-    goods_type = None
-
-    for k, v in items.items.items():
-        if goods_name == v['name']:
-            goods_id = k
-            goods_type = v['type']
-            break
-
-    if goods_id == -1:
-        msg = f"找不到物品 {goods_name}，请检查物品名称是否正确！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await cz.finish()
-
-    goods_num = int(msg[1]) if msg[1].isdigit() else 1
-
-    if len(msg) > 2:
-        nick_name = ' '.join(msg[2:])
-        give_user = sql_message.get_user_info_with_name(nick_name.strip())
-        if give_user:
-            sql_message.send_back(give_user['user_id'], goods_id, goods_name, goods_type, goods_num, 1)
-            msg = f"{give_user['user_name']}道友获得了系统赠送的{goods_name}个{goods_num}！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await cz.finish()
-        else:
-            msg = f"对方未踏入修仙界，不可赠送！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await cz.finish()
-    else:
-        all_users = sql_message.get_all_user_id()
-        for user_id in all_users:
-            sql_message.send_back(user_id, goods_id, goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
-
-        msg = f"全服通告：赠送所有用户{goods_name}个{goods_num},请注意查收！"
-        enabled_groups = sql_message.get_enabled_groups()
-        for group_id in enabled_groups:
-            bot = await assign_bot_group(group_id=group_id)
-            try:
-                await bot.send_group_msg(group_id=int(group_id), message=msg)
-            except ActionFailed:  # 发送群消息失败
-                continue
-        await cz.finish()
-
-
-@gmm_command.handle(parameterless=[Cooldown(at_sender=False)])
-async def gmm_command_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """GM改灵根"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    msg = args.extract_plain_text().strip().split()
-
-    if not args:
-        msg = "请输入正确指令！例如：轮回力量 用户名称 x(1为混沌,2为融合,3为超,4为龙,5为天,6为千世,7为万世)"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await gmm_command.finish()
-
-    if len(msg) < 2:
-        msg = "请输入正确的用户名称和灵根编号！例如：轮回力量 用户名称 1"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await gmm_command.finish()
-
-    nick_name = msg[0]
-    root_type = msg[1]
-
-    give_user = sql_message.get_user_info_with_name(nick_name.strip())
-    if give_user:
-        root_name = sql_message.update_root(give_user['user_id'], root_type)
-        sql_message.update_power2(give_user['user_id'])
-        msg = f"{give_user['user_name']}道友的灵根已变更为{root_name}！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await gmm_command.finish()
-    else:
-        msg = "对方未踏入修仙界，不可修改！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await gmm_command.finish()
 
 
 @rob_stone.handle(parameterless=[Cooldown(stamina_cost=15, at_sender=False)])

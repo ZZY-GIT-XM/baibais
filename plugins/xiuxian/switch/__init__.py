@@ -43,6 +43,8 @@ kaiguan_xiuxian = on_command("启用修仙功能", aliases={'禁用修仙功能'
                              permission=GROUP and (SUPERUSER or GROUP_ADMIN or GROUP_OWNER), priority=5, block=True)
 kaiguan_paimai = on_command("群拍卖会", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
                             block=True)
+kaiguan_boss = on_command("世界boss", aliases={"世界Boss", "世界BOSS"}, priority=13,
+                            permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER), block=True)
 
 
 @kaiguan_xiuxian.handle()
@@ -105,3 +107,33 @@ async def kaiguan_paimai_(bot: Bot, event: GroupMessageEvent, args: Message = Co
             msg = "本群未开启群拍卖会!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await kaiguan_paimai.finish()
+
+
+@kaiguan_boss.handle(parameterless=[Cooldown(at_sender=False)])
+async def kaiguan_boss_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """群世界 Boss 功能开关配置 启用/禁用群世界 Boss 功能"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    mode = args.extract_plain_text().strip()
+    group_id = str(event.group_id)
+
+    if mode == '开启':
+        if sql_message.is_boss_enabled(group_id):
+            msg = "本群已开启世界 Boss 功能，请勿重复开启!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_boss.finish()
+        else:
+            sql_message.enable_boss(group_id)
+            msg = "已开启世界 Boss 功能"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_boss.finish()
+
+    elif mode == '关闭':
+        if sql_message.is_boss_enabled(group_id):
+            sql_message.disable_boss(group_id)
+            msg = "已关闭本群世界 Boss 功能!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_boss.finish()
+        else:
+            msg = "本群未开启世界 Boss 功能!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_boss.finish()

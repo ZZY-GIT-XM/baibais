@@ -413,7 +413,10 @@ class XiuxianDateManage:
             "xiuxian_group_config": """
                 CREATE TABLE xiuxian_group_config (
                     group_id BIGINT PRIMARY KEY,  -- 群聊id
-                    enabled_xiuxian BOOLEAN NOT NULL DEFAULT FALSE  -- 用于判断群聊是否有开启修仙功能
+                    enabled_xiuxian BOOLEAN NOT NULL DEFAULT FALSE,  -- 用于判断群聊是否有开启修仙功能
+                    enabled_boss BOOLEAN NOT NULL DEFAULT FALSE,  -- 用于判断群聊是否有开启世界boss功能
+                    enabled_paimai BOOLEAN NOT NULL DEFAULT FALSE,  -- 用于判断群聊是否有开启拍卖功能
+                    enabled_mijing BOOLEAN NOT NULL DEFAULT FALSE  -- 用于判断群聊是否有开启秘境功能
                 );
             """
         }
@@ -471,7 +474,7 @@ class XiuxianDateManage:
                         data_type = 'BIGINT'
                     elif col == 'buffvalue':
                         data_type = 'REAL'
-                    elif col == 'enabled_xiuxian':
+                    elif col == ['enabled_xiuxian','enabled_paimai','enabled_boss','enabled_mijing']:
                         data_type = 'BOOLEAN NOT NULL DEFAULT FALSE'
 
                     cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col} {data_type} DEFAULT NULL")
@@ -2074,6 +2077,40 @@ class XiuxianDateManage:
         """获取所有开启了拍卖会功能的群聊列表"""
         with self.conn.cursor() as cur:
             cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled_paimai = TRUE")
+            results = cur.fetchall()
+            return [row[0] for row in results]
+
+    def enable_boss(self, group_id):
+        """启用群聊的世界 Boss 功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled_boss) VALUES (%s, TRUE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_boss = TRUE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def disable_boss(self, group_id):
+        """禁用群聊的世界 Boss 功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled_boss) VALUES (%s, FALSE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_boss = FALSE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def is_boss_enabled(self, group_id):
+        """检查群聊是否开启了世界 Boss 功能"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT enabled_boss FROM xiuxian_group_config WHERE group_id = %s", (group_id,))
+            result = cur.fetchone()
+            return result[0] if result else False
+
+    def get_enabled_boss_groups(self):
+        """获取所有开启了世界 Boss 功能的群聊列表"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled_boss = TRUE")
             results = cur.fetchall()
             return [row[0] for row in results]
 

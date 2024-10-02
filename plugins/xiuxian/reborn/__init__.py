@@ -19,45 +19,42 @@ from ..xiuxian_utils.utils import (
     CommandObjectID
 )
 
-
-
-
 cache_help_fk = {}
 sql_message = XiuxianDateManage()  # sql类
 
-lunhui = on_command('进入千世轮回', priority=15, permission=GROUP,block=True)
-twolun = on_command('进入万世轮回', priority=15, permission=GROUP,block=True)
-resetting = on_command('重入修仙', priority=15, permission=GROUP,block=True)
+lunhui_qianshi = on_command('进入千世轮回', priority=15, permission=GROUP, block=True)
+lunhui_wanshi = on_command('进入万世轮回', priority=15, permission=GROUP, block=True)
+resetting = on_command('从头再来', priority=15, permission=GROUP, block=True)
 lunhui_jiadian = on_regex(r'^轮回加点\s*(.*?)\s*(\d*)$', flags=re.IGNORECASE, priority=15, permission=GROUP, block=True)
 
 
-@lunhui.handle(parameterless=[Cooldown(at_sender=False)])
-async def lunhui_(bot: Bot, event: GroupMessageEvent):
+@lunhui_qianshi.handle(parameterless=[Cooldown(at_sender=False)])
+async def lunhui_qianshi_(bot: Bot, event: GroupMessageEvent):
     """进入千世轮回"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui.finish()
-        
+        await lunhui_qianshi.finish()
+
     user_id = user_info['user_id']
-    user_msg = sql_message.get_user_info_with_id(user_id) 
+    user_msg = sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
     user_poxian = user_msg['poxian_num']
     list_level_all = list(jsondata.level_data().keys())
     level = user_info['level']
-    
+
     if user_root == '轮回道果' and user_poxian >= 10:
         msg = "道友已是千世轮回之身,且已破限10次及以上，请前往万世轮回！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui.finish()
-    
+        await lunhui_qianshi.finish()
+
     if user_root == '真·轮回道果' and user_poxian >= 10:
         msg = "道友需渡万世轮回！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui.finish()
-        
+        await lunhui_qianshi.finish()
+
     if list_level_all.index(level) >= list_level_all.index(XiuConfig().lunhui_min_level):
         # 获取当前用户的 type_speeds
         current_type_speeds = jsondata.root_data()[user_root]['type_speeds']
@@ -73,48 +70,48 @@ async def lunhui_(bot: Bot, event: GroupMessageEvent):
             new_root = user_root  # 保持原灵根
         exp = user_msg['exp']
         now_exp = exp - 100
-        sql_message.updata_level(user_id, '江湖好手') #重置用户境界
-        sql_message.update_levelrate(user_id, 0) #重置突破成功率
-        sql_message.update_stone(user_id, 0) #重置用户灵石
-        sql_message.update_j_exp(user_id, now_exp) #重置用户修为
+        sql_message.updata_level(user_id, '江湖好手')  # 重置用户境界
+        sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        sql_message.update_stone(user_id, 0)  # 重置用户灵石
+        sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
-        sql_message.updata_user_main_buff(user_id, 0) #重置用户主功法
-        sql_message.updata_user_sub_buff(user_id, 0) #重置用户辅修功法
-        sql_message.updata_user_sec_buff(user_id, 0) #重置用户神通
-        sql_message.update_user_atkpractice(user_id, 0) #重置用户攻修等级
-        sql_message.update_poxian_num(user_id) #更新用户打破极限的次数
-        sql_message.add_rebirth_points(user_id,20) #获得轮回点数
+        sql_message.updata_user_main_buff(user_id, 0)  # 重置用户主功法
+        sql_message.updata_user_sub_buff(user_id, 0)  # 重置用户辅修功法
+        sql_message.updata_user_sec_buff(user_id, 0)  # 重置用户神通
+        sql_message.update_user_atkpractice(user_id, 0)  # 重置用户攻修等级
+        sql_message.update_poxian_num(user_id)  # 更新用户打破极限的次数
+        sql_message.add_rebirth_points(user_id, 20)  # 获得轮回点数
         msg = f"千世轮回磨不灭，重回绝颠谁能敌，恭喜大能{user_name}轮回成功！当前破限次数为{user_poxian + 1}!"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui.finish()
+        await lunhui_qianshi.finish()
     else:
         msg = f"道友境界未达要求，进入千世轮回的最低境界为{XiuConfig().lunhui_min_level}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await lunhui.finish()
+        await lunhui_qianshi.finish()
 
 
-@twolun.handle(parameterless=[Cooldown(at_sender=False)])
-async def twolun_(bot: Bot, event: GroupMessageEvent):
+@lunhui_wanshi.handle(parameterless=[Cooldown(at_sender=False)])
+async def lunhui_wanshi_(bot: Bot, event: GroupMessageEvent):
     """进入万世轮回"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish()
-        
+        await lunhui_wanshi.finish()
+
     user_id = user_info['user_id']
-    user_msg = sql_message.get_user_info_with_id(user_id) 
+    user_msg = sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
     user_root = user_msg['root_type']
     user_poxian = user_msg['poxian_num']
     list_level_all = list(jsondata.level_data().keys())
     level = user_info['level']
-        
+
     if user_root != '轮回道果' and user_poxian < 10:
         msg = "道友还未渡过千世轮回，请先进入千世轮回！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish() 
-    
+        await lunhui_wanshi.finish()
+
     if list_level_all.index(level) >= list_level_all.index(XiuConfig().twolun_min_level) and user_poxian >= 10:
         # 获取当前用户的 type_speeds
         current_type_speeds = jsondata.root_data()[user_root]['type_speeds']
@@ -130,48 +127,48 @@ async def twolun_(bot: Bot, event: GroupMessageEvent):
             new_root = user_root  # 保持原灵根
         exp = user_msg['exp']
         now_exp = exp - 100
-        sql_message.updata_level(user_id, '江湖好手') #重置用户境界
-        sql_message.update_levelrate(user_id, 0) #重置突破成功率
-        sql_message.update_stone(user_id, 0) #重置用户灵石
-        sql_message.update_j_exp(user_id, now_exp) #重置用户修为
+        sql_message.updata_level(user_id, '江湖好手')  # 重置用户境界
+        sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        sql_message.update_stone(user_id, 0)  # 重置用户灵石
+        sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
-        sql_message.update_poxian_num(user_id) #更新用户打破极限的次数
-        sql_message.add_rebirth_points(user_id,50) #获得轮回点数
+        sql_message.update_poxian_num(user_id)  # 更新用户打破极限的次数
+        sql_message.add_rebirth_points(user_id, 50)  # 获得轮回点数
         msg = f"万世道果集一身，脱出凡道入仙道，恭喜大能{user_name}万世轮回成功！当前破限次数为{user_poxian + 1}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish()
+        await lunhui_wanshi.finish()
     else:
         msg = f"道友境界未达要求，万世轮回的最低境界为{XiuConfig().twolun_min_level}，最低破限次数为10次！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await twolun.finish()
+        await lunhui_wanshi.finish()
 
 
 @resetting.handle(parameterless=[Cooldown(at_sender=False)])
 async def resetting_(bot: Bot, event: GroupMessageEvent):
-    """重入修仙"""
+    """从头再来"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await resetting.finish()
-        
+
     user_id = user_info['user_id']
-    user_msg = sql_message.get_user_info_with_id(user_id) 
+    user_msg = sql_message.get_user_info_with_id(user_id)
     user_name = user_msg['user_name']
-        
+
     if user_msg['level'] in ['搬血境初期', '搬血境中期', '搬血境圆满'] and user_msg['poxian_num'] == 0:
         exp = user_msg['exp']
         now_exp = exp
-        sql_message.updata_level(user_id, '江湖好手') #重置用户境界
-        sql_message.update_levelrate(user_id, 0) #重置突破成功率
-        sql_message.update_j_exp(user_id, now_exp) #重置用户修为
+        sql_message.updata_level(user_id, '江湖好手')  # 重置用户境界
+        sql_message.update_levelrate(user_id, 0)  # 重置突破成功率
+        sql_message.update_j_exp(user_id, now_exp)  # 重置用户修为
         sql_message.update_user_hp(user_id)  # 重置用户HP，mp，atk状态
-        sql_message.update_user_random_gender(user_id) #重置用户性别
+        sql_message.update_user_random_gender(user_id)  # 重置用户性别
         msg = f"{user_name}现在是一介凡人了！！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await resetting.finish()
     else:
-        msg = f"道友境界未达要求，自废修为的最低境界为搬血境！"
+        msg = f"道友境界未达要求，从头再来的最低境界为搬血境！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await resetting.finish()
 
@@ -195,6 +192,7 @@ ATTRIBUTE_DESCRIPTIONS = {
     '攻击': '（每点增加攻击10000）'
 }
 
+
 @lunhui_jiadian.handle(parameterless=[Cooldown(at_sender=False)])
 async def add_rebirth_points(bot: Bot, event: GroupMessageEvent, args: Tuple[str, str] = RegexGroup()):
     # 获取消息事件中的群组ID
@@ -216,7 +214,8 @@ async def add_rebirth_points(bot: Bot, event: GroupMessageEvent, args: Tuple[str
 
     # 如果输入为空，则发送帮助信息
     if not input_attr or input_attr == "轮回加点":
-        await bot.send_group_msg(group_id=int(send_group_id), message=__rebirth_help__)
+        await bot.send_group_msg(group_id=int(send_group_id),
+                                 message="请输入正确的指令！例如：轮回加点 [文字] [数字] 或 轮回加点 [重置]")
         await lunhui_jiadian.finish()
 
     # 处理查询情况

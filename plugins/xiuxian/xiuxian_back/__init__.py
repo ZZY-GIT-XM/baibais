@@ -255,8 +255,6 @@ async def set_auction_by_scheduler_():
     return
 
 
-
-
 buy_lock = asyncio.Lock()
 
 
@@ -354,7 +352,7 @@ async def shop_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
 
     # 如果用户未注册，直接发送文字消息
     if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await shop.finish()
 
     group_id = str(666)
@@ -363,7 +361,7 @@ async def shop_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
     # 如果坊市数据为空，发送纯文字提示
     if shop_data[group_id] == {}:
         msg = "坊市目前空空如也！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await shop.finish()
 
     # 尝试获取页码
@@ -742,7 +740,7 @@ async def auction_withdraw_(bot: Bot, event: GroupMessageEvent, args: Message = 
         await auction_withdraw.finish()
 
     group_id = str(event.group_id)
-    if group_id not in groups:
+    if not sql_message.is_auction_enabled(group_id):
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await auction_withdraw.finish()
@@ -1076,7 +1074,7 @@ async def auction_view_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await auction_view.finish()
 
-    if group_id not in groups:
+    if not sql_message.is_auction_enabled(group_id):
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await auction_view.finish()
@@ -1112,7 +1110,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
 
-    if group_id not in groups:
+    if not sql_message.is_auction_enabled(group_id):
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
@@ -1122,6 +1120,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
 
+    enabled_groups = sql_message.get_enabled_auction_groups()
     auction_items = []
     try:
         # 获取用户拍卖品
@@ -1159,7 +1158,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
         else:
             msg += f"{idx + 1}号：{item_name}x{item_quantity}（由拍卖场提供）\n"
 
-    for gid in groups:
+    for gid in enabled_groups:
         bot = await assign_bot_group(group_id=gid)
         try:
             await bot.send_group_msg(group_id=int(gid), message=msg)
@@ -1195,7 +1194,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             next_item_name = items.get_data_by_item_id(auction_items[i + 1][0])['name']
             msg += f"\n下一件拍卖品为：{next_item_name}，请心仪的道友提前开始准备吧！"
 
-        for gid in groups:
+        for gid in enabled_groups:
             bot = await assign_bot_group(group_id=gid)
             try:
                 await bot.send_group_msg(group_id=int(gid), message=msg)
@@ -1228,7 +1227,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
             if i + 1 == len(auction_items):
                 msg += "本场拍卖会到此结束，开始整理拍卖会结果，感谢各位道友参与！"
 
-            for gid in groups:
+            for gid in enabled_groups:
                 bot = await assign_bot_group(group_id=gid)
                 try:
                     await bot.send_group_msg(group_id=int(gid), message=msg)
@@ -1249,7 +1248,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
                                 auction_info['type'], auction['now_price'], auction['quantity']))
         auction = {}
         auction_offer_time_count = 0
-        for gid in groups:
+        for gid in enabled_groups:
             bot = await assign_bot_group(group_id=gid)
             try:
                 await bot.send_group_msg(group_id=int(gid), message=msg)
@@ -1281,7 +1280,7 @@ async def creat_auction_(bot: Bot, event: GroupMessageEvent):
         else:
             end_msg += f"{idx + 1}号拍卖品：{item_name}x{quantity} - 流拍了\n"
 
-    for gid in groups:
+    for gid in enabled_groups:
         bot = await assign_bot_group(group_id=gid)
         try:
             await bot.send_group_msg(group_id=int(gid), message=end_msg)
@@ -1301,7 +1300,7 @@ async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
 
-    if group_id not in groups:
+    if not sql_message.is_auction_enabled(group_id):
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
@@ -1311,6 +1310,7 @@ async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
 
+    enabled_groups = sql_message.get_enabled_auction_groups()
     price = args.extract_plain_text().strip()
     try:
         price = int(price)
@@ -1348,7 +1348,7 @@ async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             f"竞拍时间增加：{AUCTIONOFFERSLEEPTIME}秒，竞拍剩余时间：{remaining_time}秒"
     )
     error_msg = None
-    for group_id in groups:
+    for group_id in enabled_groups:
         bot = await assign_bot_group(group_id=group_id)
         try:
             await bot.send_group_msg(group_id=int(group_id), message=msg)
@@ -1375,7 +1375,7 @@ async def auction_added_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await auction_added.finish()
 
-    if group_id not in groups:
+    if not sql_message.is_auction_enabled(group_id):
         msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await auction_added.finish()
@@ -1558,7 +1558,7 @@ async def shop_off_all_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
     if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=f"@{event.sender.nickname}\n" + msg)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await shop_off_all.finish()
     group_id = str(666)
     shop_data = get_shop_data(group_id)
@@ -1644,10 +1644,6 @@ def get_auction_price_by_id(id):
             auction_info = v
             break
     return auction_info
-
-
-def is_in_groups(event: GroupMessageEvent):
-    return str(event.group_id) in groups
 
 
 def get_auction_msg(auction_id):

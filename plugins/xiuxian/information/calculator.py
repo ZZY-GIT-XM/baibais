@@ -1,7 +1,7 @@
 from decimal import Decimal
-from ..xiuxian_utils.xiuxian2_handle import OtherSet, UserBuffDate, XiuxianDateManage
-from ..xiuxian_utils.data_source import jsondata
-from ..xiuxian_utils.utils import number_to
+from plugins.xiuxian.xiuxian_utils.xiuxian2_handle import OtherSet, UserBuffDate, XiuxianDateManage
+from plugins.xiuxian.xiuxian_utils.data_source import jsondata
+from plugins.xiuxian.xiuxian_utils.utils import number_to
 
 sql_message = XiuxianDateManage()  # sql类
 
