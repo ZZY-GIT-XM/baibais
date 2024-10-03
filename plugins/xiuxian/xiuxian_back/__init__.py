@@ -1306,7 +1306,7 @@ async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         await creat_auction.finish()
 
     if not auction:
-        msg = "本群不存在拍卖会，请等待拍卖会开启！"
+        msg = "当前不存在拍卖会，请等待拍卖会开启！"
         await bot.send_group_msg(group_id=int(group_id), message=msg)
         await creat_auction.finish()
 

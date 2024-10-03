@@ -118,6 +118,8 @@ class XiuxianDateManage:
                 self._add_missing_columns(c, "xiuxian_group_config", XiuConfig().sql_xiuxian_group_config)
                 self._add_missing_columns(c, "xiuxian_bank_info", XiuConfig().sql_xiuxian_bank_info)
                 self._add_missing_columns(c, "xiuxian_bank_levels", XiuConfig().sql_xiuxian_bank_levels)
+                self._add_missing_columns(c, "xiuxian_mijing_config", XiuConfig().sql_xiuxian_mijing_config)
+                self._add_missing_columns(c, "xiuxian_mijing_info", XiuConfig().sql_xiuxian_mijing_info)
 
                 self.conn.commit()
         except psycopg2.Error as e:
@@ -436,6 +438,28 @@ class XiuxianDateManage:
                     level_up_cost NUMERIC NOT NULL,
                     interest_rate NUMERIC(7, 4) NOT NULL,
                     level_name VARCHAR(50) NOT NULL
+                );
+            """,
+            "xiuxian_mijing_config": """
+                CREATE TABLE IF NOT EXISTS xiuxian_mijing_config (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL UNIQUE, -- 秘境名称
+                    type_rate INTEGER NOT NULL, -- 类型概率
+                    rank INTEGER NOT NULL, -- 秘境等级
+                    base_count INTEGER NOT NULL, -- 基础可探索次数
+                    time INTEGER NOT NULL -- 探索所需的时间（单位：分钟）
+                );
+            """,
+            "xiuxian_mijing_info": """
+                CREATE TABLE IF NOT EXISTS xiuxian_mijing_info (
+                    id SERIAL PRIMARY KEY,
+                    config_id INTEGER NOT NULL REFERENCES xiuxian_mijing_config(id), -- 配置ID，外键引用配置表
+                    name VARCHAR(255) NOT NULL, -- 秘境名称
+                    rank INTEGER NOT NULL, -- 秘境等级
+                    current_count INTEGER NOT NULL, -- 当前可探索次数
+                    l_user_id TEXT DEFAULT '', -- 已经参加的用户ID列表，以逗号分隔
+                    time INTEGER NOT NULL, -- 探索所需的时间（单位：分钟）
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- 创建时间
                 );
             """
         }
@@ -2185,6 +2209,174 @@ class XiuxianDateManage:
             cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled_boss = TRUE")
             results = cur.fetchall()
             return [row[0] for row in results]
+
+    def enable_mijing(self, group_id):
+        """启用群聊的秘境功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled_mijing) VALUES (%s, TRUE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_mijing = TRUE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def disable_mijing(self, group_id):
+        """禁用群聊的秘境功能"""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO xiuxian_group_config (group_id, enabled_mijing) VALUES (%s, FALSE) "
+                "ON CONFLICT (group_id) DO UPDATE SET enabled_mijing = FALSE",
+                (group_id,)
+            )
+            self.conn.commit()
+
+    def is_mijing_enabled(self, group_id):
+        """检查群聊是否开启了秘境功能"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT enabled_mijing FROM xiuxian_group_config WHERE group_id = %s", (group_id,))
+            result = cur.fetchone()
+            return result[0] if result else False
+
+    def get_enabled_mijing_groups(self):
+        """获取所有开启了秘境功能的群聊列表"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT group_id FROM xiuxian_group_config WHERE enabled_mijing = TRUE")
+            results = cur.fetchall()
+            return [row[0] for row in results]
+
+    def insert_mijing_info(self, name, rank, current_count, l_user_id, time):
+        """
+        插入新的秘境信息。
+
+        参数:
+        - name: 秘境名称
+        - rank: 秘境等级
+        - current_count: 当前可探索次数
+        - l_user_id: 已经参加的用户ID列表，以逗号分隔
+        - time: 探索所需的时间（单位：分钟）
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO xiuxian_mijing_info (config_id, name, rank, current_count, l_user_id, time)
+                VALUES ((SELECT id FROM xiuxian_mijing_config WHERE name = %s AND rank = %s),
+                        %s, %s, %s, %s, %s);
+            """, (name, rank, name, rank, current_count, l_user_id, time))
+            self.conn.commit()
+
+
+    def update_mijing_info(self, name, rank, current_count, l_user_id, time):
+        """
+        更新秘境信息。
+
+        参数:
+        - name: 秘境名称
+        - rank: 秘境等级
+        - current_count: 当前可探索次数
+        - l_user_id: 已经参加的用户ID列表，以逗号分隔
+        - time: 探索所需的时间（单位：分钟）
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                UPDATE xiuxian_mijing_info
+                SET current_count = %s, l_user_id = %s, time = %s
+                WHERE name = %s AND rank = %s;
+            """, (current_count, l_user_id, time, name, rank))
+            self.conn.commit()
+
+    def get_mijing_info(self):
+        """
+        获取最新的秘境信息。
+
+        返回:
+        - 如果找到对应的记录，则返回该记录；否则返回None。
+        """
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:  # 使用 DictCursor
+            cur.execute("""
+                SELECT * FROM xiuxian_mijing_info 
+                ORDER BY created_at DESC
+                LIMIT 1;
+            """)
+            row = cur.fetchone()
+            return row  # 直接返回查询结果
+
+    def get_rift_info(self, user_id):
+        """
+        获取用户的秘境探索信息。
+
+        参数:
+        - user_id: 用户ID
+
+        返回:
+        - 如果找到对应的记录，则返回该记录；否则返回None。
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT * FROM xiuxian_mijing_info WHERE l_user_id @> ARRAY[%s];
+            """, (user_id,))
+            row = cur.fetchone()
+            return row
+
+    def insert_rift_info(self, user_id, name, time, rank):
+        """
+        插入一条新的用户秘境探索记录。
+
+        参数:
+        - user_id: 用户ID
+        - name: 秘境名称
+        - time: 探索所需时间（分钟）
+        - rank: 秘境等级
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO xiuxian_mijing_info (l_user_id, name, time, rank)
+                VALUES (%s, %s, %s, %s);
+            """, (user_id, name, time, rank))
+        self.conn.commit()
+
+    def get_random_config_id(self):
+        """
+        根据配置表中的 type_rate 字段随机选择一个配置 ID。
+        返回:
+        - 一个配置 ID。
+        """
+        rate_dict = {}
+
+        # 获取所有配置的 type_rate 并构建字典
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute("SELECT id, name, type_rate FROM xiuxian_mijing_config;")
+            configs = cur.fetchall()
+
+            for config in configs:
+                rate_dict[config['name']] = config['type_rate']
+
+        # 使用 calculated 方法进行加权随机选择
+        selected_name = OtherSet().calculated(rate_dict)
+
+        # 根据选定的名字获取配置 ID
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute("SELECT id FROM xiuxian_mijing_config WHERE name = %s;", (selected_name,))
+            result = cur.fetchone()
+            if result:
+                return result['id']
+            else:
+                raise Exception(f"找不到id的配置 {selected_name}")
+
+    def get_config_by_id(self, config_id):
+        """
+        根据配置 ID 获取配置信息。
+        参数:
+        - config_id: 配置 ID
+        返回:
+        - 如果找到对应的记录，则返回该记录；否则返回None。
+        """
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:  # 使用 DictCursor
+            cur.execute("""
+                SELECT * FROM xiuxian_mijing_config
+                WHERE id = %s;
+            """, (config_id,))
+            row = cur.fetchone()
+            return row  # 直接返回查询结果
+
 
 
 class XiuxianJsonDate:

@@ -45,7 +45,8 @@ kaiguan_paimai = on_command("群拍卖会", priority=4, permission=GROUP and (SU
                             block=True)
 kaiguan_boss = on_command("世界boss", aliases={"世界Boss", "世界BOSS"}, priority=13,
                             permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER), block=True)
-
+kaiguan_mijing = on_command("群秘境", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
+                            block=True)
 
 @kaiguan_xiuxian.handle()
 async def kaiguan_xiuxian_(bot: Bot, event: GroupMessageEvent):
@@ -137,3 +138,38 @@ async def kaiguan_boss_(bot: Bot, event: GroupMessageEvent, args: Message = Comm
             msg = "本群未开启世界 Boss 功能!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await kaiguan_boss.finish()
+
+
+@kaiguan_mijing.handle(parameterless=[Cooldown(at_sender=False)])
+async def kaiguan_mijing_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """群秘境开启、关闭"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    mode = args.extract_plain_text().strip()
+    group_id = str(event.group_id)
+
+    if mode == '开启':
+        if sql_message.is_mijing_enabled(group_id):
+            msg = "本群秘境已开启，无需重复开启!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_mijing.finish()
+        else:
+            sql_message.enable_mijing(group_id)
+            msg = "已开启本群秘境功能!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_mijing.finish()
+
+    elif mode == '关闭':
+        if sql_message.is_mijing_enabled(group_id):
+            sql_message.disable_mijing(group_id)
+            msg = "已关闭本群秘境功能!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_mijing.finish()
+        else:
+            msg = "本群秘境功能尚未开启!"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await kaiguan_mijing.finish()
+
+    else:
+        msg = "请输入群秘境开启或关闭!"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await kaiguan_mijing.finish()

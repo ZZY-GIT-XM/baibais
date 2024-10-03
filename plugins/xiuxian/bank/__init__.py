@@ -15,7 +15,7 @@ from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
 
 sql_message = XiuxianDateManage()  # 数据管理类实例
 
-# 定义银行命令处理器
+# 定义灵庄命令处理器
 bank = on_regex(
     r'^灵庄(存灵石|取灵石|升级会员|信息|结算)?(.*)?',
     priority=9,
@@ -26,7 +26,7 @@ bank = on_regex(
 
 @bank.handle(parameterless=[Cooldown(at_sender=False)])
 async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = RegexGroup()):
-    """处理银行命令"""
+    """处理灵庄命令"""
     # 分配机器人和群组ID
     bot, send_group_id = await assign_bot(bot=bot, event=event)
 
@@ -40,7 +40,7 @@ async def bank_(bot: Bot, event: GroupMessageEvent, args: Tuple[Any, ...] = Rege
     # 解析命令模式和数值
     mode, num = args
 
-    # 获取用户的银行信息
+    # 获取用户的灵庄信息
     user_id = user_info['user_id']
     bankinfo = sql_message.get_bank_info(user_id)
     if not bankinfo:
@@ -77,7 +77,7 @@ async def deposit_stone(bot, send_group_id, user_info, user_id, num):
             await send_message(bot, send_group_id, f"道友所拥有的灵石为{user_info['stone']}枚，金额不足，请重新输入！")
             await bank.finish()
 
-        # 获取银行信息
+        # 获取灵庄信息
         bankinfo = sql_message.get_bank_info(user_id)
         if not bankinfo:
             sql_message.insert_bank_info(user_id)
@@ -101,7 +101,7 @@ async def deposit_stone(bot, send_group_id, user_info, user_id, num):
         # 计算利息
         bankinfo, give_stone, timedeff = get_give_stone(bankinfo, current_level_info['interest_rate'])
 
-        # 更新银行信息和用户灵石数量
+        # 更新灵庄信息和用户灵石数量
         sql_message.update_bank_info(user_id, savestone=bankinfo['savestone'] + num, savetime=datetime.now(),
                                      banklevel=bankinfo['banklevel'])
         sql_message.update_ls(user_id, num, 2)  # 减少用户灵石
@@ -128,13 +128,13 @@ async def withdraw_stone(bot, send_group_id, user_info, user_id, num):
         if num <= 0:
             raise ValueError("金额必须大于零")
 
-        # 获取银行信息
+        # 获取灵庄信息
         bankinfo = sql_message.get_bank_info(user_id)
         if not bankinfo:
             sql_message.insert_bank_info(user_id)
             bankinfo = sql_message.get_bank_info(user_id)
 
-        # 检查是否有足够的灵石在银行
+        # 检查是否有足够的灵石在灵庄
         if int(bankinfo['savestone']) < num:
             await send_message(bot, send_group_id,
                                f"{user_info['user_name']} 道友当前灵庄所存有的灵石为{bankinfo['savestone']}枚，金额不足，请重新输入！")
@@ -146,7 +146,7 @@ async def withdraw_stone(bot, send_group_id, user_info, user_id, num):
         # 结算利息
         bankinfo, give_stone, timedeff = get_give_stone(bankinfo, current_level_info['interest_rate'])
 
-        # 更新用户灵石数量和银行信息
+        # 更新用户灵石数量和灵庄信息
         sql_message.update_bank_info(user_id, savestone=bankinfo['savestone'] - num, savetime=datetime.now(),
                                      banklevel=bankinfo['banklevel'])
         sql_message.update_ls(user_id, num + give_stone, 1)
@@ -167,10 +167,10 @@ async def withdraw_stone(bot, send_group_id, user_info, user_id, num):
 
 async def upgrade_membership(bot, send_group_id, user_info, user_id):
     """升级会员逻辑"""
-    # 获取用户当前的银行信息
+    # 获取用户当前的灵庄信息
     bankinfo = sql_message.get_bank_info(user_id)
     if not bankinfo:
-        # 如果没有银行信息，插入默认信息
+        # 如果没有灵庄信息，插入默认信息
         sql_message.insert_bank_info(user_id)
         bankinfo = sql_message.get_bank_info(user_id)
 
@@ -206,8 +206,8 @@ async def upgrade_membership(bot, send_group_id, user_info, user_id):
 
 
 async def show_bank_info(bot, send_group_id, user_info, user_id):
-    """显示银行信息"""
-    # 获取银行信息
+    """显示灵庄信息"""
+    # 获取灵庄信息
     bankinfo = sql_message.get_bank_info(user_id)
     if not bankinfo:
         sql_message.insert_bank_info(user_id)
@@ -255,7 +255,7 @@ async def settle_interest(bot, send_group_id, user_info, user_id):
     # 计算利息
     bankinfo, give_stone, timedeff = get_give_stone(bankinfo, current_level_info['interest_rate'])
 
-    # 更新银行信息
+    # 更新灵庄信息
     sql_message.update_bank_info(user_id, savetime=datetime.now(), banklevel=bankinfo['banklevel'])
 
     # 发送结算结果消息
@@ -265,7 +265,7 @@ async def settle_interest(bot, send_group_id, user_info, user_id):
 
 
 def get_give_stone(bankinfo, interest_rate):
-    """计算并返回利息和更新后的银行信息"""
+    """计算并返回利息和更新后的灵庄信息"""
     savetime = bankinfo['savetime'].strftime('%Y-%m-%d %H:%M:%S')  # 存款时间转换成字符串
     nowtime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # 当前时间
     timedeff = round((datetime.strptime(nowtime, '%Y-%m-%d %H:%M:%S') -
@@ -273,7 +273,7 @@ def get_give_stone(bankinfo, interest_rate):
     savestone_float = float(bankinfo['savestone'])
     interest_rate_float = float(interest_rate)
     give_stone = int(savestone_float * timedeff * interest_rate_float)
-    # 更新银行信息中的存入时间
+    # 更新灵庄信息中的存入时间
     bankinfo['savetime'] = datetime.now()
     return bankinfo, give_stone, timedeff
 

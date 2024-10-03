@@ -105,6 +105,12 @@ class XiuConfig:
         self.sql_xiuxian_bank_levels = [
             "level", "save_max", "level_up_cost", "interest_rate", "level_name"
         ]
+        self.sql_xiuxian_mijing_config = [
+            "name", "type_rate", "rank", "base_count", "time"
+        ]
+        self.sql_xiuxian_mijing_info = [
+            "name", "rank", "current_count", "l_user_id", "time", "created_at"
+        ]
         # 上面是数据库校验,别动
         self.level = Items().convert_rank('江湖好手')[1]  # 境界列表，别动
         self.img = False  # 是否使用图片发送消息

@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-from nonebot import get_bots, on_command, require, on_fullmatch
+from nonebot import get_bots, on_command, require
 from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -11,84 +11,45 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_OWNER,
     MessageSegment
 )
-from .old_rift_info import old_rift_info
-from .. import DRIVER
-from ..xiuxian_utils.lay_out import assign_bot, assign_bot_group, Cooldown
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
-from ..xiuxian_utils.utils import (
-    check_user, check_user_type,
-    send_msg_handler, get_msg_pic, CommandObjectID
-)
-from .riftconfig import get_rift_config, savef_rift
-from .jsondata import save_rift_data, read_rift_data
-from ..xiuxian_config import XiuConfig
-from .riftmake import (
-    Rift, get_rift_type, get_story_type, NONEMSG, get_battle_type,
-    get_dxsj_info, get_boss_battle_info, get_treasure_info
-)
 
-config = get_rift_config()
+from .riftmake import get_story_type, NONEMSG, get_battle_type, get_dxsj_info, get_boss_battle_info, get_treasure_info
+from ..xiuxian_utils.lay_out import assign_bot, assign_bot_group
+from ..xiuxian_utils.utils import check_user, check_user_type, send_msg_handler
+from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage  # 假设这是处理数据库操作的模块
+
 sql_message = XiuxianDateManage()  # sql类
-cache_help = {}
-group_rift = config.get("group_rift", {})  # 读取配置文件
-groups = config.get('open', [])
+
+create_rift = on_command("生成秘境", priority=5, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
+                         block=True)
+explore_rift = on_command("探索秘境", priority=5, permission=GROUP, block=True)
+complete_rift = on_command("秘境结算", priority=7, permission=GROUP, block=True)
+break_rift = on_command("秘境探索终止", priority=7, permission=GROUP, block=True)
+view_rift = on_command("秘境查看", priority=7, permission=GROUP, block=True)
+
 # 定时任务
 set_rift = require("nonebot_plugin_apscheduler").scheduler
-
-set_group_rift = on_command("群秘境", priority=4, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
-                            block=True)
-explore_rift = on_fullmatch("探索秘境", priority=5, permission=GROUP, block=True)
-create_rift = on_fullmatch("生成秘境", priority=5, permission=GROUP and (SUPERUSER | GROUP_ADMIN | GROUP_OWNER),
-                           block=True)
-complete_rift = on_command("秘境结算", aliases={"结算秘境"}, priority=7, permission=GROUP, block=True)
-break_rift = on_command("秘境探索终止", aliases={"终止探索秘境"}, priority=7, permission=GROUP, block=True)
-view_rift = on_command("秘境查看", aliases={"查看秘境"}, priority=7, permission=GROUP, block=True)
-
-
-
-
-@DRIVER.on_startup
-async def read_rift_():
-    global group_rift
-    group_rift.update(old_rift_info.read_rift_info())
-    logger.opt(colors=True).info("<green>历史rift数据读取成功</green>")
-
-
-@DRIVER.on_shutdown
-async def save_rift_():
-    global group_rift
-    old_rift_info.save_rift(group_rift)
-    logger.opt(colors=True).info("<green>rift数据已保存</green>")
 
 
 @set_rift.scheduled_job("cron", hour=8, minute=0)
 async def set_rift_():
-    """定时任务生成群秘境"""
-    global group_rift
-    group_rift = config.get("group_rift", {})
+    """定时任务刷新所有秘境信息并发送通知消息"""
+    config_id = sql_message.get_random_config_id()
+    rift_info = sql_message.get_config_by_id(config_id)
+    # 更新秘境信息
+    sql_message.update_mijing_info(rift_info['name'], rift_info['rank'], rift_info['base_count'], '', rift_info['time'])
+    # 构建通知消息
+    msg = f'''秘境已刷新，野生的{rift_info['name']}已开启！
+    可探索次数：{rift_info['base_count']}次。
+    请诸位道友发送 探索秘境 来加入吧！'''
 
-    # 确保groups变量存在且非空
-    if not groups:
-        return
+    #获取所有启用的群聊id
+    enabled_groups = sql_message.get_enabled_groups()
 
-    for group_id in groups:
-        if group_id not in config.get('blocked', []):  # 检查是否被屏蔽
-            bot = await assign_bot_group(group_id=group_id)
-            rift = Rift()
-            rift.name = get_rift_type()
-            rift.rank = config['rift'].get(rift.name, {}).get('rank', 1)  # 默认值为1
-            rift.count = config['rift'].get(rift.name, {}).get('count', 1)  # 默认值为1
-            rift.time = config['rift'].get(rift.name, {}).get('time', 0)  # 默认值为0
-            group_rift[group_id] = rift
-            msg = f"秘境已刷新，野生的{rift.name}已开启！可探索次数：{rift.count}次，请诸位道友发送 探索秘境 来加入吧！"
-            pic = await get_msg_pic(msg)
-            await bot.send_group_msg(group_id=int(group_id), message=MessageSegment.image(pic))
-
-    # 保存新的秘境信息到配置文件
-    config['group_rift'] = group_rift
-    savef_rift(config)
+    for gid in enabled_groups:
+        bot = await assign_bot_group(group_id=gid)
+        await bot.send_group_msg(group_id=int(gid), message=msg)
 
 
 @view_rift.handle()
@@ -96,96 +57,64 @@ async def view_rift_(bot: Bot, event: GroupMessageEvent):
     """秘境查看"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
-    group_id = str(event.group_id)
-    # 从全局变量中获取秘境信息
-    rift = group_rift.get(group_id, {})
-
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await view_rift.finish()
-
-    if not rift:
+    # 获取秘境信息
+    rift_info = sql_message.get_mijing_info()
+    if not rift_info:
         msg = f"当前没有正在进行的秘境。"
-        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await bot.send_group_msg(group_id=int(event.group_id), message=msg)
         await view_rift.finish()
 
-    user_id = user_info['user_id']
-    has_participated = user_id in getattr(rift, 'l_user_id', [])
+    has_participated = False
+    user_id = str(event.user_id)
+    if rift_info['l_user_id']:
+        user_ids = rift_info['l_user_id'].split(',')
+        has_participated = user_id in user_ids
 
-    msg = f"当前秘境：{getattr(rift, 'name', '未知秘境')}\n可探索次数：{getattr(rift, 'count', 0)}次"
+    msg = f"当前秘境：{rift_info['name']}\n可探索次数：{rift_info['current_count']}次"
     if has_participated:
         msg += f"\n(您已参加过此秘境)"
 
-    # 添加剩余时间提示
-    if hasattr(rift, 'start_time') and hasattr(rift, 'duration'):
-        start_time = datetime.strptime(getattr(rift, 'start_time'), "%Y-%m-%d %H:%M:%S")
-        remaining_time = (start_time + timedelta(minutes=getattr(rift, 'duration'))) - datetime.now()
-        if remaining_time.total_seconds() > 0:
-            msg += f"\n剩余时间：{int(remaining_time.total_seconds() / 60)}分钟"
+    # 秘境剩余时间提示 待处理
+    if rift_info['time'] > 0:
+        msg += f"\n剩余时间：{rift_info['time']}分钟"
 
-    await bot.send_group_msg(group_id=int(group_id), message=msg)
+    await bot.send_group_msg(group_id=int(event.group_id), message=msg)
     await view_rift.finish()
 
 
-@create_rift.handle(parameterless=[Cooldown(stamina_cost=6, at_sender=False)])
+@create_rift.handle()
 async def create_rift_(bot: Bot, event: GroupMessageEvent):
     """生成秘境"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    group_id = str(event.group_id)
-    # 使用全局配置
-    is_blocked = group_id in config.get('blocked', [])  # 检查群聊是否被屏蔽
-
-    if is_blocked:
-        msg = '本群已被屏蔽，请联系管理员解除屏蔽'
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await create_rift.finish()
-
-    # 检查 group_rift 中是否有 group_id
-    if group_id in group_rift:
-        msg = f"当前已存在{group_rift[group_id].name}，秘境可探索次数：{group_rift[group_id].count}次，请诸位道友发送 探索秘境 来加入吧！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    # 获取秘境信息
+    rift_info = sql_message.get_mijing_info()
+    if rift_info:
+        msg = f"当前已存在秘境，请诸位道友发送 探索秘境 来加入吧！"
+        await bot.send_group_msg(group_id=int(event.group_id), message=msg)
         await create_rift.finish()
 
     # 创建新的秘境
-    rift = Rift()
-    rift.name = get_rift_type()
+    config_id = sql_message.get_random_config_id()
+    rift_info = sql_message.get_config_by_id(config_id)
+    if not rift_info:
+        raise ValueError("No valid configuration found.")
 
-    # 确保 config 中有 'rift' 键
-    if 'rift' not in config:
-        config['rift'] = {}
-
-    # 确保 config['rift'] 中有 rift.name 键
-    if rift.name not in config['rift']:
-        config['rift'][rift.name] = {
-            'rank': 1,  # 默认值
-            'count': 10,  # 默认值
-            'time': 60  # 默认值
-        }
-
-    rift.rank = config['rift'][rift.name]['rank']
-    rift.count = config['rift'][rift.name]['count']
-    rift.time = config['rift'][rift.name]['time']
-
-    # 将新秘境保存到 group_rift
-    group_rift[group_id] = rift
+    # 使用字典索引
+    sql_message.insert_mijing_info(rift_info['name'], rift_info['rank'], rift_info['base_count'], "", rift_info['time'])
 
     # 发送消息通知群成员
-    msg = f"野生的{rift.name}出现了！秘境可探索次数：{rift.count}次，请诸位道友发送 探索秘境 来加入吧！"
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    msg = f'''野生的{rift_info['name']}出现了！
+    秘境可探索次数：{rift_info['base_count']}次;
+    请诸位道友发送 探索秘境 来加入吧！'''
+    await bot.send_group_msg(group_id=int(event.group_id), message=msg)
 
-    # 保存配置文件
-    try:
-        old_rift_info.save_rift(group_rift)
-    except Exception as e:
-        msg = "秘境生成成功，但保存配置文件失败，请稍后再试。"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await create_rift.finish()
-    else:
-        await create_rift.finish()
+    await create_rift.finish()
 
 
-@explore_rift.handle(parameterless=[Cooldown(stamina_cost=6, at_sender=False)])
-async def _(bot: Bot, event: GroupMessageEvent):
+@explore_rift.handle()
+async def explore_rift_(bot: Bot, event: GroupMessageEvent):
     """探索秘境"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_info, msg = check_user(event)
@@ -198,55 +127,43 @@ async def _(bot: Bot, event: GroupMessageEvent):
     if not is_type:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await explore_rift.finish()
-
-    group_id = str(event.group_id)
-    config = get_rift_config()  # 获取配置
-    is_blocked = group_id in config.get('blocked', [])  # 检查群聊是否被屏蔽
-
-    if is_blocked:
-        msg = '本群已被屏蔽，请联系管理员解除屏蔽'
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await explore_rift.finish()
-
-    try:
-        rift = group_rift[group_id]
-    except KeyError:
+    # 获取秘境信息
+    rift_info = sql_message.get_mijing_info()
+    if not rift_info:
         msg = '野外秘境尚未生成，请道友耐心等待!'
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(event.group_id), message=msg)
         await explore_rift.finish()
 
-    if user_id in rift.l_user_id:
+    if str(event.user_id) in rift_info['l_user_id'].split(','):
         msg = '道友已经参加过本次秘境啦，请把机会留给更多的道友！'
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(event.group_id), message=msg)
         await explore_rift.finish()
 
-    rift.l_user_id.append(user_id)
-    rift.count -= 1
-    msg = f"道友进入秘境：{rift.name}，探索需要花费时间：{rift.time}分钟！"
-    rift_data = {
-        "name": rift.name,
-        "time": rift.time,
-        "rank": rift.rank
-    }
+    sql_message.do_work(user_id, 3, rift_info["time"])
+    rift_count = rift_info['current_count']
+    if rift_count <= 0:
+        msg = '秘境随着道友的进入，已无法再维持更多的人，而关闭了！'
+        await bot.send_group_msg(group_id=int(event.group_id), message=msg)
+        await explore_rift.finish()
 
-    save_rift_data(user_id, rift_data)
-    sql_message.do_work(user_id, 3, rift_data["time"])
+    # 更新秘境信息
+    new_count = rift_count - 1
+    updated_l_user_id = f"{rift_info['l_user_id']},{event.user_id}" if rift_info['l_user_id'] else str(event.user_id)
+    sql_message.update_mijing_info(rift_info['name'], rift_info['rank'], new_count, updated_l_user_id,
+                                   rift_info['time'])
 
-    if rift.count == 0:
-        del group_rift[group_id]
-        logger.opt(colors=True).info(f"<green>群{group_id}秘境已到上限次数！</green>")
+    msg = f"道友进入秘境：{rift_info['name']}，探索需要花费时间：{rift_info['time']}分钟！"
+    await bot.send_group_msg(group_id=int(event.group_id), message=msg)
+
+    if new_count == 0:
         msg += "秘境随着道友的进入，已无法再维持更多的人，而关闭了！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await bot.send_group_msg(group_id=int(event.group_id), message=msg)
         await explore_rift.finish()
 
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-
-    # 在保存配置文件之前将 Rift 对象转换为可序列化的字典
-    old_rift_info.save_rift(group_rift)
     await explore_rift.finish()
 
 
-@complete_rift.handle(parameterless=[Cooldown(at_sender=False)])
+@complete_rift.handle()
 async def complete_rift_(bot: Bot, event: GroupMessageEvent):
     """秘境结算"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
@@ -255,31 +172,43 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await complete_rift.finish()
 
-    user_id = user_info['user_id']
-    group_id = str(event.group_id)
-    config = get_rift_config()  # 获取配置
-    is_blocked = group_id in config.get('blocked', [])  # 检查群聊是否被屏蔽
-
-    if is_blocked:
-        msg = '本群已被屏蔽，请联系管理员解除屏蔽'
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await complete_rift.finish()
-
-    is_type, msg = check_user_type(user_id, 3)  # 需要在秘境的用户
+    # 需要在秘境的用户
+    is_type, msg = check_user_type(user_info['user_id'], 3)
     if not is_type:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await complete_rift.finish()
 
-    try:
-        rift_info = read_rift_data(user_id)
-    except Exception as e:
-        msg = '发生未知错误！'
-        sql_message.do_work(user_id, 0)
+    # 获取秘境信息
+    rift_info = sql_message.get_mijing_info()
+    if not rift_info:
+        msg = '野外秘境尚未生成，请道友耐心等待!'
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await complete_rift.finish()
 
-    user_cd_message = sql_message.get_user_cd(user_id)
-    work_time = datetime.strptime(user_cd_message['create_time'], "%Y-%m-%d %H:%M:%S.%f")
+    # 获取用户的冷却时间信息并检查类型
+    user_cd_message = sql_message.get_user_cd(user_info['user_id'])
+    if user_cd_message is not None and 'create_time' in user_cd_message:
+        create_time = user_cd_message['create_time']
+
+        # 检查 create_time 的类型
+        if isinstance(create_time, str):
+            try:
+                work_time = datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                msg = "\n上次探索时间无法识别。"
+                await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+                await complete_rift.finish()
+        elif isinstance(create_time, datetime):
+            work_time = create_time
+        else:
+            msg = "\n上次探索时间无法识别。"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await complete_rift.finish()
+    else:
+        msg = "\n没有记录到您的上次探索时间。"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await complete_rift.finish()
+
     exp_time = (datetime.now() - work_time).seconds // 60  # 时长计算
     time2 = rift_info["time"]
 
@@ -287,8 +216,12 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
         msg = f"进行中的：{rift_info['name']}探索，预计{time2 - exp_time}分钟后可结束"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await complete_rift.finish()
-    else:  # 秘境结算逻辑
-        sql_message.do_work(user_id, 0)
+    else:
+        # 更新秘境信息
+        rift_count = rift_info['current_count']
+        new_count = rift_count - 1
+        sql_message.update_mijing_info(rift_info['name'], rift_info['rank'], new_count, rift_info['l_user_id'], 0)
+        sql_message.do_work(user_info['user_id'], 0)
         rift_rank = rift_info["rank"]  # 秘境等级
         rift_type = get_story_type()  # 无事、宝物、战斗
 
@@ -314,89 +247,3 @@ async def complete_rift_(bot: Bot, event: GroupMessageEvent):
             msg = get_treasure_info(user_info, rift_rank)
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await complete_rift.finish()
-
-
-@break_rift.handle(parameterless=[Cooldown(at_sender=False)])
-async def break_rift_(bot: Bot, event: GroupMessageEvent):
-    """终止探索秘境"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await break_rift.finish()
-
-    user_id = user_info['user_id']
-    group_id = str(event.group_id)
-    config = get_rift_config()  # 获取配置
-    is_blocked = group_id in config.get('blocked', [])  # 检查群聊是否被屏蔽
-
-    if is_blocked:
-        msg = '本群已被屏蔽，请联系管理员解除屏蔽'
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await break_rift.finish()
-
-    is_type, msg = check_user_type(user_id, 3)  # 需要在秘境的用户
-    if not is_type:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await break_rift.finish()
-    else:
-        try:
-            rift_info = read_rift_data(user_id)
-        except Exception as e:
-            msg = '发生未知错误！'
-            sql_message.do_work(user_id, 0)
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await break_rift.finish()
-
-        # 更新用户状态，确认用户已参加过本次探索
-        rift = group_rift[group_id]
-        rift.l_user_id.append(user_id)
-
-        sql_message.do_work(user_id, 0)
-        msg = f"已终止{rift_info['name']}秘境的探索！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await break_rift.finish()
-
-
-@set_group_rift.handle(parameterless=[Cooldown(at_sender=False)])
-async def set_group_rift_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """群秘境开启、关闭"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    mode = args.extract_plain_text().strip()
-    group_id = str(event.group_id)
-
-    # 获取配置
-    config = get_rift_config()  # 假设有一个函数 get_rift_config() 来获取配置
-
-    is_blocked = group_id in config['blocked']  # True 表示被屏蔽，False 表示未被屏蔽
-
-    if mode == '开启':
-        if is_blocked:
-            msg = f"本群已被屏蔽，请先解除屏蔽再开启!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_group_rift.finish()
-        else:
-            msg = f"本群秘境已开启，无需重复开启!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_group_rift.finish()
-
-    elif mode == '关闭':
-        if is_blocked:
-            msg = f"本群已被屏蔽，无需再次关闭!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_group_rift.finish()
-        else:
-            config['blocked'].append(group_id)
-            savef_rift(config)  # 使用你现有的保存方法
-            msg = f"已关闭本群秘境!"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await set_group_rift.finish()
-
-    else:
-        msg = f"请输入群秘境开启或关闭!"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await set_group_rift.finish()
-
-
-def is_in_groups(event: GroupMessageEvent):
-    return str(event.group_id) in groups
