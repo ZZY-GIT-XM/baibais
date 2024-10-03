@@ -1,24 +1,17 @@
-import json
-import os
 from datetime import datetime
-from decimal import Decimal
-from pathlib import Path
 from typing import Any, Tuple
 
 from nonebot import on_regex
-from nonebot.log import logger
-from nonebot.params import RegexGroup
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
     GROUP,
-    MessageSegment,
 )
+from nonebot.params import RegexGroup
+
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown
+from ..xiuxian_utils.utils import check_user
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage
-from .bankconfig import get_config
-from ..xiuxian_utils.utils import check_user, get_msg_pic
-from ..xiuxian_config import XiuConfig
 
 sql_message = XiuxianDateManage()  # 数据管理类实例
 
