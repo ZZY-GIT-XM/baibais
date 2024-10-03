@@ -11,7 +11,8 @@ from nonebot.adapters.onebot.v11 import (
 
 from .information_background import draw_user_info_img
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown
-from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, OtherSet, UserBuffDate
+from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, OtherSet, UserBuffDate, get_main_info_msg, get_user_buff, \
+    get_sub_info_msg, get_sec_msg
 from ..xiuxian_utils.utils import check_user, get_msg_pic, number_to
 from ..xiuxian_config import XiuConfig
 from .calculator import XiuxianCalculator
@@ -19,8 +20,63 @@ from .calculator import XiuxianCalculator
 sql_message = XiuxianDateManage()  # sql类
 
 xiuxian_message = on_command("我的修仙信息", aliases={"我的存档"}, priority=23, permission=GROUP, block=True)
-xiuxian_message_img = on_command("图片版我的修仙信息", aliases={"图片版我的存档"}, priority=23, permission=GROUP, block=True)
+xiuxian_message_img = on_command("图片版我的修仙信息", aliases={"图片版我的存档"}, priority=23, permission=GROUP,
+                                 block=True)
 xiuxian_sone = on_fullmatch("灵石", priority=4, permission=GROUP, block=True)
+xiuxian_tili = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
+xiuxian_gongfa = on_fullmatch("我的功法", priority=25, permission=GROUP, block=True)
+
+
+@xiuxian_gongfa.handle(parameterless=[Cooldown(at_sender=False)])
+async def xiuxian_gongfa_(bot: Bot, event: GroupMessageEvent):
+    """我的功法"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await xiuxian_gongfa.finish()
+
+    user_id = user_info['user_id']
+    mainbuffdata = UserBuffDate(user_id).get_user_main_buff_data()
+    if mainbuffdata != None:
+        s, mainbuffmsg = get_main_info_msg(str(get_user_buff(user_id)['main_buff']))
+    else:
+        mainbuffmsg = ''
+
+    subbuffdata = UserBuffDate(user_id).get_user_sub_buff_data()
+    if subbuffdata != None:
+        sub, subbuffmsg = get_sub_info_msg(str(get_user_buff(user_id)['sub_buff']))
+    else:
+        subbuffmsg = ''
+
+    secbuffdata = UserBuffDate(user_id).get_user_sec_buff_data()
+    secbuffmsg = get_sec_msg(secbuffdata) if get_sec_msg(secbuffdata) != '无' else ''
+    msg = f"""
+道友的主功法：{mainbuffdata["name"] if mainbuffdata != None else '无'}
+{mainbuffmsg}
+道友的辅修功法：{subbuffdata["name"] if subbuffdata != None else '无'}
+{subbuffmsg}
+道友的神通：{secbuffdata["name"] if secbuffdata != None else '无'}
+{secbuffmsg}
+"""
+
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await xiuxian_gongfa.finish()
+
+
+@xiuxian_tili.handle(parameterless=[Cooldown(at_sender=False)])
+async def xiuxian_tili_(bot: Bot, event: GroupMessageEvent):
+    """我的体力信息"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await xiuxian_tili.finish()
+
+    msg = f"{user_info['user_name']} 当前体力：{user_info['user_stamina']}"
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await xiuxian_tili.finish()
 
 
 @xiuxian_sone.handle(parameterless=[Cooldown(at_sender=False)])
@@ -114,7 +170,8 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
 
     emoji = gender_emoji.get(user_info['user_sex'], '🧍‍♂️')  # 默认使用其他性别
 
-    if user_info['poxian_num'] >= 100 or user_info['user_id'] in id_set or create_time_datetime < specific_time:  # 破限次数大于等于100或ID在id_set中的用户
+    if user_info['poxian_num'] >= 100 or user_info[
+        'user_id'] in id_set or create_time_datetime < specific_time:  # 破限次数大于等于100或ID在id_set中的用户
         msg = f""" 
 🌟 道号: {calculated_info['道号']}
 {emoji} 性别: {calculated_info['性别']}
