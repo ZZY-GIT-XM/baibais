@@ -1,4 +1,5 @@
-from nb_cli.cli.commands import self
+from psycopg2.extras import DictCursor
+from psycopg2.sql import SQL, Identifier
 
 try:
     import ujson as json
@@ -16,9 +17,7 @@ from .data_source import jsondata
 from .. import DRIVER
 from .xn_xiuxian_impart_config import config_impart
 from ..xiuxian_config import XiuConfig
-# from .item_json import Items
 from ..xiuxian_utils.item_database_handler import Items
-
 
 WORKDATA = Path() / "data" / "xiuxian" / "work"
 PLAYERSDATA = Path() / "data" / "xiuxian" / "players"
@@ -117,6 +116,8 @@ class XiuxianDateManage:
                 self._add_missing_columns(c, "xiuxian_yaocai", XiuConfig().sql_xiuxian_yaocai)
                 self._add_missing_columns(c, "xiuxian_jingjie", XiuConfig().sql_xiuxian_jingjie)
                 self._add_missing_columns(c, "xiuxian_group_config", XiuConfig().sql_xiuxian_group_config)
+                self._add_missing_columns(c, "xiuxian_bank_info", XiuConfig().sql_xiuxian_bank_info)
+                self._add_missing_columns(c, "xiuxian_bank_levels", XiuConfig().sql_xiuxian_bank_levels)
 
                 self.conn.commit()
         except psycopg2.Error as e:
@@ -418,6 +419,24 @@ class XiuxianDateManage:
                     enabled_paimai BOOLEAN NOT NULL DEFAULT FALSE,  -- 用于判断群聊是否有开启拍卖功能
                     enabled_mijing BOOLEAN NOT NULL DEFAULT FALSE  -- 用于判断群聊是否有开启秘境功能
                 );
+            """,
+            "xiuxian_bank_info": """
+                CREATE TABLE IF NOT EXISTS xiuxian_bank_info (
+                    user_id BIGINT REFERENCES user_xiuxian(user_id),
+                    savestone NUMERIC DEFAULT 0,
+                    savetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    banklevel NUMERIC DEFAULT 1,
+                    PRIMARY KEY (user_id)
+                );
+            """,
+            "xiuxian_bank_levels": """
+                CREATE TABLE IF NOT EXISTS xiuxian_bank_levels (
+                    level INTEGER PRIMARY KEY,
+                    save_max NUMERIC NOT NULL,
+                    level_up_cost NUMERIC NOT NULL,
+                    interest_rate NUMERIC(7, 4) NOT NULL,
+                    level_name VARCHAR(50) NOT NULL
+                );
             """
         }
 
@@ -441,11 +460,12 @@ class XiuxianDateManage:
                 try:
                     data_type = 'TEXT'  # 默认类型为 TEXT
                     # 先保留原有的逻辑部分
-                    if col in ['power', 'atk', 'ac', 'spend', 'hp', 'mp', 'rate', 'exp', 'sp', 'sp_ra']:
+                    if col in ['power', 'atk', 'ac', 'spend', 'hp', 'mp', 'rate', 'exp', 'sp', 'sp_ra', 'savestone',
+                               'banklevel', 'save_max', 'level_up_cost', 'interest_rate']:
                         data_type = 'NUMERIC'  # 对于数值类型的字段使用 NUMERIC
                     elif col == 'comment':
                         data_type = 'TEXT'  # 对于文本类型的字段使用 TEXT
-                    elif col == 'jingjie_name':
+                    elif col == ['jingjie_name', 'level_name']:
                         data_type = 'VARCHAR(255)'  # 对于字符串类型的字段使用 VARCHAR(255)
                     elif col in ['user_id', 'sect_id', 'sect_owner', 'sect_scale', 'sect_used_stone',
                                  'sect_fairyland', 'mainbuff', 'secbuff', 'elixir_room_level', 'goods_id', 'goods_num',
@@ -462,19 +482,20 @@ class XiuxianDateManage:
                                  'random_buff', 'ew', 'buff_type', 'buff', 'buff2', 'stone', 'integral', 'jin', 'drop',
                                  'fan', 'break', 'dan_exp', 'dan_buff', 'reap_buff', 'exp_buff', 'cultivation_speed',
                                  'herb_speed', 'type', 'price', 'selling', 'realm', 'status', 'mix_need_time',
-                                 'mix_exp','bufftype',
+                                 'mix_exp', 'bufftype',
                                  'mix_all', 'elixir_config', 'primary_ingredient', 'catalyst', 'auxiliary_ingredient']:
                         data_type = 'NUMERIC' if col in ['level', 'rank', 'state', 'number', 'exp',
                                                          'quantity'] else 'VARCHAR(255)'
                     # 新增对于时间戳类型字段的支持
-                    elif col in ['create_time', 'scheduled_time', 'last_check_info_time', 'action_time', 'update_time']:
+                    elif col in ['create_time', 'scheduled_time', 'last_check_info_time', 'action_time', 'update_time',
+                                 'savetime']:
                         data_type = 'TIMESTAMP'
                     # 新增对于 xiuxian_group_config 表的字段支持
                     elif col == 'group_id':
                         data_type = 'BIGINT'
                     elif col == 'buffvalue':
                         data_type = 'REAL'
-                    elif col == ['enabled_xiuxian','enabled_paimai','enabled_boss','enabled_mijing']:
+                    elif col == ['enabled_xiuxian', 'enabled_paimai', 'enabled_boss', 'enabled_mijing']:
                         data_type = 'BOOLEAN NOT NULL DEFAULT FALSE'
 
                     cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col} {data_type} DEFAULT NULL")
@@ -816,7 +837,7 @@ class XiuxianDateManage:
         self.conn.commit()
 
     def update_ls(self, user_id, price, key):
-        """更新灵石  1为增加，2为减少"""
+        """更新用户灵石  1为增加，2为减少"""
         cur = self.conn.cursor()
 
         if key == 1:
@@ -827,6 +848,57 @@ class XiuxianDateManage:
             sql = "UPDATE user_xiuxian SET stone = stone - %s WHERE user_id = %s"
             cur.execute(sql, (price, user_id))
             self.conn.commit()
+
+    def get_bank_info(self, user_id):
+        """获取用户灵庄信息"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT * FROM xiuxian_bank_info WHERE user_id = %s", (user_id,))
+            result = cur.fetchone()
+            if result:
+                columns = [column[0] for column in cur.description]
+                bank_dict = dict(zip(columns, result))
+                return bank_dict
+            else:
+                return None
+
+    def insert_bank_info(self, user_id):
+        """插入用户灵庄信息（如果不存在）"""
+        with self.conn.cursor() as cur:
+            cur.execute("INSERT INTO xiuxian_bank_info (user_id) VALUES (%s) ON CONFLICT (user_id) DO NOTHING",
+                        (user_id,))
+            self.conn.commit()
+
+    def update_bank_info(self, user_id, **kwargs):
+        """更新用户灵庄信息"""
+        set_clause = SQL(', ').join([Identifier(k) + SQL(' = %s') for k in kwargs])
+        query = SQL("UPDATE xiuxian_bank_info SET {} WHERE user_id = %s").format(set_clause)
+        values = list(kwargs.values()) + [user_id]
+
+        with self.conn.cursor() as cur:
+            cur.execute(query, values)
+            self.conn.commit()
+
+    def get_bank_level(self, level):
+        """获取灵庄级别信息"""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT * FROM xiuxian_bank_levels WHERE level = %s", (level,))
+            result = cur.fetchone()
+        if result:
+            return {
+                'level': result[0],
+                'save_max': result[1],
+                'level_up_cost': result[2],
+                'interest_rate': result[3],
+                'level_name': result[4]
+            }
+        return None
+
+    def get_max_bank_level(self):
+        """获取最高级别的信息"""
+        with self.conn.cursor(cursor_factory=DictCursor) as cur:  # 使用字典游标
+            cur.execute("SELECT * FROM xiuxian_bank_levels ORDER BY level DESC LIMIT 1")
+            max_level_info = cur.fetchone()
+        return max_level_info or {}
 
     def update_stone(self, user_id, rate):
         """更新突破成功率"""
@@ -1827,7 +1899,7 @@ class XiuxianDateManage:
         finally:
             cur.close()
 
-    def update_user_main_buff(self, user_id, id):
+    def updata_user_main_buff(self, user_id, id):
         """更新用户主功法信息"""
         sql = "UPDATE buffinfo SET main_buff = %s WHERE user_id = %s"
         cur = self.conn.cursor()
@@ -2885,7 +2957,7 @@ def get_weapon_info_msg(weapon_id, weapon_info=None):
     crit_atk_msg = f"提升{int(weapon_info['critatk'] * 100)}%会心伤害！" if weapon_info['critatk'] != 0 else ''
     # def_buff_msg = f"提升{int(weapon_info['def_buff'] * 100)}%减伤率！" if weapon_info['def_buff'] != 0 else ''
     def_buff_msg = f"{'提升' if weapon_info['def_buff'] > 0 else '降低'}{int(abs(weapon_info['def_buff']) * 100)}%减伤率！" if \
-    weapon_info['def_buff'] != 0 else ''
+        weapon_info['def_buff'] != 0 else ''
     zw_buff_msg = f"装备专属武器时提升伤害！！" if weapon_info['zw'] != 0 else ''
     mp_buff_msg = f"降低真元消耗{int(weapon_info['mp_buff'] * 100)}%！" if weapon_info['mp_buff'] != 0 else ''
     msg += f"名字：{weapon_info['name']}\n"
@@ -2922,7 +2994,7 @@ def get_main_info_msg(id):
 
     cri_tmsg = f"，提升{round(mainbuff['crit_buff'] * 100, 0)}%会心率" if mainbuff['crit_buff'] != 0 else ''
     def_msg = f"，{'提升' if mainbuff['def_buff'] > 0 else '降低'}{round(abs(mainbuff['def_buff']) * 100, 0)}%减伤率" if \
-    mainbuff['def_buff'] != 0 else ''
+        mainbuff['def_buff'] != 0 else ''
     dan_msg = f"，增加炼丹产出{round(mainbuff['dan_buff'])}枚" if mainbuff['dan_buff'] != 0 else ''
     dan_exp_msg = f"，每枚丹药额外增加{round(mainbuff['dan_exp'])}炼丹经验" if mainbuff['dan_exp'] != 0 else ''
     reap_msg = f"，提升药材收取数量{round(mainbuff['reap_buff'])}个" if mainbuff['reap_buff'] != 0 else ''
