@@ -28,24 +28,6 @@ complete_rift = on_command("秘境结算", priority=7, permission=GROUP, block=T
 break_rift = on_command("秘境探索终止", priority=7, permission=GROUP, block=True)
 view_rift = on_command("秘境查看", priority=7, permission=GROUP, block=True)
 
-# 定时任务
-set_rift = require("nonebot_plugin_apscheduler").scheduler
-
-
-@set_rift.scheduled_job("cron", hour=21, minute=59)
-async def set_rift_():
-    """秘境信息次数重置成功"""
-    # 获取秘境信息
-    rift_info = sql_message.get_mijing_info()
-    rift_info_name = rift_info['name']
-    config_id = sql_message.get_random_config_id()
-    rift_info = sql_message.get_config_by_id(config_id)
-    # 更新秘境信息
-    sql_message.update_dingshi_mijing_info(rift_info_name, rift_info['name'], rift_info['rank'],
-                                           rift_info['base_count'], '', rift_info['time'])
-
-    logger.opt(colors=True).info(f"<green>秘境信息次数重置成功</green>")
-
 
 @view_rift.handle(parameterless=[Cooldown(at_sender=False)])
 async def view_rift_(bot: Bot, event: GroupMessageEvent):

@@ -27,6 +27,22 @@ reset_zongmen_renwu_danyao = require("nonebot_plugin_apscheduler").scheduler
 reset_zongmen_tizongzhu = require("nonebot_plugin_apscheduler").scheduler
 reset_tilinum = require("nonebot_plugin_apscheduler").scheduler
 reset_huifu_hp = require("nonebot_plugin_apscheduler").scheduler
+reset_day_mijing = require("nonebot_plugin_apscheduler").scheduler
+
+
+@reset_day_mijing.scheduled_job("cron", hour=8, minute=0)
+async def reset_day_mijing_():
+    """秘境信息次数重置成功"""
+    # 获取秘境信息
+    rift_info = sql_message.get_mijing_info()
+    rift_info_name = rift_info['name']
+    config_id = sql_message.get_random_config_id()
+    rift_info = sql_message.get_config_by_id(config_id)
+    # 更新秘境信息
+    sql_message.update_dingshi_mijing_info(rift_info_name, rift_info['name'], rift_info['rank'],
+                                           rift_info['base_count'], '', rift_info['time'])
+
+    logger.opt(colors=True).info(f"<green>秘境信息重置成功</green>")
 
 
 @reset_day_xuanshangnum.scheduled_job("cron", hour=0, minute=0)
