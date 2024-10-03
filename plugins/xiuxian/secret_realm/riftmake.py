@@ -1,10 +1,8 @@
 import random
-from .riftconfig import get_rift_config
 from ..xiuxian_utils.xiuxian2_handle import OtherSet
 from .jsondata import read_f
 from ..xiuxian_utils.xiuxian2_handle import XiuxianDateManage, UserBuffDate, XIUXIAN_IMPART_BUFF
 from ..xiuxian_utils.player_fight import Boss_fight
-# from ..xiuxian_utils.item_json import Items
 from ..xiuxian_utils.item_database_handler import Items
 
 sql_message = XiuxianDateManage()
@@ -303,12 +301,6 @@ def get_dict_type_rate(data_dict):
     return key
 
 
-def get_rift_type():
-    """根据概率返回秘境等级"""
-    data_dict = get_rift_config()['rift']
-    return get_dict_type_rate(data_dict)
-
-
 def get_story_type():
     """根据概率返回事件类型"""
     data_dict = STORY
@@ -420,24 +412,4 @@ def get_skill_by_rank(user_level, rift_rank):
         if user_rank - rift_rank <= v['rank']:  # 秘境等级会增幅用户等级
             temp_dict.append(k)
     return random.choice(temp_dict)
-
-
-class Rift:
-    def __init__(self) -> None:
-        self.name = ''
-        self.rank = 0
-        self.count = 0
-        self.l_user_id = []  # 记录已经参加的用户
-        self.time = 0
-        self.participants = []
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "rank": self.rank,
-            "count": self.count,
-            "l_user_id": self.l_user_id,
-            "time": self.time,
-            "participants": self.participants
-        }
 

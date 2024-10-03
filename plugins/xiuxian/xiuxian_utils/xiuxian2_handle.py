@@ -2264,6 +2264,25 @@ class XiuxianDateManage:
             self.conn.commit()
 
 
+    def update_dingshi_mijing_info(self, name, xin_name, rank, current_count, l_user_id, time):
+        """
+        更新秘境信息。
+
+        参数:
+        - name: 秘境名称
+        - rank: 秘境等级
+        - current_count: 当前可探索次数
+        - l_user_id: 已经参加的用户ID列表，以逗号分隔
+        - time: 探索所需的时间（单位：分钟）
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                UPDATE xiuxian_mijing_info
+                SET current_count = %s, l_user_id = %s, time = %s, rank = %s, name = %s
+                WHERE name = %s;
+            """, (current_count, l_user_id, time, rank, xin_name, name))
+            self.conn.commit()
+
     def update_mijing_info(self, name, rank, current_count, l_user_id, time):
         """
         更新秘境信息。
@@ -2278,9 +2297,9 @@ class XiuxianDateManage:
         with self.conn.cursor() as cur:
             cur.execute("""
                 UPDATE xiuxian_mijing_info
-                SET current_count = %s, l_user_id = %s, time = %s
-                WHERE name = %s AND rank = %s;
-            """, (current_count, l_user_id, time, name, rank))
+                SET current_count = %s, l_user_id = %s, time = %s, rank = %s
+                WHERE name = %s;
+            """, (current_count, l_user_id, time, rank, name))
             self.conn.commit()
 
     def get_mijing_info(self):
@@ -2298,40 +2317,6 @@ class XiuxianDateManage:
             """)
             row = cur.fetchone()
             return row  # 直接返回查询结果
-
-    def get_rift_info(self, user_id):
-        """
-        获取用户的秘境探索信息。
-
-        参数:
-        - user_id: 用户ID
-
-        返回:
-        - 如果找到对应的记录，则返回该记录；否则返回None。
-        """
-        with self.conn.cursor() as cur:
-            cur.execute("""
-                SELECT * FROM xiuxian_mijing_info WHERE l_user_id @> ARRAY[%s];
-            """, (user_id,))
-            row = cur.fetchone()
-            return row
-
-    def insert_rift_info(self, user_id, name, time, rank):
-        """
-        插入一条新的用户秘境探索记录。
-
-        参数:
-        - user_id: 用户ID
-        - name: 秘境名称
-        - time: 探索所需时间（分钟）
-        - rank: 秘境等级
-        """
-        with self.conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO xiuxian_mijing_info (l_user_id, name, time, rank)
-                VALUES (%s, %s, %s, %s);
-            """, (user_id, name, time, rank))
-        self.conn.commit()
 
     def get_random_config_id(self):
         """
