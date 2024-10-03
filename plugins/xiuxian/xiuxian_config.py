@@ -99,8 +99,11 @@ class XiuConfig:
         self.sql_xiuxian_group_config = [
             "group_id", "enabled_xiuxian", "enabled_paimai", "enabled_boss", "enabled_mijing"
         ]
-        self.sql_user_auctions = [
-            # `sql_user_auctions` 的字段列表
+        self.sql_xiuxian_bank_info = [
+            "user_id", "savestone", "savetime", "banklevel"
+        ]
+        self.sql_xiuxian_bank_levels = [
+            "level", "save_max", "level_up_cost", "interest_rate", "level_name"
         ]
         # 上面是数据库校验,别动
         self.level = Items().convert_rank('江湖好手')[1]  # 境界列表，别动
