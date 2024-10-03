@@ -35,9 +35,7 @@ from ..xiuxian_utils.utils import (
     CommandObjectID,
     Txt2Img, send_msg_handler
 )
-# from ..xiuxian_utils.item_json import Items
 from ..xiuxian_utils.qimingr import read_random_entry_from_file
-
 
 items = Items()
 
@@ -49,8 +47,8 @@ xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
 run_xiuxian = on_fullmatch("我要修仙", priority=8, permission=GROUP, block=True)
 restart = on_fullmatch("洗髓伐骨", permission=GROUP, priority=7, block=True)
-sign_in = on_fullmatch("修仙签到", priority=13, permission=GROUP, block=True)
-rank = on_command("排行榜", aliases={"排行榜列表", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜", "轮回排行榜"},
+rank = on_command("排行榜",
+                  aliases={"排行榜列表", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜", "轮回排行榜"},
                   priority=7, permission=GROUP, block=True)
 remaname = on_command("改名", priority=5, permission=GROUP, block=True)
 level_up = on_fullmatch("突破", priority=6, permission=GROUP, block=True)
@@ -61,9 +59,8 @@ give_stone = on_command("送灵石", priority=5, permission=GROUP, block=True)
 steal_stone = on_command("偷灵石", aliases={"飞龙探云手"}, priority=4, permission=GROUP, block=True)
 rob_stone = on_command("抢劫", aliases={"抢灵石", "拿来吧你"}, priority=5, permission=GROUP, block=True)
 restate = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
-
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
-user_stamina = on_command('我的体力', aliases={'体力'}, priority=5, permission=GROUP, block=True)
+
 
 @run_xiuxian.handle(parameterless=[Cooldown(at_sender=False)])
 async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
@@ -79,7 +76,7 @@ async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
     is_new_user, msg = sql_message.create_user(
         user_id, root, root_type, int(power), create_time, user_name
     )
-    sql_message.update_user_gender(user_id,user_sex)  # 更新用户性别
+    sql_message.update_user_gender(user_id, user_sex)  # 更新用户性别
     try:
         if is_new_user:
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
@@ -91,23 +88,6 @@ async def run_xiuxian_(bot: Bot, event: GroupMessageEvent):
     except ActionFailed:
         await run_xiuxian.finish("修仙界网络堵塞，发送失败！", reply_message=True)
 
-
-@sign_in.handle(parameterless=[Cooldown(at_sender=False)])
-async def sign_in_(bot: Bot, event: GroupMessageEvent):
-    """修仙签到"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await sign_in.finish()
-    user_id = user_info['user_id']
-    result = sql_message.get_sign(user_id)
-    msg = result
-    try:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await sign_in.finish()
-    except ActionFailed:
-        await sign_in.finish("修仙界网络堵塞，发送失败!", reply_message=True)
 
 @restart.handle(parameterless=[Cooldown(at_sender=False)])
 async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
@@ -581,21 +561,6 @@ async def user_leveluprate_(bot: Bot, event: GroupMessageEvent):
     await user_leveluprate.finish()
 
 
-@user_stamina.handle(parameterless=[Cooldown(at_sender=False)])
-async def user_stamina_(bot: Bot, event: GroupMessageEvent):
-    """我的体力信息"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-
-    if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await user_stamina.finish()
-
-    msg = f"{user_info['user_name']} 当前体力：{user_info['user_stamina']}"
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    await user_stamina.finish()
-
-
 @give_stone.handle(parameterless=[Cooldown(at_sender=False)])
 async def give_stone_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     """送灵石"""
@@ -812,12 +777,12 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             user2_maxA = user_2['maxA'] * 10000
 
             # 应用破限增幅
-            atk_with_poxian1 = (user_info['atk']+user1_maxA) * (1 + total_poxian_percent1 / 100)
-            atk_with_poxian2 = (user_2['atk']+user2_maxA) * (1 + total_poxian_percent2 / 100)
-            hp_with_poxian1 = (user_info['hp']+user1_maxH) * (1 + total_poxian_percent1 / 100)
-            hp_with_poxian2 = (user_2['hp']+user2_maxH) * (1 + total_poxian_percent2 / 100)
-            mp_with_poxian1 = (user_info['mp']+user1_maxM) * (1 + total_poxian_percent1 / 100)
-            mp_with_poxian2 = (user_2['mp']+user2_maxM) * (1 + total_poxian_percent2 / 100)
+            atk_with_poxian1 = (user_info['atk'] + user1_maxA) * (1 + total_poxian_percent1 / 100)
+            atk_with_poxian2 = (user_2['atk'] + user2_maxA) * (1 + total_poxian_percent2 / 100)
+            hp_with_poxian1 = (user_info['hp'] + user1_maxH) * (1 + total_poxian_percent1 / 100)
+            hp_with_poxian2 = (user_2['hp'] + user2_maxH) * (1 + total_poxian_percent2 / 100)
+            mp_with_poxian1 = (user_info['mp'] + user1_maxM) * (1 + total_poxian_percent1 / 100)
+            mp_with_poxian2 = (user_2['mp'] + user2_maxM) * (1 + total_poxian_percent2 / 100)
 
             # 设置玩家数据
             player1['user_id'] = user_info['user_id']
@@ -943,6 +908,3 @@ async def restate_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
         msg = f"所有用户信息重置成功！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await restate.finish()
-
-
-
