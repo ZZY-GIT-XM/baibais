@@ -1,42 +1,25 @@
 import re
-import json
-import base64
-import random
-import asyncio
-from datetime import datetime
-from decimal import Decimal
 
-from nonebot.typing import T_State
-from ..xiuxian_utils.lay_out import assign_bot, Cooldown, assign_bot_group
-from nonebot import require, on_command, on_fullmatch
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
-    GROUP,
     Message,
-    GROUP_ADMIN,
-    GROUP_OWNER,
     GroupMessageEvent,
-    MessageSegment,
     ActionFailed
 )
-from nonebot.permission import SUPERUSER
-from nonebot.log import logger
 from nonebot.params import CommandArg
-from ..xiuxian_utils.data_source import jsondata
-from ..xiuxian_utils.xiuxian2_handle import (
-    XiuxianDateManage, XiuxianJsonDate, OtherSet,
-    UserBuffDate, XIUXIAN_IMPART_BUFF, leave_harm_time
-)
-from ..xiuxian_config import XiuConfig
+from nonebot.permission import SUPERUSER
+
 from ..xiuxian_utils.item_database_handler import Items
+from ..xiuxian_utils.lay_out import assign_bot, Cooldown, assign_bot_group
 from ..xiuxian_utils.utils import (
-    check_user,
-    get_msg_pic, number_to,
-    CommandObjectID,
-    Txt2Img, send_msg_handler
+    number_to
 )
+from ..xiuxian_utils.xiuxian2_handle import (
+    XiuxianDateManage, XIUXIAN_IMPART_BUFF
+)
+
 # from ..xiuxian_utils.item_json import Items
-from ..xiuxian_utils.qimingr import read_random_entry_from_file
 
 
 items = Items()
@@ -47,12 +30,10 @@ cache_level_help = {}
 sql_message = XiuxianDateManage()  # sql类
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
-
 admin_add_lingshi = on_command("神秘力量", permission=SUPERUSER, priority=10, block=True)
 admin_add_jiejing = on_command("天外力量", permission=SUPERUSER, priority=10, block=True)
 admin_update_linggen = on_command("轮回力量", permission=SUPERUSER, priority=10, block=True)
 admin_add_wupin = on_command('创造力量', permission=SUPERUSER, priority=15, block=True)
-
 
 
 @admin_add_lingshi.handle(parameterless=[Cooldown(at_sender=False)])
