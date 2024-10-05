@@ -58,7 +58,6 @@ level_up_zj = on_command("直接突破", aliases={"破"}, priority=7, permission
 give_stone = on_command("送灵石", priority=5, permission=GROUP, block=True)
 steal_stone = on_command("偷灵石", aliases={"飞龙探云手"}, priority=4, permission=GROUP, block=True)
 rob_stone = on_command("抢劫", aliases={"抢灵石", "拿来吧你"}, priority=5, permission=GROUP, block=True)
-restate = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
 user_leveluprate = on_command('我的突破概率', aliases={'突破概率'}, priority=5, permission=GROUP, block=True)
 
 
@@ -874,37 +873,3 @@ async def rob_stone_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await rob_stone.finish()
 
 
-@restate.handle(parameterless=[Cooldown(at_sender=False)])
-async def restate_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """重置用户状态。
-    单用户：重置状态 [用户名]
-    多用户：重置状态"""
-
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await restate.finish()
-
-    # 从命令参数中提取名称
-    msg = args.extract_plain_text().strip()
-    input_name = re.findall(r"\D+", msg)[0] if msg else ""
-
-    if input_name:
-        # 根据名称匹配用户
-        give_user = sql_message.get_user_info_with_name(input_name)
-        if give_user:
-            give_qq = give_user['user_id']
-            sql_message.restate(give_qq)
-            msg = f"用户 {input_name} 信息重置成功！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await restate.finish()
-        else:
-            msg = f"未找到用户 {input_name}！"
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-            await restate.finish()
-    else:
-        sql_message.restate()
-        msg = f"所有用户信息重置成功！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await restate.finish()
