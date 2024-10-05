@@ -593,8 +593,9 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
     impart_data = xiuxian_impart.get_user_info_with_id(player1['user_id'])
     impart_hp_per = impart_data['impart_hp_per'] if impart_data is not None else 0
     impart_mp_per = impart_data['impart_mp_per'] if impart_data is not None else 0
-    user1_hp_buff = user1_hp_buff + impart_hp_per
-    user1_mp_buff = user1_mp_buff + impart_mp_per
+
+    user1_hp_buff = Decimal(user1_hp_buff) + Decimal(impart_hp_per)
+    user1_mp_buff = Decimal(user1_mp_buff) + Decimal(impart_mp_per)
     global random_break
     global random_xx
     global random_hx
@@ -1062,6 +1063,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
 
     get_stone = 0
     sh = 0
+    boss['气血'] = boss['hp']
     qx = boss['气血']
     boss_now_stone = boss['stone']
     boss_js = boss['减伤']
@@ -1375,8 +1377,8 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                     msg2 = "{}：紫玄掌！！紫星河！！！并且发生了会心一击，造成了{}伤害\n"
                 else:
                     msg2 = "{}：紫玄掌！！紫星河！！！造成了{}伤害\n"
-                play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], boss_sh * (1 + boss_zs) * 5 + (player1['气血'] * 0.3)), bot_id))
-                player1['气血'] = player1['气血'] - (((boss_sh * (1 + boss_zs) * (player1_js - random_def) * 5) + (player1['气血'] * 0.3) ))
+                play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], Decimal(boss_sh) * (1 + Decimal(boss_zs)) * 5 + (Decimal(player1['气血']) * Decimal(0.3))), bot_id))
+                player1['气血'] = player1['气血'] - ((Decimal(boss_sh * (1 + Decimal(boss_zs)) * (Decimal(player1_js) - Decimal(random_def)) * 5) + (Decimal(player1['气血']) * Decimal(0.3)) ))
                 play_list.append(get_boss_dict(boss, qx, f"{player1['道号']}剩余血量{player1['气血']}", bot_id))
             
             elif 8<= boss_sub <= 16:
@@ -1386,8 +1388,8 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                      msg2 = "{}：子龙朱雀！！！穿透了对方的护甲！并且发生了会心一击，造成了{}伤害\n"
                  else:
                      msg2 = "{}：子龙朱雀！！！穿透了对方的护甲！造成了{}伤害\n"
-                 play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], boss_sh * (1 + boss_zs) * (player1_js - random_def + 0.5)  * 3), bot_id))
-                 player1['气血'] = player1['气血'] - (((boss_sh * (1 + boss_zs) * (player1_js - random_def + 0.5) * 3)))
+                 play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], Decimal(boss_sh) * (1 + Decimal(boss_zs)) * (Decimal(player1_js) - Decimal(random_def) + Decimal(0.5))  * 3), bot_id))
+                 player1['气血'] = player1['气血'] - ((Decimal(boss_sh * (1 + boss_zs) * (player1_js - random_def + 0.5) * 3)))
                  play_list.append(get_boss_dict(boss, qx, f"{player1['道号']}剩余血量{player1['气血']}", bot_id))
                 
             else:
@@ -1398,7 +1400,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                 else:
                     msg2 = "{}发起攻击，造成了{}伤害\n"
                 play_list.append(get_boss_dict(boss, qx, msg2.format(boss['name'], boss_sh * (1 + boss_zs)), bot_id))
-                player1['气血'] = player1['气血'] - (boss_sh * (1 + boss_zs) * (player1_js - random_def))
+                player1['气血'] = player1['气血'] - Decimal(boss_sh * (1 + boss_zs) * (player1_js - random_def))
                 play_list.append(get_boss_dict(boss, qx, f"{player1['道号']}剩余血量{player1['气血']}", bot_id))
 
         else:
@@ -1412,6 +1414,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
             #get_stone = int(boss_now_stone * (sh * boss_js / qx))
             #boss['stone'] = boss_now_stone - get_stone
 
+            boss['总血量'] = boss['max_hp']
             zx = boss['总血量']
             
             get_stone = int(boss_now_stone * ((qx - boss['气血']) / zx ) * (1 + stone_buff))
@@ -1523,6 +1526,7 @@ def get_turnatk(player, buff=0, user_battle_buff_date={}): #辅修功法14
 
 def get_turnatk_boss(player, buff=0, user_battle_buff_date={}): #boss伤害计算公式
     isCrit = False
+    player['攻击'] = player['attack']
     turnatk = int(round(random.uniform(0.95, 1.05), 2) 
                   * (player['攻击'] *  (buff  + 1)))  # 攻击波动,buff是攻击buff
     if random.randint(0, 100) <= player['会心'] + boss_hx * 100:  # 会心判断
