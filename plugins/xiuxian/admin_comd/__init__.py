@@ -13,7 +13,7 @@ from nonebot.permission import SUPERUSER
 from ..xiuxian_utils.item_database_handler import Items
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown, assign_bot_group
 from ..xiuxian_utils.utils import (
-    number_to
+    number_to, check_user
 )
 from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, XIUXIAN_IMPART_BUFF
@@ -34,6 +34,42 @@ admin_add_lingshi = on_command("神秘力量", permission=SUPERUSER, priority=10
 admin_add_jiejing = on_command("天外力量", permission=SUPERUSER, priority=10, block=True)
 admin_update_linggen = on_command("轮回力量", permission=SUPERUSER, priority=10, block=True)
 admin_add_wupin = on_command('创造力量', permission=SUPERUSER, priority=15, block=True)
+admin_restate_user = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
+
+
+@admin_restate_user.handle(parameterless=[Cooldown(at_sender=False)])
+async def admin_restate_user_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """重置用户状态。
+    单用户：重置状态 [用户名]
+    多用户：重置状态"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_restate_user.finish()
+
+    # 从命令参数中提取名称
+    msg = args.extract_plain_text().strip()
+    input_name = re.findall(r"\D+", msg)[0] if msg else ""
+
+    if input_name:
+        # 根据名称匹配用户
+        give_user = sql_message.get_user_info_with_name(input_name)
+        if give_user:
+            give_qq = give_user['user_id']
+            sql_message.restate(give_qq)
+            msg = f"用户 {input_name} 信息重置成功！"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await admin_restate_user.finish()
+        else:
+            msg = f"未找到用户 {input_name}！"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await admin_restate_user.finish()
+    else:
+        sql_message.restate()
+        msg = f"所有用户信息重置成功！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_restate_user.finish()
 
 
 @admin_add_lingshi.handle(parameterless=[Cooldown(at_sender=False)])
