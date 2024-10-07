@@ -37,7 +37,6 @@ xiuxian_impart = XIUXIAN_IMPART_BUFF()
 BLESSEDSPOTCOST = 3500000
 two_exp_limit = 5  # 默认双修次数上限，修仙之人一天5次也不奇怪（
 
-
 buffInfo = on_fullmatch("我的功法", priority=25, permission=GROUP, block=True)
 out_closing = on_command("出关", aliases={"灵石出关"}, priority=5, permission=GROUP, block=True)
 in_closing = on_fullmatch("闭关", priority=5, permission=GROUP, block=True)
@@ -57,18 +56,18 @@ my_exp_num = on_fullmatch("我的双修次数", priority=9, permission=GROUP, bl
 def generate_random_blessed_spot_name():
     """生成随机洞天福地名称"""
     names = ["幻月洞天", "幽影魔域", "九天玄界", "碧落仙源", "幽冥天", "万古冰原", "星河秘境", "云隐仙居",
-"翠影灵谷", "龙翔九天", "紫霄神境", "幽冥神殿", "天罡秘境", "碧落琼楼", "幽冥禁地", "万古药园",
-"星辰幻境", "仙灵福地", "幽冥深渊", "碧落天池", "九天仙境", "幽冥鬼谷", "万古神泉", "星河神域",
-"碧落灵界", "玄冰洞天", "幽冥绝域", "万古仙山", "星河灵域", "碧落瑶台", "幽冥鬼界", "万古灵墟",
-"星辰秘藏", "幽冥古洞", "碧落神渊", "九天云外", "幽冥雾海", "万古剑冢", "幽冥魔宫", "万古龙脉",
-"星辰宝殿", "幽冥鬼域", "碧落天宫", "九天玄霄", "幽冥鬼森", "万古冰魄", "星河秘府", "碧落神宫",
-"幽冥魔渊", "九天琼台", "幽冥炼狱", "万古仙域", "星河洞天", "九天云阙", "幽冥秘境", "万古仙潭",
-"星河幻境", "碧落瑶池", "九天神域", "幽冥魔窟", "万古神木", "星河灵泉", "碧落神坛", "幽冥鬼蜮",
-"九天灵霄", "幽冥古刹", "万古神坛", "碧落仙府", "烈焰火山口", "寒冰极地渊", "风雷谷秘境",
-"蓬莱仙岛域", "昆仑仙境地", "瑶姬天池畔", "幽影迷雾林", "星辰陨落谷", "金丹洞天府", "元婴秘境园",
-"化神天宫阙", "碧澜灵泉源", "幽冥魔域森", "万古仙灵域", "星辰瑶池境", "天罡神雷峰", "碧落云隐境",
-"幽冥影月潭", "万古冰魄谷", "星河轮回道", "碧落神霄殿", "幽冥夜魔岭", "万古剑意山", "星河幻梦泽",
-"碧落仙境源", "幽冥鬼雾林", "九天雷火域", "苍穹灵霄阁", "碧落瑶光池"]
+             "翠影灵谷", "龙翔九天", "紫霄神境", "幽冥神殿", "天罡秘境", "碧落琼楼", "幽冥禁地", "万古药园",
+             "星辰幻境", "仙灵福地", "幽冥深渊", "碧落天池", "九天仙境", "幽冥鬼谷", "万古神泉", "星河神域",
+             "碧落灵界", "玄冰洞天", "幽冥绝域", "万古仙山", "星河灵域", "碧落瑶台", "幽冥鬼界", "万古灵墟",
+             "星辰秘藏", "幽冥古洞", "碧落神渊", "九天云外", "幽冥雾海", "万古剑冢", "幽冥魔宫", "万古龙脉",
+             "星辰宝殿", "幽冥鬼域", "碧落天宫", "九天玄霄", "幽冥鬼森", "万古冰魄", "星河秘府", "碧落神宫",
+             "幽冥魔渊", "九天琼台", "幽冥炼狱", "万古仙域", "星河洞天", "九天云阙", "幽冥秘境", "万古仙潭",
+             "星河幻境", "碧落瑶池", "九天神域", "幽冥魔窟", "万古神木", "星河灵泉", "碧落神坛", "幽冥鬼蜮",
+             "九天灵霄", "幽冥古刹", "万古神坛", "碧落仙府", "烈焰火山口", "寒冰极地渊", "风雷谷秘境",
+             "蓬莱仙岛域", "昆仑仙境地", "瑶姬天池畔", "幽影迷雾林", "星辰陨落谷", "金丹洞天府", "元婴秘境园",
+             "化神天宫阙", "碧澜灵泉源", "幽冥魔域森", "万古仙灵域", "星辰瑶池境", "天罡神雷峰", "碧落云隐境",
+             "幽冥影月潭", "万古冰魄谷", "星河轮回道", "碧落神霄殿", "幽冥夜魔岭", "万古剑意山", "星河幻梦泽",
+             "碧落仙境源", "幽冥鬼雾林", "九天雷火域", "苍穹灵霄阁", "碧落瑶光池"]
     return random.choice(names)
 
 
@@ -189,7 +188,7 @@ async def ling_tian_up_(bot: Bot, event: GroupMessageEvent):
             base_cost = LINGTIANCONFIG[str(now_num)]['level_up_cost']
         else:
             base_cost = LINGTIANCONFIG[str(len(LINGTIANCONFIG))]['level_up_cost'] * (
-                        2 ** (now_num - len(LINGTIANCONFIG)))
+                    2 ** (now_num - len(LINGTIANCONFIG)))
 
         additional_cost = user_poxian * 5000000  # 每次破限增加5000000灵石
         cost = base_cost + additional_cost
@@ -222,8 +221,8 @@ async def blessed_spot_rename_(bot: Bot, event: GroupMessageEvent):
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await blessed_spot_rename.finish()
 
-    new_name = generate_random_blessed_spot_name()# 生成随机名称
-    sql_message.update_user_blessed_spot_name(user_id, new_name)# 更新数据库中的洞天福地名称
+    new_name = generate_random_blessed_spot_name()  # 生成随机名称
+    sql_message.update_user_blessed_spot_name(user_id, new_name)  # 更新数据库中的洞天福地名称
     msg = f"{user_info['user_name']} 道友的洞天福地成功改名为：{new_name}"
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await blessed_spot_rename.finish()
@@ -310,8 +309,8 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         atk_with_poxian1 = (user1['atk'] + user1_maxA) * (1 + total_poxian_percent1 / 100)
         atk_with_poxian2 = (user2['atk'] + user2_maxA) * (1 + total_poxian_percent2 / 100)
         # 应用破限增幅到气血
-        hp_with_poxian1 = (user1['hp'] + user1_maxH)* (1 + total_poxian_percent1 / 100)
-        hp_with_poxian2 = (user2['hp'] + user2_maxH)* (1 + total_poxian_percent2 / 100)
+        hp_with_poxian1 = (user1['hp'] + user1_maxH) * (1 + total_poxian_percent1 / 100)
+        hp_with_poxian2 = (user2['hp'] + user2_maxH) * (1 + total_poxian_percent2 / 100)
         # 应用破限增幅到真元
         mp_with_poxian1 = (user1['mp'] + user1_maxM) * (1 + total_poxian_percent1 / 100)
         mp_with_poxian2 = (user2['mp'] + user2_maxM) * (1 + total_poxian_percent2 / 100)
@@ -321,7 +320,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         user1_main_data = UserBuffDate(user_id).get_user_main_buff_data()  # 玩家1功法会心
 
         if user1_main_data is not None:  # 玩家1功法会心
-            main_crit_buff = user1_main_data['crit_buff'] * (1 + total_poxian_percent1 / 100)
+            main_crit_buff = Decimal(user1_main_data['crit_buff']) * (1 + total_poxian_percent1 / 100)
         else:
             main_crit_buff = 0
 
@@ -336,7 +335,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             armor_crit_buff = Decimal(str(armor_crit_buff))
             main_crit_buff = Decimal(str(main_crit_buff))
 
-            player1['会心'] = int(((user1_weapon_data['crit_buff'] * (1 + total_poxian_percent1 / 100)) + (
+            player1['会心'] = int(((Decimal(user1_weapon_data['crit_buff']) * (1 + total_poxian_percent1 / 100)) + (
                 armor_crit_buff) + (main_crit_buff)) * 100)
         else:
             player1['会心'] = (armor_crit_buff + main_crit_buff) * 100
@@ -346,17 +345,17 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         user2_main_data = UserBuffDate(user_id).get_user_main_buff_data()  # 玩家2功法会心
 
         if user2_main_data is not None:  # 玩家2功法会心
-            main_crit_buff2 = user2_main_data['crit_buff'] * (1 + total_poxian_percent2 / 100)
+            main_crit_buff2 = Decimal(user2_main_data['crit_buff']) * (1 + total_poxian_percent2 / 100)
         else:
             main_crit_buff2 = 0
 
         if user2_armor_crit_buff is not None:  # 玩家2防具会心
-            armor_crit_buff2 = user2_armor_crit_buff['crit_buff'] * (1 + total_poxian_percent2 / 100)
+            armor_crit_buff2 = Decimal(user2_armor_crit_buff['crit_buff']) * (1 + total_poxian_percent2 / 100)
         else:
             armor_crit_buff2 = 0
 
         if user2_weapon_data is not None:
-            player2['会心'] = int(((user2_weapon_data['crit_buff'] * (1 + total_poxian_percent2 / 100)) + (
+            player2['会心'] = int(((Decimal(user2_weapon_data['crit_buff']) * (1 + total_poxian_percent2 / 100)) + (
                 armor_crit_buff2) + (main_crit_buff2)) * 100)
         else:
             player2['会心'] = (armor_crit_buff2 + main_crit_buff2) * 100
@@ -376,8 +375,14 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
         player2['exp'] = user2['exp']
 
         result, victor = Player_fight(player1, player2, 1, bot.self_id)
-        await send_msg_handler(bot, event, result)
-        msg = f"获胜的是{victor}"
+        # 将 result 转换为字符串
+        if isinstance(result, list):
+            result_str = "『战斗详情』\n"
+            result_str += '\n'.join(node['data']['content'] for node in result if node['data']['content'])
+        else:
+            result_str = result
+        # await send_msg_handler(bot, event, result)
+        msg = f"{result_str}\n获胜的是{victor}"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await qc.finish()
     else:
@@ -618,6 +623,7 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await stone_exp.finish()
 
+
 @in_closing.handle(parameterless=[Cooldown(at_sender=False)])
 async def in_closing_(bot: Bot, event: GroupMessageEvent):
     """闭关"""
@@ -640,7 +646,6 @@ async def in_closing_(bot: Bot, event: GroupMessageEvent):
     else:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await in_closing.finish()
-
 
 
 @out_closing.handle(parameterless=[Cooldown(at_sender=False)])
@@ -680,7 +685,7 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
     mp_speed = 50
 
     max_exp = (
-        int(OtherSet().set_closing_type(level)) * XiuConfig().closing_exp_upper_limit
+            int(OtherSet().set_closing_type(level)) * XiuConfig().closing_exp_upper_limit
     )  # 获取下个境界需要的修为 * 1.5为闭关上限
     user_get_exp_max = int(max_exp) - use_exp
 
@@ -892,8 +897,9 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
         sql_message.update_exp(user_id, exp)  # 更新用户经验值
         sql_message.in_closing(user_id, 0)  # 设置用户状态为 "结束修炼"
         # 回复消息 "@用户 修炼的收益"
-        result_msg, result_hp_mp = OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
-                                                         int(exp * mp_speed))
+        result_msg, result_hp_mp = OtherSet().send_hp_mp(user_id, int(Decimal(exp) * Decimal(hp_speed) * (
+                    1 + Decimal(mainbuffclors))),
+                                                         int(Decimal(exp) * Decimal(mp_speed)))
         sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
         msg = f"修炼结束，本次修炼增加修为：{exp} {result_msg[0]}{result_msg[1]}"
 
@@ -904,7 +910,7 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
 
 @mind_state.handle(parameterless=[Cooldown(at_sender=False)])
 async def mind_state_(bot: Bot, event: GroupMessageEvent):
-    """我的状态信息"""
+    """我的状态 信息"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     isUser, user_msg, msg = check_user(event)
     if not isUser:
@@ -963,7 +969,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     else:
         def_buff = 0
 
-    user_armor_data = user_buff_data.get_user_armor_buff_data()
+    # user_armor_data = user_buff_data.get_user_armor_buff_data()
 
     if user_weapon_data is not None:
         weapon_def = user_weapon_data['def_buff'] * 100  # 我的状态武器减伤
@@ -1001,8 +1007,8 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     weapon_critatk = weapon_critatk_data['critatk'] if weapon_critatk_data is not None else 0  # 我的状态武器会心伤害
     user_main_critatk = UserBuffDate(user_id).get_user_main_buff_data()  # 我的状态功法会心伤害
     main_critatk = user_main_critatk['critatk'] if user_main_critatk is not None else 0  # 我的状态功法会心伤害
-    leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
-    number = user_main_critatk["number"] if user_main_critatk is not None else 0
+    # leveluprate = int(user_msg['level_up_rate'])  # 用户失败次数加成
+    # number = user_main_critatk["number"] if user_main_critatk is not None else 0
 
     level_rate = Decimal(str(level_rate))
     user_maxR = Decimal(str(user_maxR))
@@ -1016,15 +1022,20 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     impart_burst_per = Decimal(str(impart_burst_per))
     weapon_critatk = Decimal(str(weapon_critatk))
     main_critatk = Decimal(str(main_critatk))
-
+    main_hp_buff = Decimal(str(main_hp_buff))
+    impart_hp_per = Decimal(str(impart_hp_per))
+    main_mp_buff = Decimal(str(main_mp_buff))
+    impart_mp_per = Decimal(str(impart_mp_per))
+    user_hp = Decimal(user_msg['hp'])
+    user_exp = Decimal(user_msg['exp'])
     msg = f"""      
 道号：{user_msg['user_name']}               
-气血:{number_to((user_msg['hp'] + user_maxH)* (1 + total_poxian_percent / 100))}/{number_to(int(((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per) + user_maxH) * (1 + total_poxian_percent / 100)))}({(((user_msg['hp'] + user_maxH)/ (((user_msg['exp'] / 2) * (1 + main_hp_buff + impart_hp_per))+user_maxH))) * 100:.2f}%)
-真元:{number_to((user_msg['mp'] + user_maxM) * (1 + total_poxian_percent / 100))}/{number_to((user_msg['exp']+user_maxM) * (1 + total_poxian_percent / 100))}({(((user_msg['mp']+user_maxM) / (user_msg['exp']+user_maxM)) * 100):.2f}%)
-攻击:{number_to((user_msg['atk'] + user_maxA)* (1 + total_poxian_percent / 100))}
+气血:{number_to(((user_hp * (1 + main_hp_buff + impart_hp_per)) + user_maxH) * (1 + total_poxian_percent / 100))}/{number_to(int(((user_exp / 2) * (1 + main_hp_buff + impart_hp_per) + user_maxH) * (1 + total_poxian_percent / 100)))}({((((user_hp * (1 + main_hp_buff + impart_hp_per)) + user_maxH) / (((user_exp / 2) * (1 + main_hp_buff + impart_hp_per)) + user_maxH))) * 100:.2f}%)
+真元:{number_to(((user_msg['mp'] * (1 + main_mp_buff + impart_mp_per)) + user_maxM) * (1 + total_poxian_percent / 100))}/{number_to(((user_msg['exp'] * (1 + main_mp_buff + impart_mp_per)) + user_maxM) * (1 + total_poxian_percent / 100))}({((((user_msg['mp'] * (1 + main_mp_buff + impart_mp_per)) + user_maxM) / ((user_msg['exp'] * (1 + main_mp_buff + impart_mp_per)) + user_maxM)) * 100):.2f}%)
+攻击:{number_to((user_msg['atk'] + user_maxA) * (1 + total_poxian_percent / 100))}
 破限增幅: {total_poxian_percent}%
 攻击修炼:{user_msg['atkpractice']}级(提升攻击力{user_msg['atkpractice'] * 4}%)
-修炼效率:{int((((level_rate+user_maxR) * realm_rate) * (1 + main_buff_rate_buff)) * 100 * (1 + total_poxian_percent / 100))}%
+修炼效率:{int((((level_rate + user_maxR) * realm_rate) * (1 + main_buff_rate_buff)) * 100 * (1 + total_poxian_percent / 100))}%
 会心:{round((crit_buff + impart_know_per * 100 + armor_crit_buff + main_crit_buff) * (1 + total_poxian_percent / 100), 1)}%
 减伤率:{def_buff + weapon_def + main_def}%
 boss战增益:{int(boss_atk * 100 * (1 + total_poxian_percent / 100))}%

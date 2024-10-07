@@ -317,7 +317,7 @@ async def level_up_zj_(bot: Bot, event: GroupMessageEvent):
         update_rate = 1 if int(level_rate * XiuConfig().level_up_probability) <= 1 else int(
             level_rate * XiuConfig().level_up_probability)  # 失败增加突破几率
         sql_message.update_levelrate(user_id, leveluprate + update_rate)
-        msg = f"道友突破失败,境界受损,修为减少{now_exp}，下次突破成功率增加{update_rate}%，道友不要放弃！"
+        msg = f"道友突破失败,境界受损,修为减少{int(now_exp)}，下次突破成功率增加{update_rate}%，道友不要放弃！"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await level_up_zj.finish()
 

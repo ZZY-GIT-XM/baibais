@@ -512,24 +512,33 @@ def number_to(num):
     def strofsize(num, level):
         if level >= 29:
             return num, level
-        elif num >= 10000:
+        elif abs(num) >= 10000:  # 使用abs()来处理负数
             num /= 10000
             level += 1
             return strofsize(num, level)
         else:
             return num, level
-        
-    units = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极', 
-             '恒河沙', '阿僧祗', '那由他', '不思议', '无量大', '万无量大', '亿无量大', 
-             '兆无量大', '京无量大', '垓无量大', '秭无量大', '穰无量大', '沟无量大', 
+
+    units = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极',
+             '恒河沙', '阿僧祗', '那由他', '不思议', '无量大', '万无量大', '亿无量大',
+             '兆无量大', '京无量大', '垓无量大', '秭无量大', '穰无量大', '沟无量大',
              '涧无量大', '正无量大', '载无量大', '极无量大']
+
     # 处理科学计数法
     if "e" in str(num):
         num = float(f"{num:.1f}")
+
+    # 获取符号
+    sign = '-' if num < 0 else ''
+    num = abs(num)  # 取绝对值进行计算
+
     num, level = strofsize(num, 0)
     if level >= len(units):
         level = len(units) - 1
-    return f"{round(num, 1)}{units[level]}"
+
+    # 在结果前加上符号
+    return f"{sign}{round(num, 1)}{units[level]}"
+
 
 async def pic_msg_format(msg, event):
     user_name = (
