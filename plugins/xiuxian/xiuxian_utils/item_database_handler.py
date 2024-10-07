@@ -351,21 +351,21 @@ class Items:
 #     print("self.items 内容:", items.items)
 
 
-if __name__ == "__main__":
-    # 创建 Items 实例
-    items = Items()
-    # 加载所有数据
-    items.load_data()
-    # 输出 self.items 的内容以查看是否正确加载了数据
-    # print("self.items 内容:", items.items)
-    # 测试已知存在的物品ID
-    test_item_id = 9201  # 假设数据库中有物品ID为1的数据
-    item_info = items.get_data_by_item_id(test_item_id)
-    # 打印结果
-    if item_info:
-        print(f"物品ID {test_item_id} 的信息: {item_info}")
-    else:
-        print(f"物品ID {test_item_id} 的信息不存在。")
+# if __name__ == "__main__":
+#     # 创建 Items 实例
+#     items = Items()
+#     # 加载所有数据
+#     items.load_data()
+#     # 输出 self.items 的内容以查看是否正确加载了数据
+#     # print("self.items 内容:", items.items)
+#     # 测试已知存在的物品ID
+#     test_item_id = 9201  # 假设数据库中有物品ID为1的数据
+#     item_info = items.get_data_by_item_id(test_item_id)
+#     # 打印结果
+#     if item_info:
+#         print(f"物品ID {test_item_id} 的信息: {item_info}")
+#     else:
+#         print(f"物品ID {test_item_id} 的信息不存在。")
 
 # # 测试使用：
 # if __name__ == "__main__":
@@ -378,15 +378,15 @@ if __name__ == "__main__":
 #     yaocai_id_list = items.get_random_id_list_by_rank_and_item_type(rank_number, ['药材'])
 #     print(f"符合条件的物品ID列表:{yaocai_id_list}\n")
 #
-# # 测试使用：
-# if __name__ == "__main__":
-#     items = Items()
-#     # 获取境界ID
-#     rank_number = items.convert_rank('圣祭境圆满')[0]
-#     # 获取境界列表
-#     rank_list = items.convert_rank('圣祭境圆满')[1]
-#     print(f"圣祭境圆满的等级: {rank_number}")
-#     print(f"境界列表: {rank_list}")
+# 测试使用：
+if __name__ == "__main__":
+    items = Items()
+    # 获取境界ID
+    rank_number = items.convert_rank('铭纹境中期')[0]
+    # 获取境界列表
+    rank_list = items.convert_rank('铭纹境中期')[1]
+    print(f"铭纹境中期的等级: {rank_number}")
+    print(f"境界列表: {rank_list}")
 #
 # # 测试使用：
 # if __name__ == "__main__":

@@ -12,7 +12,7 @@ from ..xiuxian_config import XiuConfig
 from ..xiuxian_sect import config
 from ..xiuxian_utils.data_source import jsondata
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown
-from ..xiuxian_work import count
+from ..bounty_order import user_work_nums
 
 help_xiuxian = on_command("修仙帮助", priority=12, permission=GROUP, block=True)
 help_jingjie = on_fullmatch('境界列表', priority=15, permission=GROUP, block=True)
@@ -29,7 +29,7 @@ help_lunhuijd = on_fullmatch('轮回加点帮助', priority=15, permission=GROUP
 help_jianshi = on_fullmatch("鉴石帮助", priority=7, permission=GROUP, block=True)
 help_mijing = on_fullmatch("秘境帮助", priority=6, permission=GROUP, block=True)
 help_sect = on_fullmatch("宗门帮助", priority=5, permission=GROUP, block=True)
-help_xuanshang = on_fullmatch("悬赏令帮助", priority=10, permission=GROUP, block=True)
+help_xuanshang = on_fullmatch("悬赏令帮助", priority=9, permission=GROUP, block=True)
 
 __help_xiuxian__ = f"""
 修仙帮助详情：
@@ -276,7 +276,7 @@ __help_xuanshang__ = f"""
 悬赏令帮助信息:
 - 指令：
   - 悬赏令: 获取对应实力的悬赏令
-  - 悬赏令刷新: 刷新当前悬赏令，每日免费 {count} 次
+  - 悬赏令刷新: 刷新当前悬赏令，每日免费 {user_work_nums} 次
   - 悬赏令终止: 终止当前悬赏令任务
   - 悬赏令结算: 结算悬赏奖励
   - 悬赏令接取 + 编号：接取对应的悬赏令
@@ -303,93 +303,109 @@ async def send_help_info(bot: Bot, event: GroupMessageEvent, msg: str):
 async def handle_help_xiuxian(bot: Bot, event: GroupMessageEvent):
     """修仙帮助"""
     await send_help_info(bot, event, __help_xiuxian__)
+    await help_xiuxian.finish()
 
 
 @help_jingjie.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_jingjie(bot: Bot, event: GroupMessageEvent):
     """境界列表"""
     await send_help_info(bot, event, __help_jingjie__)
+    await help_jingjie.finish()
 
 
 @help_linggen.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_linggen(bot: Bot, event: GroupMessageEvent):
     """灵根列表"""
     await send_help_info(bot, event, __help_linggen__)
+    await help_linggen.finish()
 
 
 @help_pinjie.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_pinjie(bot: Bot, event: GroupMessageEvent):
     """品阶列表"""
     await send_help_info(bot, event, __help_pinjie__)
+    await help_pinjie.finish()
 
 
 @help_back.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_back(bot: Bot, event: GroupMessageEvent):
     """背包帮助"""
     await send_help_info(bot, event, __help_back__)
+    await help_back.finish()
 
 
 @help_bank.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_bank(bot: Bot, event: GroupMessageEvent):
     """灵庄帮助"""
     await send_help_info(bot, event, __help_bank__)
+    await help_bank.finish()
 
 
 @help_qiyuan.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_qiyuan(bot: Bot, event: GroupMessageEvent):
     """仙途奇缘帮助"""
     await send_help_info(bot, event, __help_qiyuan__)
+    await help_qiyuan.finish()
 
 
 @help_boss.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_boss(bot: Bot, event: GroupMessageEvent):
     """世界Boss帮助信息"""
     await send_help_info(bot, event, __help_boss__)
+    await help_boss.finish()
 
 
 @help_gongfa_lingtian.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_gongfa_lingtian(bot: Bot, event: GroupMessageEvent):
     """功法帮助信息"""
     await send_help_info(bot, event, __help_gongfa_lingtian__)
+    await help_gongfa_lingtian.finish()
 
 
 @help_xushen_chuancheng.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_xushen_chuancheng(bot: Bot, event: GroupMessageEvent):
     """传承帮助信息"""
     await send_help_info(bot, event, __help_xushen_chuancheng__)
+    await help_xushen_chuancheng.finish()
 
 
 @help_lunhuicx.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_lunhuicx(bot: Bot, event: GroupMessageEvent):
     """轮回重修帮助"""
     await send_help_info(bot, event, __help_lunhuicx__)
+    await help_lunhuicx.finish()
 
 
 @help_lunhuijd.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_lunhuijd(bot: Bot, event: GroupMessageEvent):
     """轮回加点帮助"""
     await send_help_info(bot, event, __help_lunhuijd__)
+    await help_lunhuijd.finish()
 
 
 @help_jianshi.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_jianshi(bot: Bot, event: GroupMessageEvent):
     """鉴定灵石帮助"""
     await send_help_info(bot, event, __help_jianshi__)
+    await help_jianshi.finish()
 
 
 @help_mijing.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_mijing(bot: Bot, event: GroupMessageEvent):
     """秘境帮助"""
     await send_help_info(bot, event, __help_mijing__)
+    await help_mijing.finish()
 
 
 @help_sect.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_sect(bot: Bot, event: GroupMessageEvent):
     """宗门帮助"""
     await send_help_info(bot, event, __help_sect__)
+    await help_sect.finish()
 
 
 @help_xuanshang.handle(parameterless=[Cooldown(at_sender=False)])
 async def handle_help_xuanshang(bot: Bot, event: GroupMessageEvent):
     """悬赏令帮助"""
     await send_help_info(bot, event, __help_xuanshang__)
+    await help_xuanshang.finish()

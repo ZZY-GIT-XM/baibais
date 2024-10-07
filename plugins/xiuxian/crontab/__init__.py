@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Dict, Any
 
 from nonebot import require
 from nonebot.log import logger
 
 from .. import XiuConfig
+from ..boss import get_boss_config, createboss, create_boss, get_alive_bosses
 from ..xiuxian_buff import two_exp_cd
 from ..xiuxian_impart_pk import impart_pk, xu_world
 from ..xiuxian_sect import config
@@ -14,7 +14,10 @@ from ..xiuxian_utils.xiuxian2_handle import (
 
 sql_message = XiuxianDateManage()  # sql类
 max_stamina = XiuConfig().max_stamina  # 体力上限
-stamina_recovery_rate = 1  # 体力恢复数值
+stamina_recovery_rate = 1  # 单次方法执行体力恢复数值
+boss_config_kv = get_boss_config()  # 获取 Boss 配置
+boss_config_v_time = boss_config_kv['Boss生成时间参数']  # 获取 Boss 生成时间参数
+boss_config_v_maxnum = boss_config_kv['Boss个数上限']  # 获取 Boss 生成个数上限
 
 reset_day_danyaonum = require("nonebot_plugin_apscheduler").scheduler
 reset_day_qiandao = require("nonebot_plugin_apscheduler").scheduler
@@ -28,6 +31,31 @@ reset_zongmen_tizongzhu = require("nonebot_plugin_apscheduler").scheduler
 reset_tilinum = require("nonebot_plugin_apscheduler").scheduler
 reset_huifu_hp = require("nonebot_plugin_apscheduler").scheduler
 reset_day_mijing = require("nonebot_plugin_apscheduler").scheduler
+reset_min_boss = require("nonebot_plugin_apscheduler").scheduler
+
+
+@reset_min_boss.scheduled_job('interval', minutes=boss_config_v_time['minutes'])
+async def generate_world_boss():
+    """定时生成世界Boss"""
+    # 获取当前所有Boss信息
+    current_bosses = get_alive_bosses()
+
+    # 检查当前Boss数量是否达到上限
+    if len(current_bosses) >= boss_config_v_maxnum:
+        logger.opt(colors=True).info(f"<yellow>当前世界Boss数量已达上限，无法生成新的Boss</yellow>")
+        return
+
+    # 生成新的世界Boss信息
+    new_boss = createboss()
+    if new_boss:
+        # 更新数据库中的Boss信息
+        create_boss(new_boss)
+
+        # 构建消息
+        msg = f'''新的世界Boss生成成功: {new_boss['jj']} Boss:{new_boss['name']},总血量: {new_boss['max_hp']},攻击力: {new_boss['attack']},携带灵石: {new_boss['stone']}'''
+        logger.opt(colors=True).info(f"<green>{msg}</green>")
+    else:
+        logger.opt(colors=True).error(f"<red>生成世界Boss失败</red>")
 
 
 @reset_day_mijing.scheduled_job("cron", hour=8, minute=0)

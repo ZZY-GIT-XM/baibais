@@ -155,6 +155,7 @@ def create_boss(boss_info):
     conn.close()
     return boss_id
 
+
 def update_boss_hp(boss_id, new_hp):
     """
     更新 Boss 血量
@@ -188,11 +189,22 @@ def update_boss_hp(boss_id, new_hp):
         cursor.close()
         conn.close()
 
+
 def get_all_bosses():
     """获取所有 Boss 信息"""
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("SELECT * FROM xiuxian_boss_info ORDER BY hp DESC")
+    bosses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return bosses
+
+def get_alive_bosses():
+    """获取所有 hp > 0 的 Boss 信息"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM xiuxian_boss_info WHERE hp > 0 ORDER BY hp DESC")
     bosses = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -335,6 +347,7 @@ def get_jingjie_from_db():
     conn.close()
     return jingjie_data
 
+
 def get_user_dao_name(user_id):
     """通过用户ID获取用户道号"""
     conn = get_db_connection()
@@ -351,11 +364,12 @@ def get_user_dao_name(user_id):
     else:
         return "未知用户"
 
-require('nonebot_plugin_apscheduler')
-del_boss_id = XiuConfig().del_boss_id
-gen_boss_id = XiuConfig().gen_boss_id
-config = get_boss_config()# 获取 Boss 配置
+
+del_boss_id = XiuConfig().del_boss_id  # 天罚boss组
+gen_boss_id = XiuConfig().gen_boss_id  # 生成boss组
+config = get_boss_config()  # 获取 Boss 配置
 xiuxian_impart = XIUXIAN_IMPART_BUFF()
+
 
 def check_rule_bot_boss() -> Rule:  # 消息检测，是超管，群主或者指定的qq号传入的消息就响应，其他的不响应
     async def _check_bot_(bot: Bot, event: GroupMessageEvent) -> bool:
@@ -379,84 +393,6 @@ def check_rule_bot_boss_s() -> Rule:  # 消息检测，是超管或者指定的q
             return False
 
     return Rule(_check_bot_)
-
-
-boss_time = config["Boss生成时间参数"]
-
-
-@DRIVER.on_startup
-async def read_boss_():
-    global group_boss
-    group_boss.update(old_boss_info.read_boss_info())
-    logger.opt(colors=True).info(f"<green>历史boss数据读取成功</green>")
-
-
-@DRIVER.on_startup
-async def set_boss_():
-    groups_list = list(groups.keys())
-    try:
-        for group_id in groups_list:
-            scheduler.add_job(
-                func=send_bot,
-                trigger='interval',
-                hours=groups[str(group_id)]["hours"],
-                minutes=groups[str(group_id)]['minutes'],
-                id=f"set_boss_{group_id}",
-                args=[group_id],
-                misfire_grace_time=10
-            )
-            logger.opt(colors=True).success(
-                f"<green>开启群{group_id}boss,每{groups[str(group_id)]['hours']}小时{groups[str(group_id)]['minutes']}分钟刷新！</green>")
-    except Exception as e:
-        logger.opt(colors=True).warning(f"<red>警告,定时群boss加载失败!,{e}!</red>")
-
-
-async def send_bot(group_id: str):
-    # 初始化
-    if not group_id in group_boss:
-        group_boss[group_id] = []
-
-    if group_id not in groups:
-        return
-
-    if not sql_message.is_xiuxian_enabled(group_id):
-        return
-
-    if len(group_boss[group_id]) >= config['Boss个数上限']:
-        logger.opt(colors=True).info(f"<green>群{group_id}Boss个数已到达个数上限</green>")
-        return
-
-    api = 'send_group_msg'  # 要调用的函数
-    data = {'group_id': int(group_id)}  # 要发送的群
-
-    bossinfo = createboss()
-    group_boss[group_id].append(bossinfo)
-    msg = f"野生的{bossinfo['jj']}Boss:{bossinfo['name']}出现了,诸位道友请击Boss得奖励吧!"
-    data['message'] = MessageSegment.text(msg)
-
-    try:
-        bot_id = layout_bot_dict[group_id] if group_id in layout_bot_dict else put_bot[0]
-    except:
-        bot = get_bot()
-        bot_id = bot.self_id
-
-    try:
-        if type(bot_id) is str:
-            await get_bots()[bot_id].call_api(api, **data)
-        elif type(bot_id) is list:
-            await get_bots()[random.choice(bot_id)].call_api(api, **data)
-        else:
-            await get_bots()[put_bot[0]].call_api(api, **data)
-
-    except:
-        if group_id not in bot.get_group_list():
-            logger.opt(colors=True).warning(f"<red>群{group_id}不存在,请检查配置文件!</red>")
-            return
-        else:
-            await get_bot().call_api(api, **data)
-
-    logger.opt(colors=True).info(f"<green>群{group_id}已生成世界boss</green>")
-
 
 
 boss_delete = on_command("天罚boss", aliases={"天罚世界boss", "天罚Boss", "天罚BOSS", "天罚世界Boss", "天罚世界BOSS"},
@@ -578,12 +514,12 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
                     Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
     else:
         player['会心'] = int(((armor_crit_buff + main_crit_buff) * Decimal('100') * (
-                    Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
+                Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
     player['user_id'] = userinfo['user_id']
     player['道号'] = userinfo['user_name']
     player['气血'] = (Decimal(userinfo['hp']) + user_maxH) * (Decimal('1') + total_poxian_percent / Decimal('100'))
     player['攻击'] = int(((Decimal(userinfo['atk']) + user_maxA) * (Decimal('1') + boss_atk) * (
-                Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
+            Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
     player['真元'] = (Decimal(userinfo['mp']) + user_maxM) * (Decimal('1') + total_poxian_percent / Decimal('100'))
     player['exp'] = Decimal(userinfo['exp']) * (Decimal('1') + total_poxian_percent / Decimal('100'))
 
@@ -631,7 +567,7 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
             more_msg = f"道友低boss境界{user_rank - boss_rank}层，获得{points_bonus}%积分加成！"
 
         damage_dealt = boss_old_hp - boss_now_hp
-        update_boss_hp(bossinfo['id'], boss_now_hp) # 更新boss血量
+        update_boss_hp(bossinfo['id'], boss_now_hp)  # 更新boss血量
         update_user_world_integral(user_id, boss_world_integral)  # 更新世界积分
         record_boss_damage(user_id, bossinfo['id'], damage_dealt)  # 记录本次战斗伤害量
         update_boss_damage_leaderboard(user_id, bossinfo['id'], damage_dealt)  # 将本次战斗伤害量加入到伤害排行榜
@@ -697,12 +633,11 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         else:
             drops_msg = " "
 
-
-        update_boss_hp(bossinfo['id'], 0) # 更新boss血量
+        update_boss_hp(bossinfo['id'], 0)  # 更新boss血量
         sql_message.update_ls(user_id, get_stone, 1)  # 更新灵石
         update_user_world_integral(user_id, boss_world_integral)  # 更新世界积分
-        record_boss_damage(user_id, bossinfo['id'], boss_old_hp)# 记录本次战斗伤害量
-        update_boss_damage_leaderboard(user_id, bossinfo['id'], boss_old_hp)# 将本次战斗伤害量加入到伤害排行榜
+        record_boss_damage(user_id, bossinfo['id'], boss_old_hp)  # 记录本次战斗伤害量
+        update_boss_damage_leaderboard(user_id, bossinfo['id'], boss_old_hp)  # 将本次战斗伤害量加入到伤害排行榜
 
         msg = f"恭喜道友击败{bossinfo['name']}，收获灵石{get_stone}枚，{more_msg}获得世界积分：{boss_world_integral}点!{exp_msg} {drops_msg}"
         if user_info['root'] == "器师" and boss_world_integral < 0:
