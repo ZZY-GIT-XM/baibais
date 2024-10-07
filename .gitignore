@@ -156,3 +156,4 @@ dmypy.json
 /data/xiuxian/sql/xiuxian_wupin_jichu.sql
 /data/xiuxian/sql/xiuxian_jianbiao.sql
 /plugins/xiuxian/boss/备份.sql
+/plugins/xiuxian/bounty_order/备份.sql
