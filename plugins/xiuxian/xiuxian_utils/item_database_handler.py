@@ -379,14 +379,14 @@ class Items:
 #     print(f"符合条件的物品ID列表:{yaocai_id_list}\n")
 #
 # 测试使用：
-if __name__ == "__main__":
-    items = Items()
-    # 获取境界ID
-    rank_number = items.convert_rank('铭纹境中期')[0]
-    # 获取境界列表
-    rank_list = items.convert_rank('铭纹境中期')[1]
-    print(f"铭纹境中期的等级: {rank_number}")
-    print(f"境界列表: {rank_list}")
+# if __name__ == "__main__":
+#     items = Items()
+#     # 获取境界ID
+#     rank_number = items.convert_rank('铭纹境中期')[0]
+#     # 获取境界列表
+#     rank_list = items.convert_rank('铭纹境中期')[1]
+#     print(f"铭纹境中期的等级: {rank_number}")
+#     print(f"境界列表: {rank_list}")
 #
 # # 测试使用：
 # if __name__ == "__main__":

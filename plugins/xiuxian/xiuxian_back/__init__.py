@@ -69,7 +69,7 @@ shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, bl
 chakan_wupin = on_command("查看修仙界物品", priority=25, permission=GROUP, block=True)
 
 
-@set_auction_by_scheduler.scheduled_job("cron", hour=20, minute=50)
+@set_auction_by_scheduler.scheduled_job("cron", hour=17, minute=48)
 async def set_auction_by_scheduler_():
     """定时任务生成拍卖会"""
     global auction, auction_offer_flag, auction_offer_all_count, auction_offer_time_count
@@ -1669,10 +1669,10 @@ def get_auction_msg(auction_id):
 
     if _type == "神物":
         msg = f"{item_info['name']}\n"
-        msg += f"效果：{item_info['desc']}"
+        msg += f"效果：{item_info['description']}"
 
     if _type == "丹药":
         msg = f"{item_info['name']}\n"
-        msg += f"效果：{item_info['desc']}"
+        msg += f"效果：{item_info['description']}"
 
     return msg

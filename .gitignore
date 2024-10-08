@@ -152,8 +152,10 @@ dmypy.json
 /.idea/baibais.iml
 /plugins/xiuxian/xiuxian_utils/names.txt
 /.idea/dbnavigator.xml
-/data/xiuxian/sql/wupin_sql.sql
-/data/xiuxian/sql/xiuxian_wupin_jichu.sql
-/data/xiuxian/sql/xiuxian_jianbiao.sql
+/data/xiuxian/数据备份2024年10月07日/sql/wupin_sql.sql
+/data/xiuxian/数据备份2024年10月07日/sql/xiuxian_wupin_jichu.sql
+/data/xiuxian/数据备份2024年10月07日/sql/xiuxian_jianbiao.sql
 /plugins/xiuxian/boss/备份.sql
 /plugins/xiuxian/bounty_order/备份.sql
+/plugins/xiuxian/auctions/备份.sql
+/data/xiuxian/数据备份2024年10月07日/sql/wupin_sql.sql
