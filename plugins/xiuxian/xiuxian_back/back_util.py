@@ -395,18 +395,18 @@ def get_skill_msg(l_msg, goods_id, goods_num):
     msg = ""
     # 使用 .get() 方法来避免 KeyError
     item_type = item_info.get('item_type')
-    rank = item_info.get('rank', '')
+    level = item_info.get('level', '')
     name = item_info.get('name', '')
     if item_type == '神通':
-        msg = f"{rank}神通-{name}:"
+        msg = f"{level}神通-{name}:"
         msg += get_sec_msg(item_info)
 
     elif item_type == '功法':
-        msg = f"{rank}功法-"
+        msg = f"{level}功法-"
         msg += get_main_info_msg(goods_id)[1]
 
     elif item_type == '辅修功法':
-        msg = f"{rank}辅修功法-"
+        msg = f"{level}辅修功法-"
         msg += get_sub_info_msg(goods_id)[1]
     else:
         msg = f"物品类型：{item_type}"

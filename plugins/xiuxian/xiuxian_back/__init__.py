@@ -61,13 +61,13 @@ shop_off = on_command("坊市下架", priority=5, permission=GROUP, block=True)
 main_back = on_command('我的背包', aliases={'我的物品'}, priority=10, permission=GROUP, block=True)
 no_use_zb = on_command("换装", priority=5, permission=GROUP, block=True)
 buy = on_command("坊市购买", priority=5, block=True)
-auction_added = on_command("提交拍卖品", aliases={"拍卖品提交"}, priority=10, permission=GROUP, block=True)
 auction_withdraw = on_command("撤回拍卖品", aliases={"拍卖品撤回"}, priority=10, permission=GROUP, block=True)
 creat_auction = on_fullmatch("举行拍卖会", priority=5, permission=GROUP and SUPERUSER, block=True)
-offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
 shop_off_all = on_fullmatch("清空坊市", priority=3, permission=SUPERUSER, block=True)
 chakan_wupin = on_command("查看修仙界物品", priority=25, permission=GROUP, block=True)
 
+offer_auction = on_command("我是大玩家拍卖", priority=5, permission=GROUP, block=True)
+auction_added = on_command("我是大玩家提交拍卖品", aliases={"我是大玩家拍卖品提交"}, priority=10, permission=GROUP, block=True)
 
 @set_auction_by_scheduler.scheduled_job("cron", hour=17, minute=48)
 async def set_auction_by_scheduler_():

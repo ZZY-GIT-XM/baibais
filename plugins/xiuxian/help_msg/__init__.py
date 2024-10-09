@@ -292,10 +292,7 @@ __help_xuanshang__ = f"""
 async def send_help_info(bot: Bot, event: GroupMessageEvent, msg: str):
     """发送帮助信息"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
-    try:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    except Exception as e:
-        logger.error(f"lists文件 发送消息失败: {e}")
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await bot.finish()
 
 

@@ -1,23 +1,39 @@
 from sqlalchemy.testing.schema import Column
-from datetime import datetime
-import random
-import asyncio
-from nonebot.log import logger
-from nonebot.adapters.onebot.v11 import Bot, ActionFailed
-from nonebot import on_command, require, on_fullmatch
-
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
-from sqlalchemy import update, delete, insert, Integer, Float, DateTime, ForeignKey, Boolean, String, BigInteger, \
+from sqlalchemy import update, delete, insert, Integer, DateTime, ForeignKey, Boolean, String, BigInteger, \
     Numeric, TIMESTAMP, Sequence
 from sqlalchemy.orm import sessionmaker
-
 from plugins.xiuxian.xiuxian_back import get_user_auction_id_list, get_user_auction_price_by_id, \
-    get_auction_id_list, get_auction_price_by_id, get_auction_msg, remove_auction_item
-from plugins.xiuxian.xiuxian_utils.item_database_handler import Items
-from plugins.xiuxian.xiuxian_utils.lay_out import assign_bot_group
-from plugins.xiuxian.xiuxian_utils.xiuxian2_handle import XiuxianDateManage
+    get_auction_id_list, get_auction_price_by_id, get_auction_msg
+import asyncio
+import random
+from datetime import datetime
+from nonebot import on_command, require, on_fullmatch
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GROUP,
+    Message,
+    GroupMessageEvent,
+    MessageSegment,
+    GROUP_ADMIN,
+    GROUP_OWNER,
+    ActionFailed
+)
+from ..xiuxian_utils.lay_out import assign_bot, assign_bot_group, Cooldown, CooldownIsolateLevel
+from nonebot.log import logger
+from nonebot.params import CommandArg
+from ..xiuxian_utils.item_database_handler import Items
+from ..xiuxian_utils.utils import (
+    check_user, get_msg_pic,
+    send_msg_handler, CommandObjectID,
+    Txt2Img, number_to
+)
+from ..xiuxian_utils.xiuxian2_handle import (
+    XiuxianDateManage, get_weapon_info_msg, get_armor_info_msg,
+    get_sec_msg, get_main_info_msg, get_sub_info_msg, UserBuffDate
+)
 
 # 数据库连接配置
 DB_CONFIG = {
@@ -120,7 +136,7 @@ class XiuxianAuctionBidsArchive(Base):
 class AuctionWupin(Base):
     __tablename__ = 'xiuxian_auction_wupin'
 
-    paipin_id = Column(Integer, Sequence('paipin_id_seq'), primary_key=True)
+    paipin_id = Column(Integer, primary_key=True, autoincrement=True)
     item_id = Column(Integer, nullable=False)
     user_id = Column(BigInteger)
     min_start_price = Column(Numeric, nullable=False)
@@ -209,7 +225,7 @@ async def get_admin_auction_info_min_start_price(auction_id=None):
 # 定时任务
 set_auction_by_scheduler = require("nonebot_plugin_apscheduler").scheduler
 
-@set_auction_by_scheduler.scheduled_job("cron", hour=23, minute=0)
+@set_auction_by_scheduler.scheduled_job("cron", hour=23, minute=44)
 async def set_auction_by_scheduler_():
     """定时任务生成拍卖会"""
     global auction_offer_flag, auction_offer_all_count, auction_offer_time_count
@@ -231,13 +247,13 @@ async def set_auction_by_scheduler_():
             quantity = user_auction_info['quantity']  # 数量
             start_price = user_auction_info['min_start_price']  # 底价
             user_id = user_auction_info['user_id']  # 用户id
-            auction_items.append((item_id, quantity, start_price, True, user_id))  # 使用 item_id 替换 auction_id
+            auction_items.append((auction_id, quantity, start_price, True, user_id))  # 使用 item_id 替换 auction_id
 
         # 获取系统拍卖品的物品id列表
         admin_auction_info = await get_admin_auction_info_min_start_price()
         logger.opt(colors=True).info(f"<blue>获取系统拍卖品信息：{admin_auction_info}</blue>")
         admin_auction_id_list = [info['item_id'] for info in admin_auction_info]
-        auction_count = random.randint(3, 8)  # 随机挑选数个系统拍卖品
+        auction_count = random.randint(1, 1)  # 随机挑选数个系统拍卖品
         auction_ids = random.sample(admin_auction_id_list, auction_count)
         for auction_id in auction_ids:
             item_info = items.get_data_by_item_id(auction_id)
@@ -434,7 +450,7 @@ async def set_auction_by_scheduler_():
 
 # 创建拍卖会
 async def create_auction(session: AsyncSession, groups: list, total_items: int) -> int:
-    initiator_id = 0  # 假设系统发起
+    initiator_id = 1  # 假设系统发起
     is_system_auction = True
     start_time = datetime.now()
     status = 'ongoing'
@@ -449,6 +465,9 @@ async def create_auction(session: AsyncSession, groups: list, total_items: int) 
         "current_paipin_index": current_item_index
     }
 
+    # 添加日志输出，检查 initiator_id
+    logger.opt(colors=True).info(f"<blue>Creating auction with initiator_id: {initiator_id}</blue>")
+
     stmt = insert(XiuxianAuction).values(**auction)
     result = await session.execute(stmt)
     await session.commit()
@@ -458,17 +477,27 @@ async def create_auction(session: AsyncSession, groups: list, total_items: int) 
 # 归档拍卖记录
 async def archive_auction(auction_id: int):
     async with AsyncSessionLocal() as session:
-        # 归档拍卖会记录
-        auction_query = select(XiuxianAuction).where(XiuxianAuction.auction_id == auction_id)
-        auction_result = await session.execute(auction_query)
-        auction_record = auction_result.fetchone()
+        try:
+            # 归档拍卖会记录
+            auction_query = select(XiuxianAuction).where(XiuxianAuction.auction_id == auction_id)
+            auction_result = await session.execute(auction_query)
+            auction_record = auction_result.scalar_one_or_none()
 
-        if auction_record:
+            if auction_record is None:
+                logger.error(f"No auction record found with ID {auction_id}")
+                return
+
+            if auction_record.initiator_id is None or auction_record.initiator_id == "":
+                logger.error(f"Initiator ID is empty or invalid for auction_id {auction_id}")
+                await session.rollback()
+                return
+            # 归档拍卖基本信息
             auction_archive = {
+                "auction_id": auction_record.auction_id,
                 "initiator_id": auction_record.initiator_id,
                 "is_system_auction": auction_record.is_system_auction,
                 "start_time": auction_record.start_time,
-                "end_time": auction_record.end_time,
+                "end_time": datetime.now(),
                 "status": auction_record.status,
                 "total_items": auction_record.total_items,
                 "current_paipin_index": auction_record.current_paipin_index,
@@ -477,52 +506,243 @@ async def archive_auction(auction_id: int):
             auction_archive_stmt = insert(XiuxianAuctionArchive).values(**auction_archive)
             await session.execute(auction_archive_stmt)
 
-        # 归档拍卖物品记录
-        items_query = select(XiuxianAuctionItems).where(XiuxianAuctionItems.auction_id == auction_id)
-        items_result = await session.execute(items_query)
-        items_records = items_result.fetchall()
+            # 归档拍卖物品记录
+            items_query = select(XiuxianAuctionItems).where(XiuxianAuctionItems.auction_id == auction_id)
+            items_result = await session.execute(items_query)
+            items_records = items_result.scalars().all()
 
-        for item_record in items_records:
-            item_archive = {
-                "auction_id": item_record.auction_id,
-                "paipin_id": item_record.paipin_id,
-                "quantity": item_record.quantity,
-                "start_price": item_record.start_price,
-                "current_price": item_record.current_price,
-                "highest_bidder_id": item_record.highest_bidder_id,
-                "bid_time": item_record.bid_time,
-                "is_sold": item_record.is_sold,
-                "is_user_auction": item_record.is_user_auction,
-                "archive_time": datetime.now()
-            }
-            item_archive_stmt = insert(XiuxianAuctionItemsArchive).values(**item_archive)
-            await session.execute(item_archive_stmt)
+            for item_record in items_records:
+                item_archive = {
+                    "auction_id": item_record.auction_id,
+                    "paipin_id": item_record.paipin_id,
+                    "quantity": item_record.quantity,
+                    "start_price": item_record.start_price,
+                    "current_price": item_record.current_price,
+                    "highest_bidder_id": item_record.highest_bidder_id,
+                    "bid_time": item_record.bid_time,
+                    "is_sold": item_record.is_sold,
+                    "is_user_auction": item_record.is_user_auction,
+                    "archive_time": datetime.now()
+                }
+                item_archive_stmt = insert(XiuxianAuctionItemsArchive).values(**item_archive)
+                await session.execute(item_archive_stmt)
 
-        # 归档出价记录
-        bids_query = select(XiuxianAuctionBids).where(
-            XiuxianAuctionBids.item_id.in_([r.id for r in items_records]))
-        bids_result = await session.execute(bids_query)
-        bids_records = bids_result.fetchall()
+            # 归档出价记录
+            bids_query = select(XiuxianAuctionBids).where(
+                XiuxianAuctionBids.item_id.in_([r.id for r in items_records]))
+            bids_result = await session.execute(bids_query)
+            bids_records = bids_result.scalars().all()
 
-        for bid_record in bids_records:
-            bid_archive = {
-                "item_id": bid_record.item_id,
-                "user_id": bid_record.user_id,
-                "bid_amount": bid_record.bid_amount,
-                "bid_time": bid_record.bid_time,
-                "archive_time": datetime.now()
-            }
-            bid_archive_stmt = insert(XiuxianAuctionBidsArchive).values(**bid_archive)
-            await session.execute(bid_archive_stmt)
+            for bid_record in bids_records:
+                bid_archive = {
+                    "item_id": bid_record.item_id,
+                    "user_id": bid_record.user_id,
+                    "bid_amount": bid_record.bid_amount,
+                    "bid_time": bid_record.bid_time,
+                    "archive_time": datetime.now()
+                }
+                bid_archive_stmt = insert(XiuxianAuctionBidsArchive).values(**bid_archive)
+                await session.execute(bid_archive_stmt)
 
-        # 删除原表中的记录
-        delete_auction_stmt = delete(XiuxianAuction).where(XiuxianAuction.auction_id == auction_id)
-        delete_items_stmt = delete(XiuxianAuctionItems).where(XiuxianAuctionItems.auction_id == auction_id)
-        delete_bids_stmt = delete(XiuxianAuctionBids).where(
-            XiuxianAuctionBids.item_id.in_([r.id for r in items_records]))
+            # 删除原表中的记录
+            delete_auction_stmt = delete(XiuxianAuction).where(XiuxianAuction.auction_id == auction_id)
+            delete_items_stmt = delete(XiuxianAuctionItems).where(XiuxianAuctionItems.auction_id == auction_id)
+            delete_bids_stmt = delete(XiuxianAuctionBids).where(
+                XiuxianAuctionBids.item_id.in_([r.id for r in items_records]))
 
-        await session.execute(delete_auction_stmt)
-        await session.execute(delete_items_stmt)
-        await session.execute(delete_bids_stmt)
+            await session.execute(delete_auction_stmt)
+            await session.execute(delete_items_stmt)
+            await session.execute(delete_bids_stmt)
 
+            await session.commit()
+
+        except Exception as e:
+            logger.error(f"<red>归档拍卖记录时发生错误：{e}</red>")
+            await session.rollback()
+
+
+auction_added = on_command("提交拍卖品", aliases={"拍卖品提交"}, priority=10, permission=GROUP, block=True)
+
+@auction_added.handle(parameterless=[Cooldown(1.4, isolate_level=CooldownIsolateLevel.GROUP)])
+async def auction_added_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """用户提交拍卖品"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+    group_id = str(event.group_id)
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    if not sql_message.is_auction_enabled(group_id):
+        msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    user_id = user_info['user_id']
+    args = args.extract_plain_text().strip().split()
+    if len(args) < 1:
+        msg = "请输入正确指令！例如：提交拍卖品 物品 可选参数为(金额 数量)"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    goods_name = args[0]
+    price_str = args[1] if len(args) > 1 else "1"
+    quantity_str = args[2] if len(args) > 2 else "1"
+
+    back_msg = sql_message.get_back_msg(user_id)  # 获取背包信息
+    if not back_msg:
+        msg = "道友的背包空空如也！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    # 物品是否存在于背包中
+    goods_details = next((back for back in back_msg if back['goods_name'] == goods_name), None)
+    if not goods_details:
+        msg = f"请检查该道具 {goods_name} 是否在背包内！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    try:
+        price = int(price_str)
+        quantity = int(quantity_str)
+        if price <= 0 or quantity <= 0 or quantity > goods_details['goods_num']:
+            raise ValueError("价格和数量必须为正数，或者超过了你拥有的数量!")
+    except ValueError as e:
+        msg = f"请输入正确的金额和数量: {str(e)}"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    if goods_details['goods_type'] == "装备" and int(goods_details['state']) == 1 and int(goods_details['goods_num']) == 1:
+        msg = f"装备：{goods_name}已经被道友装备在身，无法提交！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    if int(goods_details['goods_num']) <= int(goods_details['bind_num']):
+        msg = "该物品是绑定物品，无法提交！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    if goods_details['goods_type'] in ["聚灵旗", "炼丹炉"] and user_info['root'] != "器师":
+        msg = "道友职业无法上架此类物品！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await auction_added.finish()
+
+    # 将物品添加到拍卖数据库中
+    async with AsyncSessionLocal() as session:
+        try:
+            new_auction_item = AuctionWupin(
+                item_id=goods_details['goods_id'],
+                user_id=user_id,
+                min_start_price=price,
+                quantity=quantity,
+                is_user_provided=True,
+                added_time=datetime.utcnow()
+            )
+            session.add(new_auction_item)
+            await session.commit()
+        except Exception as e:
+            logger.error(f"插入拍卖物品时发生错误: {e}")
+            await session.rollback()
+            await bot.send_group_msg(group_id=int(send_group_id), message="提交拍卖品失败，请稍后再试。")
+            await auction_added.finish()
+
+    # 更新用户的背包信息
+    sql_message.update_back_j(user_id, goods_details['goods_id'], num=-quantity)
+
+    msg = f'''道友的拍卖品：{goods_name}成功提交!
+底价：{price}枚灵石
+数量：{quantity}
+下次拍卖将优先拍卖道友的拍卖品！！！'''
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await auction_added.finish()
+
+
+offer_auction = on_command("拍卖", priority=5, permission=GROUP, block=True)
+
+
+@offer_auction.handle(parameterless=[Cooldown(1.4, at_sender=False, isolate_level=CooldownIsolateLevel.GLOBAL)])
+async def offer_auction_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """拍卖"""
+    group_id = str(event.group_id)
+    bot = await assign_bot_group(group_id=group_id)
+    isUser, user_info, msg = check_user(event)
+    global auction, auction_offer_flag, auction_offer_all_count, auction_offer_time_count
+
+    if not isUser:
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
+
+    if not sql_message.is_auction_enabled(group_id):
+        msg = '本群尚未开启拍卖会功能，请联系管理员开启！'
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
+
+    if not auction:
+        msg = "当前不存在拍卖会，请等待拍卖会开启！"
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
+
+    enabled_groups = sql_message.get_enabled_auction_groups()
+    price = args.extract_plain_text().strip()
+    try:
+        price = int(price)
+    except ValueError:
+        msg = "请发送正确的灵石数量"
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
+
+    now_price = auction['now_price']
+    min_price = int(now_price * 0.05)  # 最低加价5%
+    if price <= 0 or price <= auction['now_price'] or price > user_info['stone']:
+        msg = "走开走开,灵石不够，别捣乱！小心清空你灵石捏"
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
+    if price - now_price < min_price:
+        msg = f"拍卖不得少于当前竞拍价的5%，目前最少加价为：{min_price}灵石，目前竞拍价为：{now_price}!"
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
+
+    auction_offer_flag = True  # 有人拍卖
+    auction_offer_time_count += 1
+    auction_offer_all_count += 1
+
+    auction['user_id'] = user_info['user_id']
+    auction['now_price'] = price
+    auction['group_id'] = group_id
+
+    logger.opt(colors=True).info(f"<green>{user_info['user_name']}({auction['user_id']})竞价了！！</green>")
+
+    now_time = datetime.now()
+    dif_time = (now_time - auction['start_time']).total_seconds()
+    remaining_time = int(AUCTIONSLEEPTIME - dif_time + AUCTIONOFFERSLEEPTIME * auction_offer_time_count)
+    msg = (
+            f"来自群{group_id}的{user_info['user_name']}道友拍卖：{price}枚灵石！" +
+            f"竞拍时间增加：{AUCTIONOFFERSLEEPTIME}秒，竞拍剩余时间：{remaining_time}秒"
+    )
+
+    async with AsyncSessionLocal() as session:
+        # 更新当前拍卖品的信息
+        stmt = (
+            update(XiuxianAuctionItems)
+            .where(XiuxianAuctionItems.item_id == auction['item_id'])
+            .values(current_price=price, highest_bidder_id=user_info['user_id'], bid_time=datetime.now())
+        )
+        await session.execute(stmt)
         await session.commit()
+
+    error_msg = None
+    for gid in enabled_groups:
+        bot = await assign_bot_group(group_id=gid)
+        try:
+            await bot.send_group_msg(group_id=int(gid), message=msg)
+        except ActionFailed:
+            error_msg = f"消息发送失败，可能被风控，当前拍卖物品金额为：{auction['now_price']}！"
+            continue
+    logger.opt(colors=True).info(
+        f"<green>有人拍卖，拍卖标志：{auction_offer_flag}，当前等待时间：{auction_offer_all_count * AUCTIONOFFERSLEEPTIME}，总计拍卖次数：{auction_offer_time_count}</green>")
+    if error_msg is None:
+        await offer_auction.finish()
+    else:
+        msg = error_msg
+        await bot.send_group_msg(group_id=int(group_id), message=msg)
+        await offer_auction.finish()
