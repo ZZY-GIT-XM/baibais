@@ -1,6 +1,8 @@
 import random
 from decimal import Decimal
 
+from rich.filesize import decimal
+
 from .xiuxian2_handle import XiuxianDateManage, OtherSet, UserBuffDate, XIUXIAN_IMPART_BUFF
 from ..xiuxian_utils.item_database_handler import Items
 from .utils import number_to
@@ -132,7 +134,7 @@ def Player_fight(player1: dict, player2: dict, type_in, bot_id):
                         if user1_skill_type == 1:  # 直接伤害类技能
                             play_list.append(get_msg_dict(player1, player1_init_hp, skill_msg))
                             player1 = calculate_skill_cost(player1, user1_hp_cost, user1_mp_cost)
-                            player2['气血'] = player2['气血'] - int(user1_skill_sh * player2_js)  # 玩家1的伤害 * 玩家2的减伤
+                            player2['气血'] = int(player2['气血'] - int(Decimal(user1_skill_sh) * Decimal(player2_js)))  # 玩家1的伤害 * 玩家2的减伤
                             play_list.append(
                                 get_msg_dict(player1, player1_init_hp,
                                              f"{player2['道号']}剩余血量{number_to(player2['气血'])}"))
@@ -1247,7 +1249,7 @@ async def Boss_fight(player1: dict, boss: dict, type_in=2, bot_id=0):
                             play_list.append(get_msg_dict(player1, player_init_hp, skillmsg))
                             player1 = calculate_skill_cost(player1, user1hpconst, user1mpcost)
                             boss['气血'] = boss['气血'] - int(
-                                user1_skill_sh * (boss_js + user1_break))  # 玩家1的伤害 * boss的减伤
+                                Decimal(user1_skill_sh) * (Decimal(boss_js) + Decimal(user1_break)))  # 玩家1的伤害 * boss的减伤
                             boss_hp_msg = f"{boss['name']}剩余血量{boss['气血']}"
                             play_list.append(get_msg_dict(player1, player_init_hp, boss_hp_msg))
                             sh += user1_skill_sh
@@ -1606,9 +1608,9 @@ def get_turnatk(player, buff=0, user_battle_buff_date={}):  # 辅修功法14
     turnatk = int(round(Decimal(str(random.uniform(0.95, 1.05))), 2)
                   * (player['攻击'] * (buff + sub_atk + 1) * (1 - Decimal(str(boss_jg)))) * (
                           1 + zwsh))  # 攻击波动,buff是攻击buff
-    if random.randint(0, 100) <= player['会心'] + (impart_know_per + sub_crit - boss_jh + random_hx) * 100:  # 会心判断
-        turnatk = int(turnatk * (
-                1.5 + impart_burst_per + weapon_critatk + main_critatk + sub_dmg - boss_jb))  # boss战、切磋、秘境战斗会心伤害公式（不包含抢劫）
+    if random.randint(0, 100) <= Decimal(player['会心']) + (Decimal(impart_know_per) + Decimal(sub_crit) - Decimal(boss_jh) + Decimal(random_hx)) * 100:  # 会心判断
+        turnatk = int(Decimal(turnatk) * (
+                Decimal(1.5) + Decimal(impart_burst_per) + Decimal(weapon_critatk) + Decimal(main_critatk) + Decimal(sub_dmg) - Decimal(boss_jb)))  # boss战、切磋、秘境战斗会心伤害公式（不包含抢劫）
         isCrit = True
     return isCrit, turnatk
 
@@ -1643,8 +1645,8 @@ def get_skill_hp_mp_data(player, secbuffdata):
     else:
         weapon_mp = 0
 
-    hpcost = int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0
-    mpcost = int(secbuffdata['mpcost'] * player['exp'] * (1 - weapon_mp)) if secbuffdata['mpcost'] != 0 else 0
+    hpcost = int(Decimal(secbuffdata['hpcost']) * Decimal(player['气血'])) if Decimal(secbuffdata['hpcost']) != 0 else 0
+    mpcost = int(Decimal(secbuffdata['mpcost']) * Decimal(player['exp']) * (1 - Decimal(weapon_mp))) if Decimal(secbuffdata['mpcost']) != 0 else 0
     return hpcost, mpcost, secbuffdata['skill_type'], secbuffdata['rate']
 
 
@@ -1663,60 +1665,96 @@ def get_persistent_skill_msg(username, skillname, sh, turn):
 
 def get_skill_sh_data(player, secbuffdata):
     skillmsg = ''
-    if secbuffdata['skill_type'] == 1:  # 连续攻击类型
-        turncost = -secbuffdata['turncost']
+    skill_type = secbuffdata.get('skill_type', 0)
+
+    if skill_type == 1:  # 连续攻击类型
+        turncost = -secbuffdata.get('turncost', 0)
         isCrit, turnatk = get_turnatk(player)
-        atkvalue = secbuffdata['atkvalue']  # 列表
-        skillsh = 0
+        atkvalue = secbuffdata.get('atkvalue', [])  # 默认为空列表
+        skillsh = Decimal(0)
         atkmsg = ''
+
         for value in atkvalue:
-            atkmsg += f"{int(value * turnatk)}伤害、"
-            skillsh += int(value * turnatk)
+            value_decimal = Decimal(str(value))
+            turnatk_decimal = Decimal(str(turnatk))
+            damage = int(value_decimal * turnatk_decimal)
+            atkmsg += f"{damage}伤害、"
+            skillsh += damage
 
         if turncost == 0:
             turnmsg = '!'
         else:
-            turnmsg = f"，休息{secbuffdata['turncost']}回合！"
+            turnmsg = f"，休息{abs(turncost)}回合！"
 
+        desc = secbuffdata.get('desc', '')
         if isCrit:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}并且发生了会心一击，造成{atkmsg[:-1]}{turnmsg}"
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{desc}并且发生了会心一击，造成{atkmsg[:-1]}{turnmsg}"
         else:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}造成{atkmsg[:-1]}{turnmsg}"
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{desc}造成{atkmsg[:-1]}{turnmsg}"
 
         return skillmsg, skillsh, turncost
 
-    elif secbuffdata['skill_type'] == 2:  # 持续伤害类型
-        turncost = secbuffdata['turncost']
+    elif skill_type == 2:  # 持续伤害类型
+        turncost = secbuffdata.get('turncost', 0)
         isCrit, turnatk = get_turnatk(player)
-        skillsh = int(secbuffdata['atkvalue'] * player['攻击'])  # 改动
+        atkvalue = Decimal(str(secbuffdata.get('atkvalue', 0)))
+        attack = Decimal(str(player['攻击']))
+        skillsh = int(atkvalue * attack)
         atkmsg = ''
+
+        desc = secbuffdata.get('desc', '')
         if isCrit:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}并且发生了会心一击，造成{skillsh}点伤害，持续{turncost}回合！"
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{desc}并且发生了会心一击，造成{skillsh}点伤害，持续{turncost}回合！"
         else:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}造成{skillsh}点伤害，持续{turncost}回合！"
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{desc}造成{skillsh}点伤害，持续{turncost}回合！"
 
         return skillmsg, skillsh, turncost
 
-    elif secbuffdata['skill_type'] == 3:  # 持续buff类型
-        turncost = secbuffdata['turncost']
-        skillsh = secbuffdata['buffvalue']
+    elif skill_type == 3:  # 持续buff类型
+        turncost = secbuffdata.get('turncost', 0)
+        skillsh = Decimal(str(secbuffdata.get('buffvalue', 0)))
         atkmsg = ''
-        if secbuffdata['bufftype'] == 1:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}攻击力增加{skillsh}倍，持续{turncost}回合！"
-        elif secbuffdata['bufftype'] == 2:
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}获得{skillsh * 100}%的减伤，持续{turncost}回合！"
+        bufftype = secbuffdata.get('bufftype', 0)
+        desc = secbuffdata.get('desc', '')
+        if bufftype == 1:
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{desc}攻击力增加{skillsh}倍，持续{turncost}回合！"
+        elif bufftype == 2:
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{desc}获得{skillsh * 100}%的减伤，持续{turncost}回合！"
 
         return skillmsg, skillsh, turncost
 
-    elif secbuffdata['skill_type'] == 4:  # 封印类技能
-        turncost = secbuffdata['turncost']
-        if random.randint(0, 100) <= secbuffdata['success']:  # 命中
+    elif skill_type == 4:  # 封印类技能
+        turncost = secbuffdata.get('turncost', 0)
+        success = secbuffdata.get('success', 0)
+        if random.randint(0, 100) <= success:  # 命中
             skillsh = True
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，使对手动弹不得,{secbuffdata['desc']}持续{turncost}回合！"
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，使对手动弹不得，{secbuffdata.get('desc', '')}持续{turncost}回合！"
         else:  # 未命中
             skillsh = False
-            skillmsg = f"{player['道号']}发动技能：{secbuffdata['name']}，消耗气血{int(secbuffdata['hpcost'] * player['气血']) if secbuffdata['hpcost'] != 0 else 0}点、真元{int(secbuffdata['mpcost'] * player['exp']) if secbuffdata['mpcost'] != 0 else 0}点，{secbuffdata['desc']}但是被对手躲避！"
+            hpcost = int(Decimal(str(secbuffdata.get('hpcost', 0))) * Decimal(str(player['气血'])))
+            mpcost = int(Decimal(str(secbuffdata.get('mpcost', 0))) * Decimal(str(player['exp'])))
+            skillmsg = f"{player['道号']}发动技能：{secbuffdata.get('name', '未知技能')}，消耗气血{hpcost}点、真元{mpcost}点，{secbuffdata.get('desc', '')}但是被对手躲避！"
 
+        return skillmsg, skillsh, turncost
+
+    else:
+        skillmsg = "未知技能类型"
+        skillsh = Decimal(0)
+        turncost = 0
         return skillmsg, skillsh, turncost
 
 

@@ -327,7 +327,7 @@ def get_ldl_msg(l_msg, goods_id, goods_num):
     """
     item_info = items.get_data_by_item_id(goods_id)
     msg = f"名字：{item_info['name']}\n"
-    msg += f"效果：{item_info['desc']}"
+    msg += f"效果：{item_info['description']}"
     msg += f"\n拥有数量:{goods_num}"
     l_msg.append(msg)
     return l_msg
@@ -421,7 +421,7 @@ def get_elixir_msg(l_msg, goods_id, goods_num):
     """
     item_info = items.get_data_by_item_id(goods_id)
     msg = f"名字：{item_info['name']}\n"
-    msg += f"效果：{item_info['desc']}\n"
+    msg += f"效果：{item_info['description']}\n"
     msg += f"拥有数量：{goods_num}"
     l_msg.append(msg)
     return l_msg

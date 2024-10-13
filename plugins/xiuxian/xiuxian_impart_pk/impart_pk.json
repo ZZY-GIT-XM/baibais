@@ -1,1 +1,37 @@
-{}
+{
+    "600547391": {
+        "number": 1,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "287734027": {
+        "number": 2,
+        "pk_num": 0,
+        "win_num": 1
+    },
+    "370678596": {
+        "number": 3,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "131493708": {
+        "number": 4,
+        "pk_num": 3,
+        "win_num": 0
+    },
+    "617643244": {
+        "number": 5,
+        "pk_num": 0,
+        "win_num": 4
+    },
+    "157404783": {
+        "number": 6,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "567795678": {
+        "number": 7,
+        "pk_num": 0,
+        "win_num": 4
+    }
+}

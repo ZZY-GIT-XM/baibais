@@ -559,6 +559,7 @@ async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = Com
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await upatkpractice.finish()
+
     user_id = user_info['user_id']
     sect_id = user_info['sect_id']
     level_up_count = 1
@@ -569,16 +570,26 @@ async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         level_up_count = min(max(1, level_up_count), config_max_level)
     except ValueError:
         level_up_count = 1
+
     if sect_id:
-        sect_materials = int(sql_message.get_sect_info(sect_id)['sect_materials'])  # 当前资材
+        sect_info = sql_message.get_sect_info(sect_id)
+        if sect_info is None:
+            msg = "宗门信息不存在"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await upatkpractice.finish()
+
+        # 获取当前资材，并处理可能的 None 值
+        sect_materials = sect_info.get('sect_materials')
+        if sect_materials is None:
+            sect_materials = 0  # 提供默认值0
+
         useratkpractice = int(user_info['atkpractice'])  # 当前等级
         if useratkpractice == 50:
             msg = f"道友的攻击修炼等级已达到最高等级!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await upatkpractice.finish()
 
-        sect_level = get_sect_level(sect_id)[0] if get_sect_level(sect_id)[
-                                                       0] <= 50 else 50  # 获取当前宗门修炼等级上限，500w建设度1级,上限25级
+        sect_level = get_sect_level(sect_id)[0] if get_sect_level(sect_id)[0] <= 50 else 50  # 获取当前宗门修炼等级上限，500w建设度1级,上限25级
 
         sect_position = user_info['sect_position']
         # 确保用户不会尝试升级超过宗门等级的上限
@@ -969,25 +980,31 @@ async def create_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         await create_sect.finish()
     user_id = user_info['user_id']
     # 首先判断是否满足创建宗门的三大条件
-    level = user_info['level']
-    list_level_all = list(jsondata.level_data().keys())
-    if (list_level_all.index(level) < list_level_all.index(XiuConfig().sect_min_level)):
-        msg = f"创建宗门要求:创建者境界最低要求为{XiuConfig().sect_min_level}"
+    # level = user_info['level']
+    # list_level_all = list(jsondata.level_data().keys())
+    # if list_level_all.index(level) < list_level_all.index(XiuConfig().sect_min_level):
+    #     msg = f"创建宗门要求:创建者境界最低要求为{XiuConfig().sect_min_level}"
 
-    elif user_info['stone'] < XiuConfig().sect_create_cost:
+    if user_info['stone'] < XiuConfig().sect_create_cost:
         msg = f"创建宗门要求:需要创建者拥有灵石{XiuConfig().sect_create_cost}枚"
     elif user_info['sect_id']:
-        msg = f"道友已经加入了宗门:{user_info['sect_name']}，无法再创建宗门。"
+        user_sect_name = sql_message.get_sect_info_by_id(user_info['sect_id'])
+        msg = f"道友已经加入了宗门:{user_sect_name['sect_name']}，无法再创建宗门。"
     else:
-        # 获取宗门名称
-        sect_name = args.extract_plain_text().strip()
+        # 生成随机名称
+        sect_name = generate_random_sect_name()
+
+        # 检查名称是否重复
+        while sql_message.check_sect_name_exists(sect_name):
+            sect_name = generate_random_sect_name()
+
         if sect_name:
             sql_message.create_sect(user_id, sect_name)
             new_sect = sql_message.get_sect_info_by_qq(user_id)
             owner_idx = [k for k, v in jsondata.sect_config_data().items() if v.get("title", "") == "宗主"]
             owner_position = int(owner_idx[0]) if len(owner_idx) == 1 else 0
             sql_message.update_usr_sect(user_id, new_sect['sect_id'], owner_position)
-            sql_message.update_ls(user_id, XiuConfig().sect_min_level, 2)
+            sql_message.update_ls(user_id, XiuConfig().sect_create_cost, 2)
             msg = f"恭喜{user_info['user_name']}道友创建宗门——{sect_name}，宗门编号为{new_sect['sect_id']}。为道友贺！为仙道贺！"
         else:
             msg = f"道友确定要创建无名之宗门？还请三思。"
@@ -1193,12 +1210,9 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     isUser, user_info, msg = check_user(event)
     if not isUser:
         msg = f"守山弟子：凡人，回去吧，仙途难入，莫要自误！"
-        if XiuConfig().img:
-            pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-            await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-        else:
-            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await sect_position_update.finish()
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await join_sect.finish()
+
     user_id = user_info['user_id']
     if not user_info['sect_id']:
         sect_no = args.extract_plain_text().strip()
@@ -1216,15 +1230,11 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
             msg = f"欢迎{user_info['user_name']}师弟入我{new_sect['sect_name']}，共参天道。"
     else:
         msg = f"守山弟子：我观道友气运中已有宗门气运加持，又何必与我为难。"
-    if XiuConfig().img:
-        pic = await get_msg_pic(f"@{event.sender.nickname}\n" + msg)
-        await bot.send_group_msg(group_id=int(send_group_id), message=MessageSegment.image(pic))
-    else:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await join_sect.finish()
 
 
-# editer:zyp981204
 @my_sect.handle(parameterless=[Cooldown(at_sender=False)])
 async def my_sect_(bot: Bot, event: GroupMessageEvent):
     """我的宗门"""

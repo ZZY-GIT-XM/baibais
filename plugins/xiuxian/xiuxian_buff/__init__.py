@@ -325,7 +325,7 @@ async def qc_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
             main_crit_buff = 0
 
         if user1_armor_crit_buff is not None:  # 玩家1防具会心
-            armor_crit_buff = user1_armor_crit_buff['crit_buff'] * (1 + total_poxian_percent1 / 100)
+            armor_crit_buff = Decimal(user1_armor_crit_buff['crit_buff']) * Decimal(1 + Decimal(total_poxian_percent1) / 100)
         else:
             armor_crit_buff = 0
 
@@ -445,11 +445,11 @@ async def two_exp_(bot: Bot, event: GroupMessageEvent, args: Message = CommandAr
                 main_two_data_2 = UserBuffDate(user_2['user_id']).get_user_main_buff_data()
                 main_two_1 = main_two_data_1['two_buff'] if main_two_data_1 is not None else 0
                 main_two_2 = main_two_data_2['two_buff'] if main_two_data_2 is not None else 0
-                if limt_1 >= two_exp_limit + impart_two_exp_1 + main_two_1:
+                if Decimal(limt_1) >= Decimal(two_exp_limit) + Decimal(impart_two_exp_1) + Decimal(main_two_1):
                     msg = "道友今天双修次数已经到达上限！"
                     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await two_exp.finish()
-                if limt_2 >= two_exp_limit + impart_two_exp_2 + main_two_2:
+                if Decimal(limt_2) >= Decimal(two_exp_limit) + Decimal(impart_two_exp_2) + Decimal(main_two_2):
                     msg = "对方今天双修次数已经到达上限！"
                     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
                     await two_exp.finish()
@@ -607,6 +607,14 @@ async def stone_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Command
         await stone_exp.finish()
 
     exp = int(stone_num / 10) * (1 + total_poxian_percent / 100)  # 加入破限增幅部分
+    if user_info['level'] == '祭道境圆满':
+        sql_message.update_exp(user_id, exp)
+        sql_message.update_power2(user_id)  # 更新战力
+        msg = f"修炼结束，本次修炼共增加修为：{exp},消耗灵石：{stone_num}"
+        sql_message.update_ls(user_id, int(stone_num), 2)
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await stone_exp.finish()
+
     if exp >= user_get_exp_max:
         # 用户获取的修为到达上限
         sql_message.update_exp(user_id, user_get_exp_max)
@@ -637,6 +645,11 @@ async def in_closing_(bot: Bot, event: GroupMessageEvent):
 
     user_id = user_info['user_id']
     is_type, msg = check_user_type(user_id, 0)
+
+    if user_info['root_type'] == '伪灵根':
+        msg = "器师无法闭关！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await in_closing.finish()
 
     if is_type:  # 符合
         sql_message.in_closing(user_id, user_type)
@@ -789,8 +802,8 @@ async def out_closing_(bot: Bot, event: GroupMessageEvent):
                 sql_message.in_closing(user_id, user_type)
                 sql_message.update_exp(user_id, exp)
                 sql_message.update_power2(user_id)  # 更新战力
-                result_msg, result_hp_mp = OtherSet().send_hp_mp(user_id, int(exp * hp_speed * (1 + mainbuffclors)),
-                                                                 int(exp * mp_speed))
+                result_msg, result_hp_mp = OtherSet().send_hp_mp(user_id, int(Decimal(exp) * Decimal(hp_speed) * Decimal(1 + mainbuffclors)),
+                                                                 int(Decimal(exp) * Decimal(mp_speed)))
                 sql_message.update_user_attribute(user_id, result_hp_mp[0], result_hp_mp[1], int(result_hp_mp[2] / 10))
                 msg = f"闭关结束，共闭关{exp_time}分钟，本次闭关增加修为：{exp}{result_msg[0]}{result_msg[1]}"
                 await bot.send_group_msg(group_id=int(send_group_id), message=msg)
@@ -837,11 +850,12 @@ async def start_cultivation(bot: Bot, event: GroupMessageEvent):
             int(OtherSet().set_closing_type(level)) * XiuConfig().closing_exp_upper_limit
     )  # 获取下个境界需要的修为 即闭关上限
 
-    # 检查用户的经验是否已经达到了该等级的最大经验值
-    if use_exp >= max_exp:
-        msg = f"道友已临近突破，请先突破后再来修炼！"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await cultivation_command.finish()
+    if not (user_info['level'] == '祭道境圆满'):
+        # 检查用户的经验是否已经达到了该等级的最大经验值
+        if use_exp >= max_exp:
+            msg = f"道友已临近突破，请先突破后再来修炼！"
+            await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+            await cultivation_command.finish()
 
     user_get_exp_max = int(max_exp) - use_exp
 

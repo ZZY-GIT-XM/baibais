@@ -266,6 +266,12 @@ async def impart_pk_exp_(bot: Bot, event: GroupMessageEvent, args: Message = Com
         msg = f"累计时间不足，修炼失败!"
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await impart_pk_exp.finish()
+
+    if user_info['root_type'] == '伪灵根':
+        msg = f"器师无法进行修炼!"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await impart_pk_exp.finish()
+
     # 闭关时长计算(分钟)
     level_rate = sql_message.get_root_rate(user_info['root_type'])  # 灵根倍率
     realm_rate = jsondata.level_data()[level]["spend"]  # 境界倍率

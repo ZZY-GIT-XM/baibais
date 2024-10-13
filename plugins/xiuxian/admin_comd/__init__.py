@@ -19,9 +19,6 @@ from ..xiuxian_utils.xiuxian2_handle import (
     XiuxianDateManage, XIUXIAN_IMPART_BUFF
 )
 
-# from ..xiuxian_utils.item_json import Items
-
-
 items = Items()
 
 # 定时任务
@@ -92,18 +89,18 @@ async def admin_add_lingshi_(bot: Bot, event: GroupMessageEvent, args: Message =
             msg = f"对方未踏入修仙界，不可赠送！"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await admin_add_lingshi.finish()
-    else:
-        sql_message.update_ls_all(give_stone_num)
-        msg = f"全服通告：赠送所有用户{number_to(give_stone_num)}灵石,请注意查收！"
-        enabled_groups = sql_message.get_enabled_groups()
-
-        for group_id in enabled_groups:
-            bot = await assign_bot_group(group_id=group_id)
-            try:
-                await bot.send_group_msg(group_id=int(group_id), message=msg)
-            except ActionFailed:  # 发送群消息失败
-                continue
-        await admin_add_lingshi.finish()
+    # else:
+    #     sql_message.update_ls_all(give_stone_num)
+    #     msg = f"全服通告：赠送所有用户{number_to(give_stone_num)}灵石,请注意查收！"
+    #     enabled_groups = sql_message.get_enabled_groups()
+    #
+    #     for group_id in enabled_groups:
+    #         bot = await assign_bot_group(group_id=group_id)
+    #         try:
+    #             await bot.send_group_msg(group_id=int(group_id), message=msg)
+    #         except ActionFailed:  # 发送群消息失败
+    #             continue
+    await admin_add_lingshi.finish()
 
 
 @admin_add_jiejing.handle(parameterless=[Cooldown(at_sender=False)])
@@ -182,20 +179,20 @@ async def admin_add_wupin_(bot: Bot, event: GroupMessageEvent, args: Message = C
             msg = f"对方未踏入修仙界，不可赠送！"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await admin_add_wupin.finish()
-    else:
-        all_users = sql_message.get_all_user_id()
-        for user_id in all_users:
-            sql_message.send_back(user_id, goods_id, goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
-
-        msg = f"全服通告：赠送所有用户{goods_name}个{goods_num},请注意查收！"
-        enabled_groups = sql_message.get_enabled_groups()
-        for group_id in enabled_groups:
-            bot = await assign_bot_group(group_id=group_id)
-            try:
-                await bot.send_group_msg(group_id=int(group_id), message=msg)
-            except ActionFailed:  # 发送群消息失败
-                continue
-        await admin_add_wupin.finish()
+    # else:
+    #     all_users = sql_message.get_all_user_id()
+    #     for user_id in all_users:
+    #         sql_message.send_back(user_id, goods_id, goods_name, goods_type, goods_num, 1)  # 给每个用户发送物品
+    #
+    #     msg = f"全服通告：赠送所有用户{goods_name}个{goods_num},请注意查收！"
+    #     enabled_groups = sql_message.get_enabled_groups()
+    #     for group_id in enabled_groups:
+    #         bot = await assign_bot_group(group_id=group_id)
+    #         try:
+    #             await bot.send_group_msg(group_id=int(group_id), message=msg)
+    #         except ActionFailed:  # 发送群消息失败
+    #             continue
+    await admin_add_wupin.finish()
 
 
 @admin_update_linggen.handle(parameterless=[Cooldown(at_sender=False)])

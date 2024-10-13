@@ -524,6 +524,10 @@ def number_to(num):
              '兆无量大', '京无量大', '垓无量大', '秭无量大', '穰无量大', '沟无量大',
              '涧无量大', '正无量大', '载无量大', '极无量大']
 
+    # 处理 None 值
+    if num is None:
+        return "0"
+
     # 处理科学计数法
     if "e" in str(num):
         num = float(f"{num:.1f}")

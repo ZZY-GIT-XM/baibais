@@ -9,7 +9,7 @@ import os
 import random
 import psycopg2  # 新增：导入PostgreSQL的Python库
 from psycopg2 import sql
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timedelta
 from pathlib import Path
 from nonebot.log import logger
@@ -840,23 +840,31 @@ class XiuxianDateManage:
         cur = self.conn.cursor()
         level = jsondata.level_data()
         root = jsondata.root_data()
-        poxian_num = UserMessage['poxian_num']  # 获取用户当前破限次数
-        poxian_num = Decimal(str(poxian_num))
-        if poxian_num <= 10:  # 根据破限次数计算增幅系数
+
+        # 获取用户当前破限次数
+        poxian_num = Decimal(str(UserMessage['poxian_num']))
+
+        # 计算增幅系数
+        if poxian_num <= 10:
             bonus = 1 + (poxian_num * Decimal('0.1'))  # 1~10次，每次增加10%
         else:
             bonus = 1 + (10 * Decimal('0.1')) + ((poxian_num - 10) * Decimal('0.2'))  # 11次及以上，每次增加20%
 
+        # 获取其他参数
         exp = Decimal(str(UserMessage['exp']))
         type_speeds = Decimal(str(root[UserMessage['root_type']]["type_speeds"]))
         spend = Decimal(str(level[UserMessage['level']]["spend"]))
         maxR = Decimal(str(UserMessage['maxR']))
-        bonus = Decimal(str(bonus))
 
         # 计算最终的战力值
-        power = round(exp * type_speeds * spend * bonus * (1 + (maxR / Decimal('100'))), 0)
+        try:
+            power = round(exp * type_speeds * spend * bonus * (1 + (maxR / Decimal('100'))), 0)
+        except InvalidOperation as e:
+            logger.error(f"InvalidOperation error: {e}")
+            return
 
-        sql = "UPDATE user_xiuxian SET power = %s WHERE user_id = %s"  # 更新数据库中的战力值
+        # 更新数据库中的战力值
+        sql = "UPDATE user_xiuxian SET power = %s WHERE user_id = %s"
         cur.execute(sql, (power, user_id))
         self.conn.commit()
 
@@ -1311,7 +1319,7 @@ class XiuxianDateManage:
         if result:
             return [row[0] for row in result]
         else:
-            return None
+            return []  # 返回空列表而不是 None
 
     def get_all_user_id(self):
         """获取全部用户id"""
@@ -2421,7 +2429,7 @@ class OtherSet(XiuConfig):
         return need_exp
 
     def get_type(self, user_exp, rate, user_level):
-        list_all = len(self.level) - 1
+        list_all = len(self.level)
         now_index = self.level.index(user_level)
         if list_all == now_index:
             return "道友已是最高境界，无法突破！"
@@ -3010,8 +3018,8 @@ def leave_harm_time(user_id):
     main_buff_rate_buff = main_buff_data['ratebuff'] if main_buff_data else 0  # 主功法修炼倍率
 
     try:
-        time = int(((user_mes['exp'] / 1.5) - user_mes['hp']) / ((XiuConfig().closing_exp * level_rate * realm_rate * (
-                1 + main_buff_rate_buff)) * hp_speed))
+        time = int(((Decimal(user_mes['exp']) / Decimal(1.5)) - user_mes['hp']) / ((Decimal(XiuConfig().closing_exp) * Decimal(level_rate) * Decimal(realm_rate) * (
+                1 + Decimal(main_buff_rate_buff))) * Decimal(hp_speed)))
     except ZeroDivisionError:
         time = "无穷大"
     except OverflowError:
