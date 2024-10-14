@@ -7,6 +7,9 @@ from datetime import datetime
 from decimal import Decimal
 
 from nonebot.typing import T_State
+
+from ..xiuxian_back import get_item_msg_rank, check_equipment_can_use, get_use_equipment_sql, check_use_elixir, \
+    get_use_jlq_msg
 from ..xiuxian_utils.lay_out import assign_bot, Cooldown, assign_bot_group
 from nonebot import require, on_command, on_fullmatch
 from nonebot.adapters.onebot.v11 import (
@@ -37,14 +40,82 @@ from ..xiuxian_utils.utils import (
 )
 from ..xiuxian_utils.qimingr import read_random_entry_from_file
 
+items = Items()
 sql_message = XiuxianDateManage()  # sql类
 
 daily_qiandao = on_fullmatch("修仙签到", priority=13, permission=GROUP, block=True)
 daily_xianyuan = on_command("仙途奇缘", permission=GROUP, priority=7, block=True)
+daily_lianjin = on_command("炼金", priority=6, permission=GROUP, block=True)
+
+
+@daily_lianjin.handle(parameterless=[Cooldown(at_sender=False)])
+async def daily_lianjin_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """炼金"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+    user_id = user_info['user_id']
+    args = args.extract_plain_text().split()
+    if not args:
+        msg = f"{user_info['user_name']} 道友请输入要炼化的物品！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+    goods_name = args[0]
+    back_msg = sql_message.get_back_msg(user_id)  # 背包sql信息,list(back)
+    if back_msg is None:
+        msg = f"{user_info['user_name']} 道友的背包空空如也！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+    in_flag = False  # 判断指令是否正确，道具是否在背包内
+    goods_id = None
+    goods_type = None
+    goods_state = None
+    goods_num = None
+    for back in back_msg:
+        if goods_name == back['goods_name']:
+            in_flag = True
+            goods_id = back['goods_id']
+            goods_type = back['goods_type']
+            goods_state = back['state']
+            goods_num = back['goods_num']
+            break
+    if not in_flag:
+        msg = f"{user_info['user_name']} 请检查该道具 {goods_name} 是否在背包内！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+
+    if goods_type == "装备" and int(goods_state) == 1 and int(goods_num) == 1:
+        msg = f"装备：{goods_name}已经被道友装备在身，无法炼金！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+
+    if get_item_msg_rank(goods_id) == 520:
+        msg = "此类物品不支持！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+    try:
+        if 1 <= int(args[1]) <= int(goods_num):
+            num = int(args[1])
+    except IndexError:
+        num = 1
+    price = int(6000000 - get_item_msg_rank(goods_id) * 100000) * num
+    if price <= 0:
+        msg = f"物品：{goods_name}炼金失败，凝聚{price}枚灵石，记得通知晓楠！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await daily_lianjin.finish()
+
+    sql_message.update_back_j(user_id, goods_id, num=num)
+    sql_message.update_ls(user_id, price, 1)
+    msg = f"物品：{goods_name} 数量：{num} 炼金成功，凝聚{price}枚灵石！"
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await daily_lianjin.finish()
 
 
 @daily_xianyuan.handle(parameterless=[Cooldown(at_sender=False)])
 async def daily_xianyuan_(bot: Bot, event: GroupMessageEvent, msg=None):
+    """仙途奇缘"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     user_id = event.get_user_id()
     isUser, user_info, _ = check_user(event)

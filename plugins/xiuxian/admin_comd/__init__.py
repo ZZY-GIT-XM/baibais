@@ -32,6 +32,35 @@ admin_add_jiejing = on_command("天外力量", permission=SUPERUSER, priority=10
 admin_update_linggen = on_command("轮回力量", permission=SUPERUSER, priority=10, block=True)
 admin_add_wupin = on_command('创造力量', permission=SUPERUSER, priority=15, block=True)
 admin_restate_user = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
+admin_recover_stamina = on_command("恢复体力", permission=SUPERUSER, priority=12, block=True)
+
+@admin_recover_stamina.handle(parameterless=[CommandArg()])
+async def admin_recover_stamina_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """恢复用户体力。
+    单用户：恢复体力 [用户名]
+    多用户：恢复体力 [未做]"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    isUser, user_info, msg = check_user(event)
+    if not isUser:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_recover_stamina.finish()
+
+    # 从命令参数中提取名称
+    msg = args.extract_plain_text().strip()
+    input_name = re.findall(r"\D+", msg)[0] if msg else ""
+
+    # 根据名称匹配用户
+    give_user = sql_message.get_user_info_with_name(input_name)
+    if give_user:
+        give_qq = give_user['user_id']
+        sql_message.update_user_stamina(give_qq, 1000, 1)
+        msg = f"用户 {input_name} 体力已恢复！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_recover_stamina.finish()
+    else:
+        msg = f"未找到用户 {input_name}！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_recover_stamina.finish()
 
 
 @admin_restate_user.handle(parameterless=[Cooldown(at_sender=False)])

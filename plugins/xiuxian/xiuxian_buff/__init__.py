@@ -1042,6 +1042,7 @@ async def mind_state_(bot: Bot, event: GroupMessageEvent):
     impart_mp_per = Decimal(str(impart_mp_per))
     user_hp = Decimal(user_msg['hp'])
     user_exp = Decimal(user_msg['exp'])
+    user_maxH = Decimal(user_maxH)
     msg = f"""      
 道号：{user_msg['user_name']}               
 气血:{number_to(((user_hp * (1 + main_hp_buff + impart_hp_per)) + user_maxH) * (1 + total_poxian_percent / 100))}/{number_to(int(((user_exp / 2) * (1 + main_hp_buff + impart_hp_per) + user_maxH) * (1 + total_poxian_percent / 100)))}({((((user_hp * (1 + main_hp_buff + impart_hp_per)) + user_maxH) / (((user_exp / 2) * (1 + main_hp_buff + impart_hp_per)) + user_maxH))) * 100:.2f}%)

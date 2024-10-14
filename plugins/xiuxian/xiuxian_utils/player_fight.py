@@ -348,7 +348,7 @@ def Player_fight(player1: dict, player2: dict, type_in, bot_id):
                         skill_msg, user2_skill_sh, player2_turn_cost = get_skill_sh_data(player2, user2_skill_date)
                         if user2_skill_type == 1:  # 直接伤害类技能
                             play_list.append(get_msg_dict(player2, player2_init_hp, skill_msg))
-                            player1['气血'] = player1['气血'] - int(user2_skill_sh * player1_js)  # 玩家2的伤害 * 玩家1的减伤
+                            player1['气血'] = player1['气血'] - int(Decimal(user2_skill_sh) * Decimal(player1_js))  # 玩家2的伤害 * 玩家1的减伤
                             play_list.append(
                                 get_msg_dict(player2, player2_init_hp,
                                              f"{player1['道号']}剩余血量{number_to(player1['气血'])}"))

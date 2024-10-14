@@ -164,7 +164,7 @@ async def xiuxian_message_(bot: Bot, event: GroupMessageEvent):
         '其他': '🧍‍♂️'  # 其他性别
     }
     # 指定的时间点
-    specific_time = datetime(2024, 9, 29, 20, 0)
+    specific_time = datetime(2024, 10, 13, 22, 0)
     create_time_str = user_info['create_time'].strftime("%Y-%m-%d %H:%M:%S.%f")
     create_time_datetime = datetime.strptime(create_time_str, "%Y-%m-%d %H:%M:%S.%f")
 

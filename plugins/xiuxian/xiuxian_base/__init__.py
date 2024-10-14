@@ -47,9 +47,6 @@ xiuxian_impart = XIUXIAN_IMPART_BUFF()
 
 run_xiuxian = on_fullmatch("我要修仙", priority=8, permission=GROUP, block=True)
 restart = on_fullmatch("洗髓伐骨", permission=GROUP, priority=7, block=True)
-rank = on_command("排行榜",
-                  aliases={"排行榜列表", "灵石排行榜", "战力排行榜", "境界排行榜", "宗门排行榜", "轮回排行榜"},
-                  priority=7, permission=GROUP, block=True)
 remaname = on_command("改名", priority=5, permission=GROUP, block=True)
 level_up = on_fullmatch("突破", priority=6, permission=GROUP, block=True)
 level_up_dr = on_fullmatch("渡厄突破", priority=7, permission=GROUP, block=True)
@@ -117,67 +114,7 @@ async def restart_(bot: Bot, event: GroupMessageEvent, state: T_State):
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
 
 
-@rank.handle(parameterless=[Cooldown(at_sender=False)])
-async def rank_(bot: Bot, event: GroupMessageEvent):
-    """排行榜"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    message = str(event.message)
-    rank_msg = r'[\u4e00-\u9fa5]+'
-    message = re.findall(rank_msg, message)
-    if message:
-        message = message[0]
 
-    if message in ["排行榜", "修仙排行榜", "境界排行榜", "修为排行榜"]:
-        p_rank = sql_message.realm_top()
-        msg = f"✨位面境界排行榜TOP50✨\n"
-        num = 0
-        for i in p_rank:
-            num += 1
-            msg += f"第{num}位 {i[0]} {i[1]}, 修为{number_to(i[2])}\n"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await rank.finish()
-
-    elif message == "灵石排行榜":
-        a_rank = sql_message.stone_top()
-        msg = f"✨位面灵石排行榜TOP50✨\n"
-        num = 0
-        for i in a_rank:
-            num += 1
-            msg += f"第{num}位  {i[0]}  灵石：{number_to(i[1])}枚\n"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await rank.finish()
-
-    elif message == "战力排行榜":
-        c_rank = sql_message.power_top()
-        msg = f"✨位面战力排行榜TOP50✨\n"
-        num = 0
-        for i in c_rank:
-            num += 1
-            msg += f"第{num}位  {i[0]}  战力：{number_to(i[1])}\n"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await rank.finish()
-
-    elif message == "轮回排行榜":
-        c_rank = sql_message.poxian_top()
-        msg = f"✨位面轮回排行榜TOP50✨\n"
-        num = 0
-        for i in c_rank:
-            num += 1
-            msg += f"第{num}位  {i[0]}  轮回：{i[1]}次\n"
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await rank.finish()
-
-    elif message in ["宗门排行榜", "宗门建设度排行榜"]:
-        s_rank = sql_message.scale_top()
-        msg = f"✨位面宗门建设排行榜TOP50✨\n"
-        num = 0
-        for i in s_rank:
-            num += 1
-            msg += f"第{num}位  {i[1]}  建设度：{number_to(i[2])}\n"
-            if num == 50:
-                break
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await rank.finish()
 
 
 @remaname.handle(parameterless=[Cooldown(at_sender=False)])

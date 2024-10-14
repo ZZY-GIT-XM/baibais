@@ -5,6 +5,8 @@ import json
 import math
 from datetime import datetime
 import unicodedata
+from decimal import Decimal, InvalidOperation
+
 from .xiuxian2_handle import XiuxianDateManage
 from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
@@ -503,14 +505,13 @@ def CommandObjectID() -> int:
 
     return Depends(_event_id)
 
-
 def number_to(num):
-    '''
+    """
     递归实现，精确为最大单位值 + 小数点后一位
     处理科学计数法表示的数值
-    '''
+    """
     def strofsize(num, level):
-        if level >= 29:
+        if level >= len(units) - 1:
             return num, level
         elif abs(num) >= 10000:  # 使用abs()来处理负数
             num /= 10000
@@ -519,14 +520,33 @@ def number_to(num):
         else:
             return num, level
 
-    units = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极',
-             '恒河沙', '阿僧祗', '那由他', '不思议', '无量大', '万无量大', '亿无量大',
-             '兆无量大', '京无量大', '垓无量大', '秭无量大', '穰无量大', '沟无量大',
-             '涧无量大', '正无量大', '载无量大', '极无量大']
+    # 扩展单位列表
+    units = [
+        '', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极',
+        '恒河沙', '阿僧祗', '那由他', '不思议', '无量大', '万无量大', '亿无量大',
+        '兆无量大', '京无量大', '垓无量大', '秭无量大', '穰无量大', '沟无量大',
+        '涧无量大', '正无量大', '载无量大', '极无量大',
+        '大数', '巨数', '天数', '地数', '宇宙数', '无限数', '无穷数', '无尽数',
+        '无边数', '无际数', '无量数', '无垠数', '无极数', '无界数', '无量无边数',
+        '微尘数', '星河数', '时光数', '梦境数', '幻象数', '须弥数', '轮回数',
+        '虚空数', '混沌数', '宿命数', '因果数', '光明数', '黑暗数', '元素数',
+        '宇宙尘埃数', '灵魂数', '智慧数', '命运轨迹数', '天帝', '万天帝', '亿天帝', '兆天帝', '京天帝',
+        '垓天帝', '秭天帝', '穰天帝', '沟天帝', '涧天帝', '正天帝', '载天帝', '极天帝',
+        '恒河沙天帝', '阿僧祗天帝', '那由他天帝', '不思议天帝', '无量大天帝', '万无量大天帝'
+    ]
 
     # 处理 None 值
     if num is None:
         return "0"
+
+    # 检查是否为有效数字
+    try:
+        num = Decimal(str(num))
+    except InvalidOperation:
+        try:
+            num = float(num)
+        except ValueError:
+            return "无效数字"
 
     # 处理科学计数法
     if "e" in str(num):
@@ -537,8 +557,10 @@ def number_to(num):
     num = abs(num)  # 取绝对值进行计算
 
     num, level = strofsize(num, 0)
+
+    # 如果超过最大单位，返回 '未知'
     if level >= len(units):
-        level = len(units) - 1
+        return '未知'
 
     # 在结果前加上符号
     return f"{sign}{round(num, 1)}{units[level]}"
