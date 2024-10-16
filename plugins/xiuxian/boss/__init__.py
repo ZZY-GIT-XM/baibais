@@ -1,6 +1,6 @@
 import random
 import json
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import psycopg2
 from nonebot import on_command
@@ -468,8 +468,7 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await battle.finish()
 
-    player = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None,
-              '防御': Decimal('0')}
+    player = {"user_id": None, "道号": None, "气血": None, "攻击": None, "真元": None, '会心': None, '防御': Decimal('0')}
     userinfo = sql_message.get_user_real_info(user_id)
     user_weapon_data = UserBuffDate(userinfo['user_id']).get_user_weapon_data()
     user_poxian = userinfo['poxian_num']  # 新增破限次数
@@ -508,19 +507,43 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     else:
         armor_crit_buff = Decimal('0')
 
-    if user_weapon_data is not None:
-        player['会心'] = int(
-            ((Decimal(user_weapon_data['crit_buff']) + armor_crit_buff + main_crit_buff) * Decimal('100') * (
+    try:
+        if user_weapon_data is not None:
+            player['会心'] = int(
+                ((Decimal(user_weapon_data['crit_buff']) + armor_crit_buff + main_crit_buff) * Decimal('100') * (
+                        Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
+        else:
+            player['会心'] = int(((armor_crit_buff + main_crit_buff) * Decimal('100') * (
                     Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
-    else:
-        player['会心'] = int(((armor_crit_buff + main_crit_buff) * Decimal('100') * (
-                Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
+    except InvalidOperation as e:
+        logger.error(f"Invalid operation in player['会心'] calculation: {e}")
+        await bot.send_group_msg(group_id=int(send_group_id), message="计算会心值时出现错误，请检查数据！")
+        await battle.finish()
+
     player['user_id'] = userinfo['user_id']
     player['道号'] = userinfo['user_name']
-    player['气血'] = (Decimal(userinfo['hp']) + user_maxH) * (Decimal('1') + total_poxian_percent / Decimal('100'))
-    player['攻击'] = int(((Decimal(userinfo['atk']) + user_maxA) * (Decimal('1') + boss_atk) * (
-            Decimal('1') + total_poxian_percent / Decimal('100'))).quantize(Decimal('1')))
-    player['真元'] = (Decimal(userinfo['mp']) + user_maxM) * (Decimal('1') + total_poxian_percent / Decimal('100'))
+    try:
+        player['气血'] = (Decimal(userinfo['hp']) + user_maxH) * (Decimal('1') + total_poxian_percent / Decimal('100'))
+    except InvalidOperation as e:
+        logger.error(f"Invalid operation in player['气血'] calculation: {e}")
+        await bot.send_group_msg(group_id=int(send_group_id), message="计算气血值时出现错误，请检查数据！")
+        await battle.finish()
+
+    try:
+        player['攻击'] = int(((Decimal(userinfo['atk']) + Decimal(user_maxA)) * (Decimal('1') + Decimal(boss_atk)) * (
+                Decimal('1') + Decimal(total_poxian_percent) / Decimal('100'))).quantize(Decimal('1')))
+    except InvalidOperation as e:
+        logger.error(f"Invalid operation in player['攻击'] calculation: {e}")
+        await bot.send_group_msg(group_id=int(send_group_id), message="计算攻击力时出现错误，请检查数据！")
+        await battle.finish()
+
+    try:
+        player['真元'] = (Decimal(userinfo['mp']) + user_maxM) * (Decimal('1') + total_poxian_percent / Decimal('100'))
+    except InvalidOperation as e:
+        logger.error(f"Invalid operation in player['真元'] calculation: {e}")
+        await bot.send_group_msg(group_id=int(send_group_id), message="计算真元值时出现错误，请检查数据！")
+        await battle.finish()
+
     player['exp'] = Decimal(userinfo['exp']) * (Decimal('1') + total_poxian_percent / Decimal('100'))
 
     bossinfo = all_bosses[boss_num - 1]
@@ -541,7 +564,6 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
 
     boss_old_hp = bossinfo['hp']  # 打之前的血量
     more_msg = ''
-    # battle_flag[group_id] = True
     result, victor, bossinfo_new, get_stone = await Boss_fight(player, bossinfo, bot_id=bot.self_id)
     # 将 result 转换为字符串
     if isinstance(result, list):
@@ -555,16 +577,27 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         # 新增boss战斗积分点数
         boss_now_hp = bossinfo_new['hp']  # 打之后的血量
         boss_all_hp = bossinfo['max_hp']  # 总血量
-        boss_world_integral = int(
-            ((Decimal(boss_old_hp) - Decimal(boss_now_hp)) / Decimal(boss_all_hp) * Decimal('240')).quantize(
-                Decimal('1')))
+        try:
+            boss_world_integral = int(
+                ((Decimal(boss_old_hp) - Decimal(boss_now_hp)) / Decimal(boss_all_hp) * Decimal('240')).quantize(
+                    Decimal('1')))
+        except InvalidOperation as e:
+            logger.error(f"Invalid operation in boss_world_integral calculation: {e}")
+            await bot.send_group_msg(group_id=int(send_group_id), message="计算世界积分时出现错误，请检查数据！")
+            await battle.finish()
+
         if boss_world_integral < 5:  # 摸一下不给
             boss_world_integral = 0
         if user_info['root'] == "器师":
-            boss_world_integral = int(
-                (Decimal(boss_world_integral) * (Decimal('1') + (user_rank - boss_rank))).quantize(Decimal('1')))
-            points_bonus = int((Decimal('80') * (user_rank - boss_rank)).quantize(Decimal('1')))
-            more_msg = f"道友低boss境界{user_rank - boss_rank}层，获得{points_bonus}%积分加成！"
+            try:
+                boss_world_integral = int(
+                    (Decimal(boss_world_integral) * (Decimal('1') + (user_rank - boss_rank))).quantize(Decimal('1')))
+                points_bonus = int((Decimal('80') * (user_rank - boss_rank)).quantize(Decimal('1')))
+                more_msg = f"道友低boss境界{user_rank - boss_rank}层，获得{points_bonus}%积分加成！"
+            except InvalidOperation as e:
+                logger.error(f"Invalid operation in boss_world_integral calculation for 器师: {e}")
+                await bot.send_group_msg(group_id=int(send_group_id), message="计算世界积分时出现错误，请检查数据！")
+                await battle.finish()
 
         damage_dealt = boss_old_hp - boss_now_hp
         update_boss_hp(bossinfo['id'], boss_now_hp)  # 更新boss血量
@@ -575,20 +608,24 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         top_user_exp = Decimal(top_user_info['exp'])
 
         if exp_buff > 0 and user_info['root'] != "器师":
-            now_exp = int((((Decimal(top_user_exp) * Decimal('0.1')) / Decimal(user_info['exp'])) / (
-                    exp_buff * (Decimal('1') / (Items().convert_rank(user_info['level'])[0] + 1)))).quantize(
-                Decimal('1')))
-            if now_exp > 1000000:
-                now_exp = int((Decimal('1000000') / Decimal(random.randint(5, 10))).quantize(Decimal('1')))
-            sql_message.update_exp(user_id, now_exp)
-            exp_msg = f"，获得修为{int(now_exp)}点！"
+            try:
+                now_exp = int((((Decimal(top_user_exp) * Decimal('0.1')) / Decimal(user_info['exp'])) / (
+                        exp_buff * (Decimal('1') / (Items().convert_rank(user_info['level'])[0] + 1)))).quantize(
+                    Decimal('1')))
+                if now_exp > 1000000:
+                    now_exp = int((Decimal('1000000') / Decimal(random.randint(5, 10))).quantize(Decimal('1')))
+                sql_message.update_exp(user_id, now_exp)
+                exp_msg = f"，获得修为{int(now_exp)}点！"
+            except InvalidOperation as e:
+                logger.error(f"Invalid operation in now_exp calculation: {e}")
+                await bot.send_group_msg(group_id=int(send_group_id), message="计算修为时出现错误，请检查数据！")
+                await battle.finish()
         else:
             exp_msg = f" "
 
         msg = f"道友不敌{bossinfo['name']}，重伤逃遁，临逃前收获灵石{get_stone}枚，{more_msg}获得世界积分：{boss_world_integral}点{exp_msg} "
         if user_info['root'] == "器师" and boss_world_integral < 0:
             msg += f"\n如果出现负积分，说明你境界太高了，玩器师就不要那么高境界了！！！"
-        # battle_flag[group_id] = False
         try:
             await bot.send_group_msg(group_id=int(send_group_id), message=result_str)
         except ActionFailed:
@@ -599,12 +636,23 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
     elif victor == "群友赢了":
         # 新增boss战斗积分点数
         boss_all_hp = bossinfo['max_hp']  # 总血量
-        boss_world_integral = int((Decimal(boss_old_hp) / Decimal(boss_all_hp) * Decimal('240')).quantize(Decimal('1')))
+        try:
+            boss_world_integral = int((Decimal(boss_old_hp) / Decimal(boss_all_hp) * Decimal('240')).quantize(Decimal('1')))
+        except InvalidOperation as e:
+            logger.error(f"Invalid operation in boss_world_integral calculation: {e}")
+            await bot.send_group_msg(group_id=int(send_group_id), message="计算世界积分时出现错误，请检查数据！")
+            await battle.finish()
+
         if user_info['root'] == "器师":
-            boss_world_integral = int(
-                (Decimal(boss_world_integral) * (Decimal('1') + (user_rank - boss_rank))).quantize(Decimal('1')))
-            points_bonus = int((Decimal('80') * (user_rank - boss_rank)).quantize(Decimal('1')))
-            more_msg = f"道友低boss境界{user_rank - boss_rank}层，获得{points_bonus}%积分加成！"
+            try:
+                boss_world_integral = int(
+                    (Decimal(boss_world_integral) * (Decimal('1') + (user_rank - boss_rank))).quantize(Decimal('1')))
+                points_bonus = int((Decimal('80') * (user_rank - boss_rank)).quantize(Decimal('1')))
+                more_msg = f"道友低boss境界{user_rank - boss_rank}层，获得{points_bonus}%积分加成！"
+            except InvalidOperation as e:
+                logger.error(f"Invalid operation in boss_world_integral calculation for 器师: {e}")
+                await bot.send_group_msg(group_id=int(send_group_id), message="计算世界积分时出现错误，请检查数据！")
+                await battle.finish()
         else:
             if boss_rank - user_rank >= 9:  # 超过太多不给
                 boss_world_integral = 0
@@ -614,13 +662,18 @@ async def battle_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg
         top_user_exp = Decimal(top_user_info['exp'])
 
         if exp_buff > 0 and user_info['root'] != "器师":
-            now_exp = int((((Decimal(top_user_exp) * Decimal('0.1')) / Decimal(user_info['exp'])) / (
-                    exp_buff * (Decimal('1') / (Items().convert_rank(user_info['level'])[0] + 1)))).quantize(
-                Decimal('1')))
-            if now_exp > 1000000:
-                now_exp = int((Decimal('1000000') / Decimal(random.randint(5, 10))).quantize(Decimal('1')))
-            sql_message.update_exp(user_id, now_exp)
-            exp_msg = f"，获得修为{int(now_exp)}点！"
+            try:
+                now_exp = int((((Decimal(top_user_exp) * Decimal('0.1')) / Decimal(user_info['exp'])) / (
+                        exp_buff * (Decimal('1') / (Items().convert_rank(user_info['level'])[0] + 1)))).quantize(
+                    Decimal('1')))
+                if now_exp > 1000000:
+                    now_exp = int((Decimal('1000000') / Decimal(random.randint(5, 10))).quantize(Decimal('1')))
+                sql_message.update_exp(user_id, now_exp)
+                exp_msg = f"，获得修为{int(now_exp)}点！"
+            except InvalidOperation as e:
+                logger.error(f"Invalid operation in now_exp calculation: {e}")
+                await bot.send_group_msg(group_id=int(send_group_id), message="计算修为时出现错误，请检查数据！")
+                await battle.finish()
         else:
             exp_msg = f" "
 

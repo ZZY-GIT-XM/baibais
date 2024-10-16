@@ -1,1 +1,122 @@
-{}
+{
+    "714561732": {
+        "number": 1,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "720199628": {
+        "number": 2,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "552694218": {
+        "number": 3,
+        "pk_num": 0,
+        "win_num": 0
+    },
+    "248125895": {
+        "number": 4,
+        "pk_num": 0,
+        "win_num": 4
+    },
+    "564548073": {
+        "number": 5,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "694147768": {
+        "number": 6,
+        "pk_num": 0,
+        "win_num": 6
+    },
+    "617643244": {
+        "number": 7,
+        "pk_num": 0,
+        "win_num": 6
+    },
+    "711602465": {
+        "number": 8,
+        "pk_num": 0,
+        "win_num": 0
+    },
+    "362534058": {
+        "number": 9,
+        "pk_num": 0,
+        "win_num": 9
+    },
+    "503744458": {
+        "number": 10,
+        "pk_num": 0,
+        "win_num": 8
+    },
+    "873688631": {
+        "number": 11,
+        "pk_num": 0,
+        "win_num": 6
+    },
+    "34925681": {
+        "number": 12,
+        "pk_num": 0,
+        "win_num": 3
+    },
+    "474052436": {
+        "number": 13,
+        "pk_num": 0,
+        "win_num": 6
+    },
+    "724566430": {
+        "number": 14,
+        "pk_num": 0,
+        "win_num": 4
+    },
+    "287734027": {
+        "number": 15,
+        "pk_num": 0,
+        "win_num": 0
+    },
+    "535987210": {
+        "number": 16,
+        "pk_num": 0,
+        "win_num": 1
+    },
+    "343292183": {
+        "number": 17,
+        "pk_num": 0,
+        "win_num": 1
+    },
+    "128496352": {
+        "number": 18,
+        "pk_num": 0,
+        "win_num": 0
+    },
+    "832712511": {
+        "number": 19,
+        "pk_num": 0,
+        "win_num": 2
+    },
+    "550502674": {
+        "number": 20,
+        "pk_num": 3,
+        "win_num": 0
+    },
+    "753227143": {
+        "number": 21,
+        "pk_num": 2,
+        "win_num": 0
+    },
+    "587290820": {
+        "number": 22,
+        "pk_num": 0,
+        "win_num": 1
+    },
+    "450416140": {
+        "number": 23,
+        "pk_num": 0,
+        "win_num": 7
+    },
+    "265768733": {
+        "number": 24,
+        "pk_num": 0,
+        "win_num": 2
+    }
+}

@@ -2370,6 +2370,22 @@ class XiuxianDateManage:
             row = cur.fetchone()
             return row  # 直接返回查询结果
 
+    def delete_back_by_user_id(self, user_id):
+        """
+        通过用户ID删除背包数据
+        :param user_id: 用户ID
+        :return: 成功返回True，失败返回False
+        """
+        cur = self.conn.cursor()
+        sql = "DELETE FROM back WHERE user_id = %s"
+        try:
+            cur.execute(sql, (user_id,))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Database delete error: {e}")
+            self.conn.rollback()
+            return False
 
 
 class XiuxianJsonDate:

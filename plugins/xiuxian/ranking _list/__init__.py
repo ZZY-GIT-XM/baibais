@@ -53,7 +53,7 @@ list_wupin = on_command("查看修仙界物品", priority=25, permission=GROUP, 
 
 @list_wupin.handle(parameterless=[Cooldown(at_sender=False)])
 async def list_wupin_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    """查看修仙界所有物品列表"""
+    """查看修仙界物品 查看修仙界所有物品列表"""
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     args = args.extract_plain_text().strip()
     list_tp = []
@@ -128,7 +128,7 @@ async def list_wupin_(bot: Bot, event: GroupMessageEvent, args: Message = Comman
                     {"type": "node", "data": {"name": f"修仙界物品列表{args}", "uin": bot.self_id,
                                               "content": msg}})
         try:
-            await send_msg_handler(bot, event, list_tp)
+            await bot.send_group_msg(group_id=int(send_group_id), message=list_tp)
         except ActionFailed:
             msg = "未知原因，查看失败!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)

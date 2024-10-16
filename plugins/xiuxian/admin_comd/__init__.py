@@ -31,8 +31,44 @@ admin_add_lingshi = on_command("神秘力量", permission=SUPERUSER, priority=10
 admin_add_jiejing = on_command("天外力量", permission=SUPERUSER, priority=10, block=True)
 admin_update_linggen = on_command("轮回力量", permission=SUPERUSER, priority=10, block=True)
 admin_add_wupin = on_command('创造力量', permission=SUPERUSER, priority=15, block=True)
+admin_clear_back = on_command('毁灭力量', permission=SUPERUSER, priority=15, block=True)
 admin_restate_user = on_command("重置状态", permission=SUPERUSER, priority=12, block=True)
 admin_recover_stamina = on_command("恢复体力", permission=SUPERUSER, priority=12, block=True)
+
+@admin_clear_back.handle(parameterless=[Cooldown(at_sender=False)])
+async def admin_clear_back_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    """毁灭力量 清空指定用户的背包数据"""
+    bot, send_group_id = await assign_bot(bot=bot, event=event)
+    msg = args.extract_plain_text().strip()
+
+    if not msg:
+        msg = f"请输入正确指令！例如：清空背包 [user_id]"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_clear_back.finish()
+
+    user_id = msg.strip()
+
+    if not user_id.isdigit():
+        msg = f"用户ID必须为数字！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_clear_back.finish()
+
+    user_id = int(user_id)
+    user_info = sql_message.get_user_info_with_id(user_id)
+    if not user_info:
+        msg = f"用户ID {user_id} 不存在！"
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+        await admin_clear_back.finish()
+
+    result = sql_message.delete_back_by_user_id(user_id)
+    if result:
+        msg = f"用户ID {user_id} 的背包已成功清空！"
+    else:
+        msg = f"清空用户ID {user_id} 的背包时发生错误，请检查日志。"
+
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    await admin_clear_back.finish()
+
 
 @admin_recover_stamina.handle(parameterless=[CommandArg()])
 async def admin_recover_stamina_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):

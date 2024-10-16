@@ -1060,46 +1060,6 @@ boss战增益:{int(boss_atk * 100 * (1 + total_poxian_percent / 100))}%
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
     await mind_state.finish()
 
-
-@buffInfo.handle(parameterless=[Cooldown(at_sender=False)])
-async def buffInfo_(bot: Bot, event: GroupMessageEvent):
-    """我的功法"""
-    bot, send_group_id = await assign_bot(bot=bot, event=event)
-    isUser, user_info, msg = check_user(event)
-    if not isUser:
-        await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-        await buffInfo.finish()
-
-    user_id = user_info['user_id']
-    # skill_msg = get_user_skill_back_msg(user_id)
-    mainbuffdata = UserBuffDate(user_id).get_user_main_buff_data()
-    if mainbuffdata != None:
-        s, mainbuffmsg = get_main_info_msg(str(get_user_buff(user_id)['main_buff']))
-    else:
-        mainbuffmsg = ''
-
-    subbuffdata = UserBuffDate(user_id).get_user_sub_buff_data()  # 辅修功法13
-    if subbuffdata != None:
-        sub, subbuffmsg = get_sub_info_msg(str(get_user_buff(user_id)['sub_buff']))
-    else:
-        subbuffmsg = ''
-
-    secbuffdata = UserBuffDate(user_id).get_user_sec_buff_data()
-    secbuffmsg = get_sec_msg(secbuffdata) if get_sec_msg(secbuffdata) != '无' else ''
-    msg = f"""
-道友的主功法：{mainbuffdata["name"] if mainbuffdata != None else '无'}
-{mainbuffmsg}
-道友的辅修功法：{subbuffdata["name"] if subbuffdata != None else '无'}
-{subbuffmsg}
-道友的神通：{secbuffdata["name"] if secbuffdata != None else '无'}
-{secbuffmsg}
-"""
-
-    await bot.send_group_msg(group_id=int(send_group_id), message=msg)
-    # await send_msg_handler(bot, event, '背包', bot.self_id, skill_msg)
-    await buffInfo.finish()
-
-
 @del_exp_decimal.handle(parameterless=[Cooldown(at_sender=False)])
 async def del_exp_decimal_(bot: Bot, event: GroupMessageEvent):
     """清除修为浮点数"""

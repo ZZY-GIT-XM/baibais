@@ -49,7 +49,6 @@ buffrankkey = {
     "天阶上品": 10,
 }
 
-
 upatkpractice = on_command("升级攻击修炼", priority=5, permission=GROUP, block=True)
 my_sect = on_command("我的宗门", aliases={"宗门信息"}, priority=5, permission=GROUP, block=True)
 create_sect = on_command("创建宗门", priority=5, permission=GROUP, block=True)
@@ -72,7 +71,6 @@ sect_users = on_command("宗门成员查看", aliases={"查看宗门成员"}, pr
 sect_elixir_room_make = on_command("宗门丹房建设", aliases={"建设宗门丹房"}, priority=5, permission=GROUP, block=True)
 sect_elixir_get = on_command("宗门丹药领取", aliases={"领取宗门丹药领取"}, priority=5, permission=GROUP, block=True)
 sect_rename = on_command("宗门改名", priority=5, permission=GROUP, block=True)
-
 
 
 @sect_elixir_room_make.handle(parameterless=[Cooldown(stamina_cost=2, at_sender=False)])
@@ -589,7 +587,8 @@ async def upatkpractice_(bot: Bot, event: GroupMessageEvent, args: Message = Com
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await upatkpractice.finish()
 
-        sect_level = get_sect_level(sect_id)[0] if get_sect_level(sect_id)[0] <= 50 else 50  # 获取当前宗门修炼等级上限，500w建设度1级,上限25级
+        sect_level = get_sect_level(sect_id)[0] if get_sect_level(sect_id)[
+                                                       0] <= 50 else 50  # 获取当前宗门修炼等级上限，500w建设度1级,上限25级
 
         sect_position = user_info['sect_position']
         # 确保用户不会尝试升级超过宗门等级的上限
@@ -668,7 +667,7 @@ async def sect_list_(bot: Bot, event: GroupMessageEvent):
         msg_list.append(
             f"编号{sect_id}：{sect_name}\n宗主：{user_name}\n宗门建设度：{number_to(sect_scale)}\n成员数：{member_count}")
 
-    await send_msg_handler(bot, event, '宗门列表', bot.self_id, msg_list)
+    await bot.send_group_msg(group_id=int(send_group_id), message=msg_list)
     await sect_list.finish()
 
 
@@ -678,27 +677,50 @@ async def sect_users_(bot: Bot, event: GroupMessageEvent):
     bot, send_group_id = await assign_bot(bot=bot, event=event)
     msg_list = []
     isUser, user_info, msg = check_user(event)
+
     if not isUser:
         await bot.send_group_msg(group_id=int(send_group_id), message=msg)
         await sect_users.finish()
+
     if user_info:
         sect_id = user_info['sect_id']
+
         if sect_id:
-            sect_info = sql_message.get_sect_info(sect_id)
-            userlist = sql_message.get_all_users_by_sect_id(sect_id)
-            msg = f"☆【{sect_info['sect_name']}】的成员信息☆\n"
-            msg_list.append(msg)
-            i = 1
-            for user in userlist:
-                msg = f"""编号{i}:{user['user_name']},{user['level']}\n宗门职位：{jsondata.sect_config_data()[f"{user['sect_position']}"]['title']}\n宗门贡献度：{user['sect_contribution']}\n"""
-                msg += f"QQ号{user['user_id']}"
+            try:
+                sect_info = sql_message.get_sect_info(sect_id)
+                userlist = sql_message.get_all_users_by_sect_id(sect_id)
+
+                msg = f"☆【{sect_info['sect_name']}】的成员信息☆\n"
                 msg_list.append(msg)
-                i += 1
+
+                i = 1
+                for user in userlist:
+                    position_title = jsondata.sect_config_data().get(f"{user['sect_position']}", {}).get('title',
+                                                                                                         '未知职位')
+                    msg = (
+                        f"编号{i}: {user['user_name']}, {user['level']}\n"
+                        f"宗门职位：{position_title}\n"
+                        f"宗门贡献度：{user['sect_contribution']}\n"
+                        f"ID: {user['user_id']}\n"
+                    )
+                    msg_list.append(msg)
+                    i += 1
+
+            except Exception as e:
+                msg_list.append(f"查询宗门成员信息时发生错误：{str(e)}")
         else:
             msg_list.append(f"一介散修，莫要再问。")
     else:
         msg_list.append(f"未曾踏入修仙世界，输入【我要修仙】加入我们，看破这世间虚妄!")
-    await send_msg_handler(bot, event, '宗门成员', bot.self_id, msg_list)
+
+    # 将列表中的所有元素拼接成一个字符串
+    msg_str = '\n'.join(msg_list)
+
+    try:
+        await bot.send_group_msg(group_id=int(send_group_id), message=msg_str)
+    except Exception as e:
+        await bot.send_group_msg(group_id=int(send_group_id), message=f"发送消息时发生错误：{str(e)}")
+
     await sect_users.finish()
 
 
@@ -908,24 +930,19 @@ async def sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         sect_id = user_info['sect_id']
         sect_info = sql_message.get_sect_info(sect_id)
         enabled_groups = sql_message.get_enabled_groups()
-
         # 生成随机名称
         new_name = generate_random_sect_name()
-
         # 检查名称是否重复
         while sql_message.check_sect_name_exists(new_name):
             new_name = generate_random_sect_name()
-
         # 检查宗门灵石是否足够
         if sect_info['sect_used_stone'] < XiuConfig().sect_rename_cost:
             msg = f"道友宗门灵石储备不足，还需{number_to(XiuConfig().sect_rename_cost - sect_info['sect_used_stone'])}灵石!"
             await bot.send_group_msg(group_id=int(send_group_id), message=msg)
             await sect_rename.finish()
-
         # 更新宗门名称
         sql_message.update_sect_name(sect_id, new_name)
         sql_message.update_sect_used_stone(sect_id, XiuConfig().sect_rename_cost, 2)
-
         msg = f"""
 传宗门——{sect_info['sect_name']}
 宗主{user_info['user_name']}法旨:
@@ -934,14 +951,12 @@ async def sect_rename_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
 愿同门共沐神光，共护宗门千世荣光！
 青天无云，道韵长存，灵气飘然。
 愿同门同心同德，共铸宗门万世辉煌！"""
-
         for group_id in enabled_groups:
             bot = await assign_bot_group(group_id=group_id)
             try:
                 await bot.send_group_msg(group_id=int(group_id), message=msg)
             except ActionFailed:
                 continue
-
         await sect_rename.finish()
 
 
@@ -993,11 +1008,9 @@ async def create_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Comma
     else:
         # 生成随机名称
         sect_name = generate_random_sect_name()
-
         # 检查名称是否重复
         while sql_message.check_sect_name_exists(sect_name):
             sect_name = generate_random_sect_name()
-
         if sect_name:
             sql_message.create_sect(user_id, sect_name)
             new_sect = sql_message.get_sect_info_by_qq(user_id)
@@ -1217,7 +1230,8 @@ async def join_sect_(bot: Bot, event: GroupMessageEvent, args: Message = Command
     if not user_info['sect_id']:
         sect_no = args.extract_plain_text().strip()
         sql_sects = sql_message.get_all_sect_id()
-        sects_all = [tup[0] for tup in sql_sects]
+        sects_all = sql_sects
+
         if not sect_no.isdigit():
             msg = f"申请加入的宗门编号解析异常，应全为数字!"
         elif int(sect_no) not in sects_all:

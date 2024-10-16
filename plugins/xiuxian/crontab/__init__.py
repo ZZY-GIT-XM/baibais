@@ -128,12 +128,12 @@ async def reset_day_xushennum_():
     logger.opt(colors=True).info(f"<green>已重置虚神界次数</green>")
 
 
-@reset_zongmen_gongxian_zicai.scheduled_job("cron", hour=config["发放宗门资材"]["时间"])
+@reset_zongmen_gongxian_zicai.scheduled_job("cron", hour="*", minute=32)
 async def reset_zongmen_gongxian_zicai_():
     """每1小时按照宗门的贡献度增加资材"""
     all_sects = sql_message.get_all_sects_id_scale()
     for s in all_sects:
-        sql_message.update_sect_materials(sect_id=s[0], sect_materials=s[1] * config["发放宗门资材"]["倍率"], key=1)
+        sql_message.update_sect_materials(sect_id=s[0], sect_materials=s[1] * 1, key=1)
 
     logger.opt(colors=True).info(f"<green>已更新所有宗门的资材</green>")
 

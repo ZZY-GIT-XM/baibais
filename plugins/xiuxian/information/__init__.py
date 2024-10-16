@@ -61,6 +61,7 @@ async def xiuxian_gongfa_(bot: Bot, event: GroupMessageEvent):
 """
 
     await bot.send_group_msg(group_id=int(send_group_id), message=msg)
+    # await send_msg_handler(bot, event, '背包', bot.self_id, skill_msg)
     await xiuxian_gongfa.finish()
 
 

@@ -1793,7 +1793,6 @@ def start_sub_buff_handle(player1_sub_open, subbuffdata1, user1_battle_buff_date
 
     return user1_battle_buff_date, user2_battle_buff_date, msg1 + msg2
 
-
 # 处理攻击后辅修功法效果
 def after_atk_sub_buff_handle(player1_sub_open, player1, user1_main_buff_data, subbuffdata1, damage1, player2):
     msg = ""
@@ -1804,43 +1803,52 @@ def after_atk_sub_buff_handle(player1_sub_open, player1, user1_main_buff_data, s
     buff_value = int(subbuffdata1['buff'])
     buff_tow = int(subbuffdata1['buff2'])
     buff_type = subbuffdata1['buff_type']
-    exp = int(player1['exp'])
-    max_hp = int(exp / 2) * (1 + user1_main_buff_data.get('hpbuff', 0) if user1_main_buff_data is not None else 0)
-    max_mp = exp * (1 + user1_main_buff_data.get('mpbuff', 0) if user1_main_buff_data is not None else 0)
+    exp = Decimal(player1['exp'])
+
+    # 获取 buff 值
+    hpbuff = Decimal(user1_main_buff_data.get('hpbuff', 0)) if user1_main_buff_data is not None else Decimal(0)
+    mpbuff = Decimal(user1_main_buff_data.get('mpbuff', 0)) if user1_main_buff_data is not None else Decimal(0)
+
+    # 计算最大生命值和最大魔法值
+    max_hp = (exp / 2) * (1 + hpbuff)
+    max_mp = exp * (1 + mpbuff)
+
+    # 将结果转换回整数
+    max_hp = int(max_hp)
+    max_mp = int(max_mp)
 
     if buff_type == '4':
-        restore_health = int(exp / 2) * (1 + user1_main_buff_data['hpbuff']) * buff_value // 100
-        player1['气血'] += restore_health
+        restore_health = (exp / 2) * (1 + hpbuff) * (buff_value / 100)
+        player1['气血'] += int(restore_health)
         player1['气血'] = min(player1['气血'], max_hp)
-        msg = "回复气血:" + str(restore_health)
+        msg = "回复气血:" + str(int(restore_health))
     elif buff_type == '5':
-        restore_mana = exp * (1 + user1_main_buff_data['mpbuff']) * buff_value // 100
-        player1['真元'] += restore_mana
+        restore_mana = exp * (1 + mpbuff) * (buff_value / 100)
+        player1['真元'] += int(restore_mana)
         player1['真元'] = min(player1['真元'], max_mp)
-        msg = "回复真元:" + str(restore_mana)
+        msg = "回复真元:" + str(int(restore_mana))
     elif buff_type == '6':
-        health_stolen = (damage1 * (buff_value + random_xx) // 100) * (1 - boss_xx)
-        player1['气血'] += health_stolen
+        health_stolen = (damage1 * (buff_value + random_xx) / 100) * (1 - boss_xx)
+        player1['气血'] += int(health_stolen)
         player1['气血'] = min(player1['气血'], max_hp)
-        msg = "吸取气血:" + str(health_stolen)
+        msg = "吸取气血:" + str(int(health_stolen))
     elif buff_type == '7':
-        mana_stolen = (damage1 * buff_value // 100) * (1 - boss_xl)
-        player1['真元'] += mana_stolen
+        mana_stolen = (damage1 * buff_value / 100) * (1 - boss_xl)
+        player1['真元'] += int(mana_stolen)
         player1['真元'] = min(player1['真元'], max_mp)
-        msg = "吸取真元:" + str(mana_stolen)
+        msg = "吸取真元:" + str(int(mana_stolen))
     elif buff_type == '8':
-        poison_damage = player2['气血'] * buff_value // 100
-        player2['气血'] -= poison_damage
-        msg = "对手中毒消耗血量:" + str(poison_damage)
-
+        poison_damage = player2['气血'] * (buff_value / 100)
+        player2['气血'] -= int(poison_damage)
+        msg = "对手中毒消耗血量:" + str(int(poison_damage))
     elif buff_type == '9':
-        health_stolen = (damage1 * (buff_value + random_xx) // 100) * (1 - boss_xx)
-        mana_stolen = (damage1 * buff_tow // 100) * (1 - boss_xl)
-        player1['气血'] += health_stolen
+        health_stolen = (damage1 * (buff_value + random_xx) / 100) * (1 - boss_xx)
+        mana_stolen = (damage1 * buff_tow / 100) * (1 - boss_xl)
+        player1['气血'] += int(health_stolen)
         player1['气血'] = min(player1['气血'], max_hp)
-        player1['真元'] += mana_stolen
+        player1['真元'] += int(mana_stolen)
         player1['真元'] = min(player1['真元'], max_mp)
-        msg = f"吸取气血: {str(health_stolen)}, 吸取真元: {str(mana_stolen)}"
+        msg = f"吸取气血: {str(int(health_stolen))}, 吸取真元: {str(int(mana_stolen))}"
 
     return player1, player2, msg
 
